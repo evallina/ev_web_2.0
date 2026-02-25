@@ -371,8 +371,8 @@ export default function Home() {
         <div className="absolute inset-y-0 right-0 w-10 bg-white z-2 pointer-events-none" />
 
         {/* White bottom panels — leave ~40% dark gap in the center */}
-        <div className="absolute bottom-0 left-0 bg-white z-2 pointer-events-none" style={{ right: '70%', height: '80px' }} />
-        <div className="absolute bottom-0 right-0 bg-white z-2 pointer-events-none" style={{ left: '70%', height: '80px' }} />
+        <div className="absolute bottom-0 left-0 bg-white z-2 pointer-events-none" style={{ right: '80%', height: '160px' }} />
+        <div className="absolute bottom-0 right-0 bg-white z-2 pointer-events-none" style={{ left: '80%', height: '60px' }} />
 
         {/* Content — above white panels */}
         <h2 className="relative z-10 font-serif font-bold text-white text-4xl text-center mb-3">

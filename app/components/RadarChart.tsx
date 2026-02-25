@@ -90,6 +90,7 @@ function smoothClosedPath(pts: { x: number; y: number }[]): string {
 export default function RadarChart() {
   const [values, setValues]         = useState<number[]>([...DEFAULT_VALUES]);
   const [ghosts, setGhosts]         = useState<number[][]>([]);
+  const [played, setPlayed]         = useState(false);
   // Incrementing counters per arrow — changing the key remounts the element,
   // restarting the CSS animation even on rapid successive clicks.
   const [arrowKeys, setArrowKeys]   = useState<Record<string, number>>({});
@@ -114,6 +115,7 @@ export default function RadarChart() {
 
   const handlePlay = () => {
     setGhosts(prev => [...prev.slice(-4), [...values]]);
+    setPlayed(true);
     console.log('Radar selection:', Object.fromEntries(CATEGORIES.map((c, i) => [c.name, values[i]])));
   };
 
@@ -251,6 +253,18 @@ export default function RadarChart() {
         })}
 
       </svg>
+
+      {/* ── Play hint note ────────────────────────────────────────────────── */}
+      <p
+        className="font-sans text-white/50 text-xs uppercase tracking-[0.2em] mb-3"
+        style={{
+          transition: 'opacity 600ms ease',
+          opacity: played ? 0 : 1,
+          pointerEvents: 'none',
+        }}
+      >
+        Press Play to Unveil the selected showcase
+      </p>
 
       {/* ── Play button ───────────────────────────────────────────────────── */}
       <button
