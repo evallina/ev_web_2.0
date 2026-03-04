@@ -7,8 +7,8 @@ const activeStrokeWidth = 3;          // line weight of the active polygon
 const ghostStrokeWidth  = 2;          // line weight of the ghost (history) polygons
 const activeFillOpacity = 0.04;       // white fill opacity inside the active polygon
 const categoryTextSize  = 'text-base'; // Tailwind-style size token for category labels
-const arrowColor        = 'black';    // color of the + / − buttons
-const arrowOpacity      = 0.60;       // resting opacity of the + / − buttons (0–1)
+const arrowColor        = 'white';    // color of the + / − buttons
+const arrowOpacity      = 0.30;       // resting opacity of the + / − buttons (0–1)
 const arrowFontSize     = 25;         // font size of the + / − buttons in viewBox units
 
 // ── Chart geometry ─────────────────────────────────────────────────────────────
@@ -38,7 +38,11 @@ const CATEGORIES = [
   { name: 'User Oriented', angle: 210 },
 ] as const;
 
-const DEFAULT_VALUES = [50, 60, 30, 70, 30, 50];
+// categoryScores keys in projects.json, in the same order as CATEGORIES
+const CAT_KEYS = ['places', 'strategy', 'publicRealm', 'dataDriven', 'interactivity', 'userOriented'] as const;
+
+// const DEFAULT_VALUES = [50, 60, 30, 70, 30, 50];
+const DEFAULT_VALUES = [70, 70, 70, 70, 70, 70];
 
 // Ghost stroke opacities indexed oldest → newest (5 slots)
 const GHOST_OPACITIES = [0.08, 0.14, 0.20, 0.28, 0.40];
@@ -87,7 +91,11 @@ function smoothClosedPath(pts: { x: number; y: number }[]): string {
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export default function RadarChart() {
+interface RadarChartProps {
+  onPlay?: (values: Record<string, number>) => void;
+}
+
+export default function RadarChart({ onPlay }: RadarChartProps) {
   const [values, setValues]         = useState<number[]>([...DEFAULT_VALUES]);
   const [ghosts, setGhosts]         = useState<number[][]>([]);
   const [played, setPlayed]         = useState(false);
@@ -116,7 +124,7 @@ export default function RadarChart() {
   const handlePlay = () => {
     setGhosts(prev => [...prev.slice(-4), [...values]]);
     setPlayed(true);
-    console.log('Radar selection:', Object.fromEntries(CATEGORIES.map((c, i) => [c.name, values[i]])));
+    onPlay?.(Object.fromEntries(CAT_KEYS.map((key, i) => [key, values[i]])));
   };
 
   const activePts  = values.map((v, i) => spokePoint(i, v));

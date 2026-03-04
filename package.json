@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-projects": "node scripts/generate-projects.js",
+    "generate-philosophy": "node scripts/generate-philosophy.js"
   },
   "dependencies": {
     "next": "16.1.6",

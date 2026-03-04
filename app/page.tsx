@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import RadarChart from "./components/RadarChart";
+import ProjectCards from "./components/ProjectCards";
+import DesignPhilosophy from "./components/DesignPhilosophy";
+import projectsData from "@/src/data/projects.json";
 
 export default function Home() {
   useEffect(() => {
@@ -12,18 +15,35 @@ export default function Home() {
   }, []);
 
   // Global Design parameters
-  const grainOpacity        = 0.15;        // change here to adjust grain intensity everywhere (background + cards)
+  const grainOpacity        = 0.20;        // change here to adjust grain intensity everywhere (background + cards)
   
-  // Design Solutions Cards Design parameters
-  const cardTitleSize       = "text-xl";  // change here to resize all 6 card titles
-  const cardDescSize        = "text-base"; // change here to resize all 6 card descriptions
-  const cardDescStripHeight = 120;         // px — change here to adjust all 6 description strip heights
-  const cardHeight          = 360;         // px — change here to adjust the height of all 6 cards
-  const cardGap             = 30;          // px — change here to adjust the spacing between all 6 cards
-
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) window.scrollTo({ top: el.offsetTop, behavior: "smooth" });
+  };
+
+  // ── Project selection — driven by RadarChart play button ─────────────────
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+
+  const handleRadarPlay = (radarValues: Record<string, number>) => {
+    // Projects whose composite fit score ≥ threshold are shown, sorted best-fit first.
+    // Fit score = sum over categories of (radarValue × projectScore / 100).
+    // Since each project typically has one dominant category at 80, a radarValue of
+    // 25 or more for that category produces a score ≥ 20 (the threshold).
+    const MATCH_THRESHOLD = 20;
+
+    const projectScore = (p: typeof projectsData.projects[number]) =>
+      Object.entries(p.categoryScores as Record<string, number>).reduce(
+        (sum, [key, val]) => sum + (radarValues[key] ?? 0) * val / 100, 0
+      );
+
+    const matched = projectsData.projects
+      .filter(p => projectScore(p) >= MATCH_THRESHOLD)
+      .sort((a, b) => projectScore(b) - projectScore(a))
+      .map(p => p.id);
+
+    setSelectedProjectIds(matched);
+    scrollToSection('project-cards');
   };
 
   const scrollToSectionBottom = (id: string) => {
@@ -205,7 +225,7 @@ export default function Home() {
         {/* Bottom nav hint — scroll down to Projects */}
         <div className="flex justify-center pb-8">
           <button
-            onClick={() => scrollToSection("design-solutions")}
+            onClick={() => scrollToSection("design-philosophy")}
             className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer"
           >
             <span>Projects</span>
@@ -215,151 +235,8 @@ export default function Home() {
 
       </section>
 
-      {/* ── Section 4: Design Solutions ── */}
-      <section
-        id="design-solutions"
-        className="relative z-2 bg-white h-screen flex flex-col px-10 py-18"
-      >
-        {/* Heading */}
-        <h2 className="font-serif font-bold text-[#282829] text-5xl text-center mb-8">
-          Design Solutions
-        </h2>
-
-        {/* Intro paragraph */}
-        <p
-          className="font-sans text-[#444444] text-sm leading-relaxed text-center mx-auto mb-14"
-          style={{ maxWidth: "65%" }}
-        >
-          When understanding Design as a way to approach a problem, the nature
-          of the solution can take different forms and not being uniquely
-          constrained by one form of practice. This portfolio is organized by
-          the solutions that each work aims to achieve.
-        </p>
-
-        {/* 3×2 category card grid — fills remaining section height */}
-        <div className="flex-1 grid grid-cols-3 grid-rows-2 min-h-0" style={{ gap: cardGap, minHeight: cardHeight * 2 + cardGap }}>
-
-          {/* Card 1 — Interactivity: square cutout */}
-          <div className="relative bg-[#282829] flex flex-col overflow-hidden">
-            <div className="absolute top-0 right-0 bg-white" style={{ width: 40, height: 40 }} />
-            <div className="p-4 pb-0">
-              <span className={`font-sans font-bold text-white uppercase tracking-widest ${cardTitleSize}`}>Interactivity</span>
-            </div>
-            <div className="flex-1 overflow-hidden px-4 py-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/categories/Interactivity_01.png" alt="Interactivity" className="w-full h-full object-contain" />
-            </div>
-            <div className="bg-[#1a1a1b] px-4 py-3 overflow-hidden" style={{ height: cardDescStripHeight }}>
-              <p className={`font-sans text-white/60 leading-relaxed ${cardDescSize}`}>Projects and Studies that explore design solutions that bridge between the digital and the tangible</p>
-            </div>
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: grainOpacity }} aria-hidden="true">
-              <rect width="100%" height="100%" filter="url(#page-noise)" />
-            </svg>
-          </div>
-
-          {/* Card 2 — Public Realm: triangular cutout */}
-          <div className="relative bg-[#282829] flex flex-col overflow-hidden">
-            <div className="absolute top-0 right-0 bg-white" style={{ width: 60, height: 30 }} />
-            <div className="p-4 pb-0">
-              <span className={`font-sans font-bold text-white uppercase tracking-widest ${cardTitleSize}`}>Public Realm</span>
-            </div>
-            <div className="flex-1 overflow-hidden px-4 py-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/categories/Public-Realm_01.png" alt="Public Realm" className="w-full h-full object-contain" />
-            </div>
-            <div className="bg-[#1a1a1b] px-4 py-3 overflow-hidden" style={{ height: cardDescStripHeight }}>
-              <p className={`font-sans text-white/60 leading-relaxed ${cardDescSize}`}>Work that ambitions to improve the public environment through interventions in different design scales.</p>
-            </div>
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: grainOpacity }} aria-hidden="true">
-              <rect width="100%" height="100%" filter="url(#page-noise)" />
-            </svg>
-          </div>
-
-          {/* Card 3 — User-Oriented: quarter-circle cutout */}
-          <div className="relative bg-[#282829] flex flex-col overflow-hidden">
-            <div className="absolute top-0 right-0 bg-white" style={{ width: 30, height: 60 }} />
-            <div className="p-4 pb-0">
-              <span className={`font-sans font-bold text-white uppercase tracking-widest ${cardTitleSize}`}>User-Oriented</span>
-            </div>
-            <div className="flex-1 overflow-hidden px-4 py-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/categories/User-Oriented_01.png" alt="User-Oriented" className="w-full h-full object-contain" />
-            </div>
-            <div className="bg-[#1a1a1b] px-4 py-3 overflow-hidden" style={{ height: cardDescStripHeight }}>
-              <p className={`font-sans text-white/60 leading-relaxed ${cardDescSize}`}>A project that results on a taxonomy exercise of the user in order to create an environment that would represent them.</p>
-            </div>
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: grainOpacity }} aria-hidden="true">
-              <rect width="100%" height="100%" filter="url(#page-noise)" />
-            </svg>
-          </div>
-
-          {/* Card 4 — Data-Driven: staircase cutout */}
-          <div className="relative bg-[#282829] flex flex-col overflow-hidden">
-            <div className="absolute top-0 right-0 bg-white" style={{ width: 50, height: 50 }} />
-            <div className="p-4 pb-0">
-              <span className={`font-sans font-bold text-white uppercase tracking-widest ${cardTitleSize}`}>Data-Driven</span>
-            </div>
-            <div className="flex-1 overflow-hidden px-4 py-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/categories/Data-Driven_01.png" alt="Data-Driven" className="w-full h-full object-contain" />
-            </div>
-            <div className="bg-[#1a1a1b] px-4 py-3 overflow-hidden" style={{ height: cardDescStripHeight }}>
-              <p className={`font-sans text-white/60 leading-relaxed ${cardDescSize}`}>Solutions that ambition to unveil insights that help to make design-driven decisions, as well as storytelling pieces.</p>
-            </div>
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: grainOpacity }} aria-hidden="true">
-              <rect width="100%" height="100%" filter="url(#page-noise)" />
-            </svg>
-          </div>
-
-          {/* Card 5 — Strategy: thin horizontal bar cutout */}
-          <div className="relative bg-[#282829] flex flex-col overflow-hidden">
-            <div className="absolute top-0 right-0 bg-white" style={{ width: 80, height: 20 }} />
-            <div className="p-4 pb-0">
-              <span className={`font-sans font-bold text-white uppercase tracking-widest ${cardTitleSize}`}>Strategy</span>
-            </div>
-            <div className="flex-1 overflow-hidden px-4 py-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/categories/Strategy_01.png" alt="Strategy" className="w-full h-full object-contain" />
-            </div>
-            <div className="bg-[#1a1a1b] px-4 py-3 overflow-hidden" style={{ height: cardDescStripHeight }}>
-              <p className={`font-sans text-white/60 leading-relaxed ${cardDescSize}`}>Ideas and Conceptualization of the solutions to a problem in predetermined range of time, and that would create an exciting and hopeful future.</p>
-            </div>
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: grainOpacity }} aria-hidden="true">
-              <rect width="100%" height="100%" filter="url(#page-noise)" />
-            </svg>
-          </div>
-
-          {/* Card 6 — Places: parallelogram cutout */}
-          <div className="relative bg-[#282829] flex flex-col overflow-hidden">
-            <div className="absolute top-0 right-0 bg-white" style={{ width: 55, height: 40 }} />
-            <div className="p-4 pb-0">
-              <span className={`font-sans font-bold text-white uppercase tracking-widest ${cardTitleSize}`}>Places</span>
-            </div>
-            <div className="flex-1 overflow-hidden px-4 py-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/categories/Place_01.png" alt="Places" className="w-full h-full object-contain" />
-            </div>
-            <div className="bg-[#1a1a1b] px-4 py-3 overflow-hidden" style={{ height: cardDescStripHeight }}>
-              <p className={`font-sans text-white/60 leading-relaxed ${cardDescSize}`}>Projects and studies which ultimate goal is to improve and engage the user experience.</p>
-            </div>
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: grainOpacity }} aria-hidden="true">
-              <rect width="100%" height="100%" filter="url(#page-noise)" />
-            </svg>
-          </div>
-
-        </div>
-
-        {/* Bottom nav hint — scroll down to Project Showcase */}
-        <div className="flex justify-center mt-auto pt-6 pb-2">
-          <button
-            onClick={() => scrollToSection("project-selection")}
-            className="font-sans text-[#282829]/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-[#282829]/65 transition-colors cursor-pointer"
-          >
-            <span>Project Showcase</span>
-            <span>▼</span>
-          </button>
-        </div>
-      </section>
+      {/* ── Section 4: Design Philosophy ── */}
+      <DesignPhilosophy onScrollDown={() => scrollToSection('project-selection')} />
 
       {/* ── Section 5: Project Selection by Type ── */}
       <section
@@ -385,38 +262,12 @@ export default function Home() {
           Please configure a custom project showcase based on the design solution categories
         </p>
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full min-h-0">
-          <RadarChart />
+          <RadarChart onPlay={handleRadarPlay} />
         </div>
       </section>
 
-      {/* ── Section 6: Project Cards (alternating backgrounds) ── */}
-      <section id="project-cards">
-        {/* Card slot A — dark */}
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <p className="font-sans text-white/30 text-xs uppercase tracking-[0.2em]">
-              Section 6 · Card A — Dark
-            </p>
-            <h2 className="font-serif font-bold text-white text-4xl">Project Card</h2>
-            <p className="font-sans text-white/40 text-sm mt-2">
-              Placeholder — project card (dark background)
-            </p>
-          </div>
-        </div>
-
-        {/* Card slot B — light */}
-        <div className="relative z-2 min-h-screen bg-white flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <p className="font-sans text-black/30 text-xs uppercase tracking-[0.2em]">
-              Section 6 · Card B — Light
-            </p>
-            <h2 className="font-serif font-bold text-[#282829] text-4xl">Project Card</h2>
-            <p className="font-sans text-black/40 text-sm mt-2">
-              Placeholder — project card (light background)
-            </p>
-          </div>
-        </div>
-      </section>
+      {/* ── Section 6: Project Cards ── */}
+      <ProjectCards selectedProjectIds={selectedProjectIds} />
 
       {/* ── Section 7: Contact (bottom) ── */}
       <section

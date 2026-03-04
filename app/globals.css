@@ -9,6 +9,11 @@ html {
   overscroll-behavior-y: none;
 }
 
+/* ── ProjectCards: hide scrollbar on the isolated inner scroll container ── */
+.cards-scroll::-webkit-scrollbar {
+  display: none; /* Chrome / Safari */
+}
+
 body {
   background: linear-gradient(160deg, #262627 0%, #1c1c1d 100%);
   background-attachment: fixed;
@@ -32,4 +37,33 @@ body {
   0%   { transform: scale(1);    }
   25%  { transform: scale(0.85); }
   100% { transform: scale(1);    }
+}
+
+/* ── DesignPhilosophy animations ── */
+
+/* New photo drops in from above and settles into the stack */
+@keyframes photo-drop {
+  0%   { transform: translateY(-70px); opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: translateY(0);     opacity: 1; }
+}
+
+@keyframes philosophy-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── ProjectCards nav arrow animations ── */
+@keyframes nav-bounce-left {
+  0%   { transform: translateX(0);    }
+  35%  { transform: translateX(-7px); }
+  70%  { transform: translateX(2px);  }
+  100% { transform: translateX(0);    }
+}
+
+@keyframes nav-bounce-right {
+  0%   { transform: translateX(0);   }
+  35%  { transform: translateX(7px); }
+  70%  { transform: translateX(-2px); }
+  100% { transform: translateX(0);   }
 }
