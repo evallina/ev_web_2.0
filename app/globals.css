@@ -48,9 +48,37 @@ body {
   100% { transform: translateY(0);     opacity: 1; }
 }
 
+@keyframes photo-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @keyframes philosophy-cursor-blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
+}
+
+/* ── RadarChart preset button animated border ── */
+@keyframes preset-btn-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ── RadarChart reset button icon spin ── */
+@keyframes icon-spin-once {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── RadarChart down-arrow hover pulse ── */
+@keyframes down-arrow-hover {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(6px); }
+  100% { transform: translateY(0); }
+}
+
+.radar-down-arrow-btn:hover svg {
+  animation: down-arrow-hover 1s ease-in-out infinite;
 }
 
 /* ── ProjectCards nav arrow animations ── */

@@ -16,6 +16,13 @@ export default function Home() {
 
   // Global Design parameters
   const grainOpacity        = 0.20;        // change here to adjust grain intensity everywhere (background + cards)
+
+  // ── Works section dark-shape controls ──────────────────────────────────────
+  // These variables control the white framing panels that surround the dark chart area.
+  const darkShapeTopPadding         = 65;    // px — white band between section top edge and dark area
+  const darkShapeBottomCornerRadius = 0;     // px — rounds the inner top corners of the bottom white panels
+  const darkShapeBottomCornerWidth  = '20%'; // width of each white bottom corner panel (left and right)
+  const darkShapeBottomPanelHeight  = 60;    // px — height of the white bottom panels
   
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -228,7 +235,7 @@ export default function Home() {
             onClick={() => scrollToSection("design-philosophy")}
             className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer"
           >
-            <span>Projects</span>
+            <span>Approach & Work</span>
             <span>▼</span>
           </button>
         </div>
@@ -247,21 +254,29 @@ export default function Home() {
         <div className="absolute inset-y-0 left-0 w-10 bg-white z-2 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-10 bg-white z-2 pointer-events-none" />
 
-        {/* White bottom panels — leave ~40% dark gap in the center */}
-        <div className="absolute bottom-0 left-0 bg-white z-2 pointer-events-none" style={{ right: '80%', height: '160px' }} />
-        <div className="absolute bottom-0 right-0 bg-white z-2 pointer-events-none" style={{ left: '80%', height: '60px' }} />
+        {/* White top strip — darkShapeTopPadding controls how far down the dark area starts */}
+        <div className="absolute top-0 left-0 right-0 bg-white z-2 pointer-events-none" style={{ height: darkShapeTopPadding }} />
+
+        {/* White bottom panels — darkShapeBottomCornerWidth controls panel width;
+            darkShapeBottomPanelHeight controls height;
+            darkShapeBottomCornerRadius rounds the inner top corners */}
+        <div className="absolute bottom-0 left-0 bg-white z-2 pointer-events-none"
+          style={{ width: darkShapeBottomCornerWidth, height: darkShapeBottomPanelHeight, borderTopRightRadius: darkShapeBottomCornerRadius }} />
+        <div className="absolute bottom-0 right-0 bg-white z-2 pointer-events-none"
+          style={{ width: darkShapeBottomCornerWidth, height: darkShapeBottomPanelHeight, borderTopLeftRadius: darkShapeBottomCornerRadius }} />
 
         {/* Content — above white panels */}
         <h2 className="relative z-10 font-serif font-bold text-white text-4xl text-center mb-3">
-          Project Selection by Type
+          Work Selection
         </h2>
         <p
           className="relative z-10 font-sans text-white/40 text-sm leading-relaxed text-center mx-auto"
           style={{ maxWidth: "65%" }}
         >
-          Please configure a custom project showcase based on the design solution categories
+            Please configure a custom project showcase based on the design solution categories.
         </p>
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full min-h-0">
+        <div className="h-5" />
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-start pt-4 w-full min-h-0">
           <RadarChart onPlay={handleRadarPlay} />
         </div>
       </section>

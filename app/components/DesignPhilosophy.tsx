@@ -5,13 +5,24 @@ import principlesData from '@/src/data/designPrinciples.json';
 import philosophyImages from '@/src/data/philosophyImages.json';
 
 // ── Design variables ────────────────────────────────────────────────────────
-const typingSpeed       = 60;   // ms per character while typing
-const erasingSpeed      = 40;   // ms per character while erasing
-const pauseDuration     = 2200; // ms to hold the fully-typed phrase before erasing
-const photoDropInterval = 300;  // ms between each photo appearing on the stack
+const typingSpeed       = 60;                        // ms per character while typing
+const erasingSpeed      = 20;                        // ms per character while erasing
+const pauseDuration     = 3200;                      // ms to hold the fully-typed phrase
+const photoDropInterval   = 4000;                       // ms between each photo appearing
+const photoFadeInDuration = 2000;                       // ms for each photo to fade in
+const photoOpacity        = 0.9;                       // opacity of background photos (0–1)
+const grainOpacity        = 0.60;                      // opacity of grain overlay (0–1)
+const headingSize         = 'clamp(3rem, 5vw, 5rem)'; // font-size of the heading
+const headingColor        = '#1C1C1C';                 // color of "Design" and the typed phrase, '#282829' is the Default. '#ffffff'(White)
+const typedLineWidth      = '60vw';                    // max-width of the typed continuation line
+const textShadowOpacity   = 0.2;                      // opacity of the drop shadow behind the heading text (0–1)
+
+// Max random offset from the section center for each image (px)
+const maxOffsetX = 0; // horizontal scatter range: ±maxOffsetX , before was 80
+const maxOffsetY = 0; // vertical scatter range:   ±maxOffsetY, before was 30
 
 // ── Internal constants ──────────────────────────────────────────────────────
-const MAX_STACK_VISIBLE = 4;
+const MAX_STACK_VISIBLE = 1;
 
 const PLACEHOLDER_COLORS = [
   'hsl(220, 10%, 86%)',
@@ -27,16 +38,19 @@ const PLACEHOLDER_COLORS = [
 // ── Types ───────────────────────────────────────────────────────────────────
 interface StackItem {
   photoIdx: number;
-  rotation: number; // degrees, -5 to +5
-  scale: number;    // 0.95 to 1.05
+  x: number;       // center x position in px
+  y: number;       // center y position in px
   key: number;
+  visible: boolean; // false on first paint → true after browser paints → triggers CSS transition
 }
 
 // ── Typewriter hook ─────────────────────────────────────────────────────────
+// Phase 'pausing' removed — the pause is handled via setTimeout so no
+// setState call happens synchronously inside the effect body.
 function useTypewriter(phrases: string[]) {
   const [display, setDisplay]     = useState('');
   const [phraseIdx, setPhraseIdx] = useState(0);
-  const [phase, setPhase]         = useState<'typing' | 'pausing' | 'erasing'>('typing');
+  const [phase, setPhase]         = useState<'typing' | 'erasing'>('typing');
   const charIdx = useRef(0);
 
   useEffect(() => {
@@ -51,14 +65,10 @@ function useTypewriter(phrases: string[]) {
         }, typingSpeed);
         return () => clearTimeout(t);
       } else {
-        const t = setTimeout(() => setPhase('pausing'), pauseDuration);
+        // Done typing — wait pauseDuration then start erasing
+        const t = setTimeout(() => setPhase('erasing'), pauseDuration);
         return () => clearTimeout(t);
       }
-    }
-
-    if (phase === 'pausing') {
-      setPhase('erasing');
-      return;
     }
 
     if (phase === 'erasing') {
@@ -69,9 +79,12 @@ function useTypewriter(phrases: string[]) {
         }, erasingSpeed);
         return () => clearTimeout(t);
       } else {
-        setPhraseIdx(i => i + 1);
-        setPhase('typing');
-        return;
+        // Done erasing — advance to next phrase
+        const t = setTimeout(() => {
+          setPhraseIdx(i => i + 1);
+          setPhase('typing');
+        }, 0);
+        return () => clearTimeout(t);
       }
     }
   }, [display, phase, phraseIdx, phrases]);
@@ -89,13 +102,20 @@ function usePhotoStack(photoCount: number) {
     if (photoCount === 0) return;
 
     const addPhoto = () => {
-      const rotation = Math.random() * 10 - 5;       // -5° to +5°
-      const scale    = 0.95 + Math.random() * 0.10;  // 0.95 to 1.05
+      const x = window.innerWidth  / 2 + (Math.random() * 2 - 1) * maxOffsetX;
+      const y = window.innerHeight / 2 + (Math.random() * 2 - 1) * maxOffsetY;
       const photoIdx = photoIdxRef.current % photoCount;
       photoIdxRef.current += 1;
       keyRef.current      += 1;
       const key = keyRef.current;
-      setStack(prev => [...prev, { photoIdx, rotation, scale, key }].slice(-MAX_STACK_VISIBLE));
+      setStack(prev => [...prev, { photoIdx, x, y, key, visible: false }].slice(-MAX_STACK_VISIBLE));
+      // Two rAF frames ensure the browser has painted opacity:0 before we flip to
+      // opacity:photoOpacity, so the CSS transition actually fires.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setStack(prev => prev.map(i => i.key === key ? { ...i, visible: true } : i));
+        });
+      });
     };
 
     addPhoto(); // first photo immediately, no delay
@@ -123,107 +143,133 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
   return (
     <section
       id="design-philosophy"
-      className="relative bg-white min-h-screen flex flex-col md:flex-row overflow-hidden"
+      className="relative bg-white h-screen overflow-hidden"
     >
 
-      {/* ── Text column ──────────────────────────────────────────────────── */}
-      <div className="flex flex-col justify-center items-center md:items-start text-center md:text-left px-8 md:px-16 pt-20 pb-8 md:py-0 w-full md:w-[60%]">
+      {/* ── Photo background layer ───────────────────────────────────────── */}
+      {stack.map((item) => {
+        const bg = hasPhotos
+          ? undefined
+          : PLACEHOLDER_COLORS[item.photoIdx % PLACEHOLDER_COLORS.length];
 
-        <p className="font-sans text-[#282829]/40 text-xs uppercase tracking-[0.25em] mb-8">
-          My Design Philosophy
-        </p>
+        return (
+          // Wrapper: positions the image's CENTER at the random (x, y) point
+          <div
+            key={item.key}
+            style={{
+              position: 'absolute',
+              left: item.x,
+              top: item.y,
+              transform: 'translate(-50%, -50%)',
+              opacity: item.visible ? photoOpacity : 0,
+              transition: `opacity ${photoFadeInDuration}ms ease-out`,
+            }}
+          >
+            {hasPhotos ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={photos[item.photoIdx]}
+                alt=""
+                aria-hidden="true"
+                style={{
+                  maxWidth: '65vw',
+                  maxHeight: '65vh',
+                  width: 'auto',
+                  height: 'auto',
+                  display: 'block',
+                  boxShadow: '0 8px 28px rgba(0,0,0,0.12)',
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '65vw',
+                  height: '45vw',
+                  background: bg,
+                  boxShadow: '0 8px 28px rgba(0,0,0,0.12)',
+                }}
+              />
+            )}
+          </div>
+        );
+      })}
 
-        {/* "Design" + typed continuation on ONE line */}
-        <div
-          className="font-serif font-bold text-[#282829]"
-          style={{ fontSize: 'clamp(2rem, 5vw, 3.75rem)', lineHeight: 1.2 }}
-        >
-          <span>Design </span>
-          <span style={{ fontWeight: 400 }}>{displayText}</span>
+      {/* ── Grain overlay ────────────────────────────────────────────────── */}
+      <svg
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 2,
+          opacity: grainOpacity,
+          pointerEvents: 'none',
+        }}
+      >
+        <filter id="philosophy-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#philosophy-grain)" />
+      </svg>
 
-          {/* Blinking cursor */}
+      {/* ── Label — pinned top center ─────────────────────────────────────── */}
+      <p
+        className="font-sans text-[#282829]/40 text-xs uppercase tracking-[0.25em]"
+        style={{ position: 'absolute', top: '5.5rem', left: 0, right: 0, textAlign: 'center', zIndex: 10 }}
+      >
+        My Design Philosophy
+      </p>
+
+      {/* ── Heading — centered in section ────────────────────────────────── */}
+      <div
+        className="font-serif font-bold"
+        style={{
+          color: headingColor,
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          paddingTop: 'calc(35vh - 3rem)', // anchors "Design" near vertical center
+          zIndex: 10,
+          pointerEvents: 'none',
+        }}
+      >
+        {/* "Design" — fixed first line */}
+        <div style={{ fontSize: headingSize, lineHeight: 1.15, textShadow: `0 2px 24px rgba(0,0,0,${textShadowOpacity})` }}>Design</div>
+
+        {/* Typed continuation — second line */}
+        <div style={{ fontSize: headingSize, lineHeight: 1.15, fontWeight: 400, maxWidth: typedLineWidth, textAlign: 'center', textShadow: `0 2px 24px rgba(0,0,0,${textShadowOpacity})` }}>
+          {displayText}
           <span
             aria-hidden="true"
             style={{
               display: 'inline-block',
               width: 3,
               height: '0.75em',
-              background: '#282829',
+              background: headingColor,
               marginLeft: 3,
               verticalAlign: 'middle',
               animation: 'philosophy-cursor-blink 800ms step-end infinite',
             }}
           />
         </div>
-
-        {onScrollDown && (
-          <button
-            onClick={onScrollDown}
-            className="mt-16 font-sans text-[#282829]/35 text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:text-[#282829]/65 transition-colors cursor-pointer self-center md:self-start"
-          >
-            <span>Works</span>
-            <span>▼</span>
-          </button>
-        )}
       </div>
 
-      {/* ── Photo stack column ───────────────────────────────────────────── */}
-      <div className="relative w-full md:w-[40%] flex items-center justify-center px-6 md:px-0 py-12 md:py-0">
-        {/*
-          Container sized to fill most of the column.
-          85% width + aspect-ratio lets the height auto-compute so
-          absolutely-positioned stack items always fill it correctly.
-        */}
-        <div style={{ position: 'relative', width: '85%', height: '70vh' }}>
-          {stack.map((item) => {
-            const bg = hasPhotos
-              ? undefined
-              : PLACEHOLDER_COLORS[item.photoIdx % PLACEHOLDER_COLORS.length];
-
-            return (
-              <div
-                key={item.key}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  animation: 'none',
-                }}
-              >
-                {hasPhotos ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={photos[item.photoIdx]}
-                    alt=""
-                    aria-hidden="true"
-                    style={{
-                      maxWidth: '92%',
-                      maxHeight: '92%',
-                      width: 'auto',
-                      height: 'auto',
-                      display: 'block',
-                      transform: `rotate(${item.rotation}deg) scale(${item.scale})`,
-                      boxShadow: '0 8px 28px rgba(0,0,0,0.18)',
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: '92%',
-                      height: '92%',
-                      background: bg,
-                      transform: `rotate(${item.rotation}deg) scale(${item.scale})`,
-                      boxShadow: '0 8px 28px rgba(0,0,0,0.18)',
-                    }}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* ── "Works" link — pinned bottom center ──────────────────────────── */}
+      {onScrollDown && (
+        <button
+          onClick={onScrollDown}
+          className="font-sans text-[#282829]/35 text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:text-[#282829]/65 transition-colors cursor-pointer"
+          style={{ position: 'absolute', bottom: '2.5rem', left: 0, right: 0, margin: '0 auto', width: 'fit-content', zIndex: 10 }}
+        >
+          <span>Works</span>
+          <span>▼</span>
+        </button>
+      )}
 
     </section>
   );
