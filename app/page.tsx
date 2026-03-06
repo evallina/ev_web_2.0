@@ -30,26 +30,41 @@ export default function Home() {
   };
 
   // ── Project selection — driven by RadarChart play button ─────────────────
-  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const [selectedProjectIds,     setSelectedProjectIds]     = useState<string[]>([]);
+  const [selectedProjectScores,  setSelectedProjectScores]  = useState<Record<string, number>>({});
 
   const handleRadarPlay = (radarValues: Record<string, number>) => {
-    // Projects whose composite fit score ≥ threshold are shown, sorted best-fit first.
     // Fit score = sum over categories of (radarValue × projectScore / 100).
-    // Since each project typically has one dominant category at 80, a radarValue of
-    // 25 or more for that category produces a score ≥ 20 (the threshold).
+    // NOTE: projects.json has a `priority` field that is NOT yet factored in.
     const MATCH_THRESHOLD = 20;
 
-    const projectScore = (p: typeof projectsData.projects[number]) =>
+    type Project = typeof projectsData.projects[number];
+    const rawScore = (p: Project) =>
       Object.entries(p.categoryScores as Record<string, number>).reduce(
         (sum, [key, val]) => sum + (radarValues[key] ?? 0) * val / 100, 0
       );
 
-    const matched = projectsData.projects
-      .filter(p => projectScore(p) >= MATCH_THRESHOLD)
-      .sort((a, b) => projectScore(b) - projectScore(a))
-      .map(p => p.id);
+    // ── Debug logging ────────────────────────────────────────────────────
+    console.group('[RadarChart → ProjectCards] Play triggered');
+    console.log('Radar values:', radarValues);
+    const debugRows = projectsData.projects.map(p => {
+      const raw      = rawScore(p);
+      const priority = (p as Project & { priority?: number }).priority ?? 0;
+      return { id: p.id, rawScore: +raw.toFixed(2), priorityBonus: priority, finalScore: +raw.toFixed(2) };
+    });
+    console.table(debugRows);
+    const matched = debugRows
+      .filter(r => r.finalScore >= MATCH_THRESHOLD)
+      .sort((a, b) => b.finalScore - a.finalScore);
+    console.log('Matched & sorted:', matched.map(r => `${r.id} (${r.finalScore})`).join(', ') || '— none —');
+    console.groupEnd();
+    // ────────────────────────────────────────────────────────────────────
 
-    setSelectedProjectIds(matched);
+    const scores: Record<string, number> = {};
+    matched.forEach(r => { scores[r.id] = r.finalScore; });
+
+    setSelectedProjectIds(matched.map(r => r.id));
+    setSelectedProjectScores(scores);
     scrollToSection('project-cards');
   };
 
@@ -282,7 +297,7 @@ export default function Home() {
       </section>
 
       {/* ── Section 6: Project Cards ── */}
-      <ProjectCards selectedProjectIds={selectedProjectIds} />
+      <ProjectCards selectedProjectIds={selectedProjectIds} selectedProjectScores={selectedProjectScores} />
 
       {/* ── Section 7: Contact (bottom) ── */}
       <section

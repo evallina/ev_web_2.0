@@ -11,13 +11,13 @@
       ],
       "categoryScores": {
         "interactivity": 80,
-        "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 0,
-        "places": 0
+        "publicRealm": 50,
+        "userOriented": 20,
+        "dataDriven": 35,
+        "strategy": 5,
+        "places": 15
       },
-      "priority": 0
+      "priority": 3
     },
     {
       "id": "EV-02",
@@ -29,14 +29,14 @@
         "/images/projects/EV-02_Interactive_Animap/2026-02_Interactive_EV-02_Animap_LMN Tech Studio.jpg"
       ],
       "categoryScores": {
-        "interactivity": 80,
-        "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 0,
-        "places": 0
+        "interactivity": 100,
+        "publicRealm": 5,
+        "userOriented": 20,
+        "dataDriven": 70,
+        "strategy": 20,
+        "places": 5
       },
-      "priority": 0
+      "priority": 5
     },
     {
       "id": "EV-03",
@@ -48,14 +48,14 @@
         "/images/projects/EV-03_Interactive_Following the Conversation/2026-02_Interactive_EV-03_Following the Conversation_Harvard GSD.jpg"
       ],
       "categoryScores": {
-        "interactivity": 80,
+        "interactivity": 85,
         "publicRealm": 0,
         "userOriented": 0,
-        "dataDriven": 0,
+        "dataDriven": 60,
         "strategy": 0,
         "places": 0
       },
-      "priority": 0
+      "priority": 2
     },
     {
       "id": "EV-04",
@@ -67,14 +67,14 @@
         "/images/projects/EV-04_Interactive_Music Footprint/2026-02_Interactive_EV-04_Music Footprint_Harvard SEAS.jpg"
       ],
       "categoryScores": {
-        "interactivity": 80,
+        "interactivity": 85,
         "publicRealm": 0,
         "userOriented": 0,
-        "dataDriven": 0,
+        "dataDriven": 40,
         "strategy": 0,
         "places": 0
       },
-      "priority": 0
+      "priority": 2
     },
     {
       "id": "EV-05",
@@ -86,14 +86,14 @@
         "/images/projects/EV-05_Interactive_Vestige Augmented/2026-02_Interactive_EV-05_Vestige Augmented_Harvard SEAS.jpg"
       ],
       "categoryScores": {
-        "interactivity": 80,
-        "publicRealm": 0,
+        "interactivity": 90,
+        "publicRealm": 60,
         "userOriented": 0,
-        "dataDriven": 0,
+        "dataDriven": 10,
         "strategy": 0,
         "places": 0
       },
-      "priority": 0
+      "priority": 1
     },
     {
       "id": "EV-06",
@@ -108,11 +108,11 @@
         "interactivity": 80,
         "publicRealm": 0,
         "userOriented": 0,
-        "dataDriven": 0,
+        "dataDriven": 10,
         "strategy": 0,
         "places": 0
       },
-      "priority": 0
+      "priority": 2
     },
     {
       "id": "EV-07",
@@ -126,14 +126,14 @@
         "/images/projects/EV-07_User-Oriented_University of Nevada Reno John Tulloch Business Building/2026-02_User-Oriented_EV-07_University of Nevada Reno John Tulloch Business Building_LMN Architects_Page3.jpg"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 0,
-        "userOriented": 80,
-        "dataDriven": 0,
-        "strategy": 0,
-        "places": 0
+        "interactivity": 5,
+        "publicRealm": 50,
+        "userOriented": 100,
+        "dataDriven": 30,
+        "strategy": 40,
+        "places": 75
       },
-      "priority": 0
+      "priority": 5
     },
     {
       "id": "EV-08",
@@ -145,14 +145,14 @@
         "/images/projects/EV-08_User-Oriented_iUA Interactive Urban Analysis/2026-02_User-Oriented_EV-08_iUA Interactive Urban Analysis_Harvard GSD.jpg"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 0,
-        "userOriented": 80,
-        "dataDriven": 0,
-        "strategy": 0,
-        "places": 0
+        "interactivity": 70,
+        "publicRealm": 50,
+        "userOriented": 100,
+        "dataDriven": 70,
+        "strategy": 60,
+        "places": 20
       },
-      "priority": 0
+      "priority": 4
     },
     {
       "id": "EV-09",
@@ -166,12 +166,12 @@
       "categoryScores": {
         "interactivity": 0,
         "publicRealm": 0,
-        "userOriented": 80,
+        "userOriented": 90,
         "dataDriven": 0,
         "strategy": 0,
-        "places": 0
+        "places": 60
       },
-      "priority": 0
+      "priority": 3
     },
     {
       "id": "EV-10",
@@ -187,10 +187,10 @@
         "publicRealm": 0,
         "userOriented": 80,
         "dataDriven": 0,
-        "strategy": 0,
-        "places": 0
+        "strategy": 60,
+        "places": 70
       },
-      "priority": 0
+      "priority": 1
     },
     {
       "id": "EV-11",
@@ -203,13 +203,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
-        "userOriented": 80,
+        "publicRealm": 60,
+        "userOriented": 90,
         "dataDriven": 0,
-        "strategy": 0,
-        "places": 0
+        "strategy": 40,
+        "places": 70
       },
-      "priority": 0
+      "priority": 3
     },
     {
       "id": "EV-12",
@@ -222,13 +222,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 80,
-        "places": 0
+        "publicRealm": 60,
+        "userOriented": 40,
+        "dataDriven": 60,
+        "strategy": 100,
+        "places": 50
       },
-      "priority": 0
+      "priority": 4
     },
     {
       "id": "EV-13",
@@ -241,13 +241,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
-        "userOriented": 0,
+        "publicRealm": 50,
+        "userOriented": 50,
         "dataDriven": 0,
-        "strategy": 80,
-        "places": 0
+        "strategy": 90,
+        "places": 50
       },
-      "priority": 0
+      "priority": 3
     },
     {
       "id": "EV-14",
@@ -260,13 +260,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
+        "publicRealm": 60,
         "userOriented": 0,
-        "dataDriven": 0,
+        "dataDriven": 50,
         "strategy": 80,
-        "places": 0
+        "places": 20
       },
-      "priority": 0
+      "priority": 3
     },
     {
       "id": "EV-15",
@@ -279,13 +279,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 80,
-        "userOriented": 0,
+        "publicRealm": 100,
+        "userOriented": 50,
         "dataDriven": 0,
-        "strategy": 0,
-        "places": 0
+        "strategy": 50,
+        "places": 40
       },
-      "priority": 0
+      "priority": 3
     },
     {
       "id": "EV-16",
@@ -298,13 +298,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 80,
-        "userOriented": 0,
+        "publicRealm": 100,
+        "userOriented": 10,
         "dataDriven": 0,
-        "strategy": 0,
-        "places": 0
+        "strategy": 70,
+        "places": 50
       },
-      "priority": 0
+      "priority": 4
     },
     {
       "id": "EV-17",
@@ -317,13 +317,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 80,
+        "publicRealm": 90,
         "userOriented": 0,
         "dataDriven": 0,
-        "strategy": 0,
+        "strategy": 50,
         "places": 0
       },
-      "priority": 0
+      "priority": 3
     },
     {
       "id": "EV-18",
@@ -336,13 +336,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 80,
-        "userOriented": 0,
+        "publicRealm": 100,
+        "userOriented": 50,
         "dataDriven": 0,
-        "strategy": 0,
-        "places": 0
+        "strategy": 75,
+        "places": 75
       },
-      "priority": 0
+      "priority": 5
     },
     {
       "id": "EV-19",
@@ -357,11 +357,11 @@
         "interactivity": 0,
         "publicRealm": 80,
         "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 0,
+        "dataDriven": 60,
+        "strategy": 50,
         "places": 0
       },
-      "priority": 0
+      "priority": 2
     },
     {
       "id": "EV-20",
@@ -374,13 +374,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 80,
+        "publicRealm": 90,
         "userOriented": 0,
         "dataDriven": 0,
-        "strategy": 0,
+        "strategy": 70,
         "places": 0
       },
-      "priority": 0
+      "priority": 3
     },
     {
       "id": "EV-21",
@@ -394,13 +394,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 80,
-        "strategy": 0,
+        "publicRealm": 80,
+        "userOriented": 50,
+        "dataDriven": 100,
+        "strategy": 50,
         "places": 0
       },
-      "priority": 0
+      "priority": 4
     },
     {
       "id": "EV-22",
@@ -412,14 +412,14 @@
         "/images/projects/EV-22_Data-Driven_WSBLE Station Feasibility Iterative Tool/2026-02_Data-Driven_EV-22_WSBLE Station Feasibility Iterative Tool_LMN Architects.jpg"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 80,
-        "strategy": 0,
+        "interactivity": 40,
+        "publicRealm": 20,
+        "userOriented": 20,
+        "dataDriven": 100,
+        "strategy": 50,
         "places": 0
       },
-      "priority": 0
+      "priority": 4
     },
     {
       "id": "EV-23",
@@ -432,13 +432,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
+        "publicRealm": 50,
         "userOriented": 0,
-        "dataDriven": 80,
-        "strategy": 0,
+        "dataDriven": 100,
+        "strategy": 80,
         "places": 0
       },
-      "priority": 0
+      "priority": 4
     },
     {
       "id": "EV-24",
@@ -451,13 +451,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
+        "publicRealm": 70,
         "userOriented": 0,
-        "dataDriven": 80,
+        "dataDriven": 90,
         "strategy": 0,
         "places": 0
       },
-      "priority": 0
+      "priority": 4
     },
     {
       "id": "EV-25",
@@ -471,13 +471,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
+        "publicRealm": 50,
         "userOriented": 0,
-        "dataDriven": 80,
-        "strategy": 0,
+        "dataDriven": 100,
+        "strategy": 75,
         "places": 0
       },
-      "priority": 0
+      "priority": 4
     },
     {
       "id": "EV-26",
@@ -490,13 +490,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
+        "publicRealm": 50,
         "userOriented": 0,
         "dataDriven": 0,
-        "strategy": 80,
+        "strategy": 100,
         "places": 0
       },
-      "priority": 0
+      "priority": 3
     },
     {
       "id": "EV-27",
@@ -508,14 +508,14 @@
         "/images/projects/EV-27_Strategy_Life Custodian/2026-02_Strategy_EV-27_Life Custodian_Harvard GSD.jpg"
       ],
       "categoryScores": {
-        "interactivity": 0,
+        "interactivity": 15,
         "publicRealm": 0,
         "userOriented": 0,
         "dataDriven": 0,
-        "strategy": 80,
+        "strategy": 90,
         "places": 0
       },
-      "priority": 0
+      "priority": 2
     },
     {
       "id": "EV-28",
@@ -529,12 +529,12 @@
       "categoryScores": {
         "interactivity": 0,
         "publicRealm": 0,
-        "userOriented": 0,
+        "userOriented": 70,
         "dataDriven": 0,
-        "strategy": 80,
+        "strategy": 100,
         "places": 0
       },
-      "priority": 0
+      "priority": 5
     },
     {
       "id": "EV-29",
@@ -548,13 +548,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
+        "publicRealm": 75,
         "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 0,
-        "places": 80
+        "dataDriven": 20,
+        "strategy": 10,
+        "places": 100
       },
-      "priority": 0
+      "priority": 5
     },
     {
       "id": "EV-30",
@@ -569,13 +569,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
+        "publicRealm": 70,
         "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 0,
-        "places": 80
+        "dataDriven": 90,
+        "strategy": 25,
+        "places": 100
       },
-      "priority": 0
+      "priority": 5
     },
     {
       "id": "EV-31",
@@ -588,13 +588,13 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 0,
+        "publicRealm": 25,
         "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 0,
-        "places": 80
+        "dataDriven": 75,
+        "strategy": 90,
+        "places": 90
       },
-      "priority": 0
+      "priority": 4
     },
     {
       "id": "EV-32",
@@ -611,9 +611,9 @@
         "userOriented": 0,
         "dataDriven": 0,
         "strategy": 0,
-        "places": 80
+        "places": 50
       },
-      "priority": 0
+      "priority": 1
     }
   ],
   "other": [

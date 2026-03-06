@@ -15,6 +15,9 @@ const backArrowColor   = 'rgba(255,255,255,0.60)';  // color — resting color o
 const backArrowHover   = 'rgba(255,255,255,0.50)';  // color — hover color of the ↑ arrow
 // └─────────────────────────────────────────────────────────────────────────────┘
 
+// ── Debug overlay ─────────────────────────────────────────────────────────────
+const showDebug = true; // set to false before going live
+
 // ── Internal layout constants (tied to page structure, not meant to be tweaked) ──
 const HEADER_H     = 48;  // px — height of the fixed header (set in layout.tsx)
 const SIDE_MARGIN  = 40;  // px — matches the px-10 side margins of all other sections
@@ -30,11 +33,12 @@ interface CardItem {
 }
 
 interface Props {
-  selectedProjectIds?: string[];
+  selectedProjectIds?:    string[];
+  selectedProjectScores?: Record<string, number>;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function ProjectCards({ selectedProjectIds }: Props) {
+export default function ProjectCards({ selectedProjectIds, selectedProjectScores = {} }: Props) {
   const { projects, other } = projectsData;
   const otherCards: string[] = other?.[0]?.cards ?? [];
 
@@ -71,6 +75,8 @@ export default function ProjectCards({ selectedProjectIds }: Props) {
 
   const containerRef  = useRef<HTMLDivElement>(null);
   const currentIdxRef = useRef(0);
+  const itemsLengthRef = useRef(items.length);
+  useEffect(() => { itemsLengthRef.current = items.length; });
 
   const updateIdx = useCallback((idx: number) => {
     setCurrentIdx(idx);
@@ -110,10 +116,10 @@ export default function ProjectCards({ selectedProjectIds }: Props) {
   const snapToCard = useCallback((idx: number) => {
     const container = containerRef.current;
     if (!container || container.clientWidth === 0) return;
-    const clamped = Math.max(0, Math.min(items.length - 1, idx));
+    const clamped = Math.max(0, Math.min(itemsLengthRef.current - 1, idx));
     updateIdx(clamped);
     container.scrollTo({ left: clamped * container.clientWidth, behavior: 'smooth' });
-  }, [items.length, updateIdx]);
+  }, [updateIdx]);
 
   // ── Navigation ─────────────────────────────────────────────────────────────
   const goPrev = () => { setLeftBounceKey(k => k + 1);  snapToCard(currentIdx - 1); };
@@ -142,7 +148,7 @@ export default function ProjectCards({ selectedProjectIds }: Props) {
     <section
       id="project-cards"
       style={isEmpty
-        ? { minHeight: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+        ? { minHeight: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }
         : { height: '100vh', position: 'relative', overflow: 'hidden' }
       }
       className={isEmpty ? 'px-10' : undefined}
@@ -340,6 +346,48 @@ export default function ProjectCards({ selectedProjectIds }: Props) {
           </div>
         </>
       )}
+      {/* ── Debug overlay ─────────────────────────────────────────────── */}
+      {showDebug && (
+        <div style={{
+          position: 'absolute',
+          top: HEADER_H + 8,
+          right: 8,
+          zIndex: 200,
+          background: 'rgba(0,0,0,0.78)',
+          color: '#fff',
+          fontFamily: 'monospace',
+          fontSize: 11,
+          lineHeight: 1.6,
+          padding: '8px 12px',
+          borderRadius: 4,
+          maxWidth: 300,
+          pointerEvents: 'none',
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{ color: '#facc15', marginBottom: 4, fontWeight: 'bold' }}>◉ DEBUG: ProjectCards</div>
+          <div>Selected projects: <b>{selected.length}</b></div>
+          {selected.length === 0 ? (
+            <div style={{ color: '#9ca3af' }}>— none —</div>
+          ) : (
+            selected.map((p, rank) => (
+              <div key={p.id} style={{ display: 'flex', gap: 6 }}>
+                <span style={{ color: '#9ca3af' }}>#{rank + 1}</span>
+                <span>{p.id}</span>
+                {selectedProjectScores[p.id] !== undefined && (
+                  <span style={{ color: '#86efac' }}>({selectedProjectScores[p.id].toFixed(1)})</span>
+                )}
+              </div>
+            ))
+          )}
+          <div style={{ marginTop: 6, borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 6 }}>
+            &quot;Other&quot; appended:{' '}
+            <span style={{ color: otherCards.length > 0 ? '#86efac' : '#f87171' }}>
+              {otherCards.length > 0 ? `yes — ${otherCards.length} card${otherCards.length !== 1 ? 's' : ''}` : 'no'}
+            </span>
+          </div>
+        </div>
+      )}
+
     </section>
   );
 }
