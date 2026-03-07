@@ -19,6 +19,8 @@ const breakdownValuesColor  = 'rgba(255,255,255,0.80)';  // color — category v
 const breakdownAbbrColor    = 'rgba(255,255,255,0.40)';  // color — abbreviation labels (e.g. "Pl=")
 const breakdownSepColor     = 'rgba(255,255,255,0.40)';  // color — pipe separators between values
 const breakdownCommentColor = 'rgba(255,255,255,0.40)';  // color — comment line (preset / custom)
+// ── Tap zones
+const zoomZoneWidth = 20; // % — width of the center zoom zone (nav zones share the remaining space equally)
 // └─────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -149,10 +151,14 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
   const [currentIdx,    setCurrentIdx]    = useState(0);
   const [leftBounceKey, setLeftBounceKey] = useState(0);
   const [rightBounceKey,setRightBounceKey]= useState(0);
+  const [detailOpen,    setDetailOpen]    = useState(false);
+  const [detailVisible, setDetailVisible] = useState(false);
 
-  const containerRef  = useRef<HTMLDivElement>(null);
-  const currentIdxRef = useRef(0);
+  const containerRef   = useRef<HTMLDivElement>(null);
+  const currentIdxRef  = useRef(0);
   const itemsLengthRef = useRef(items.length);
+  const detailScrollRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef   = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => { itemsLengthRef.current = items.length; });
 
   const updateIdx = useCallback((idx: number) => {
@@ -209,6 +215,41 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
     const el = document.getElementById('project-selection');
     if (el) window.scrollTo({ top: el.offsetTop, behavior: 'smooth' });
   };
+
+  // ── Detail / zoom popout ───────────────────────────────────────────────────
+  const openDetail = () => {
+    clearTimeout(closeTimerRef.current);
+    setDetailOpen(true);
+    // Double rAF ensures the element is mounted before the transition starts
+    requestAnimationFrame(() => requestAnimationFrame(() => setDetailVisible(true)));
+  };
+
+  const closeDetail = useCallback(() => {
+    setDetailVisible(false);
+    closeTimerRef.current = setTimeout(() => setDetailOpen(false), 150);
+  }, []);
+
+  // Navigate within the detail view: reset scroll, update index, sync carousel
+  const detailNavTo = useCallback((next: number) => {
+    const clamped = Math.max(0, Math.min(itemsLengthRef.current - 1, next));
+    if (detailScrollRef.current) detailScrollRef.current.scrollTop = 0;
+    updateIdx(clamped);
+    const container = containerRef.current;
+    if (container && container.clientWidth > 0)
+      container.scrollTo({ left: clamped * container.clientWidth, behavior: 'instant' });
+  }, [updateIdx]);
+
+  // Keyboard handler while detail view is open
+  useEffect(() => {
+    if (!detailOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if      (e.key === 'Escape')      closeDetail();
+      else if (e.key === 'ArrowLeft')   detailNavTo(currentIdxRef.current - 1);
+      else if (e.key === 'ArrowRight')  detailNavTo(currentIdxRef.current + 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [detailOpen, closeDetail, detailNavTo]);
 
   // ── Shared nav button base styles ─────────────────────────────────────────
   const navArrowBase: React.CSSProperties = {
@@ -292,29 +333,23 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
                   }} />
                 )}
 
-                {/* Invisible tap zones: left half → previous card, right half → next card.
-                    Also trigger the bottom arrow bounce animation for visual feedback. */}
+                {/* Three tap zones: nav zones share space outside the center zoom zone */}
                 {currentIdx > 0 && (
                   <div
                     onClick={goPrev}
-                    style={{
-                      position: 'absolute', inset: 0,
-                      width: '50%', left: 0,
-                      cursor: 'w-resize',
-                      zIndex: 1,
-                    }}
+                    style={{ position: 'absolute', inset: 0, width: `${(100 - zoomZoneWidth) / 2}%`, left: 0, cursor: 'w-resize', zIndex: 1 }}
                     aria-hidden="true"
                   />
                 )}
+                <div
+                  onClick={openDetail}
+                  style={{ position: 'absolute', inset: 0, left: `${(100 - zoomZoneWidth) / 2}%`, right: `${(100 - zoomZoneWidth) / 2}%`, cursor: 'zoom-in', zIndex: 1 }}
+                  aria-hidden="true"
+                />
                 {currentIdx < items.length - 1 && (
                   <div
                     onClick={goNext}
-                    style={{
-                      position: 'absolute', inset: 0,
-                      width: '50%', right: 0, left: 'auto',
-                      cursor: 'e-resize',
-                      zIndex: 1,
-                    }}
+                    style={{ position: 'absolute', inset: 0, width: `${(100 - zoomZoneWidth) / 2}%`, right: 0, left: 'auto', cursor: 'e-resize', zIndex: 1 }}
                     aria-hidden="true"
                   />
                 )}
@@ -444,6 +479,54 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
           </div>{/* end bottom bar */}
         </>
       )}
+
+      {/* ── Detail / zoom popout ─────────────────────────────────────────── */}
+      {detailOpen && items[currentIdx] && (
+        <div
+          ref={detailScrollRef}
+          onClick={closeDetail}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 500,
+            background: 'rgba(0,0,0,0.85)',
+            cursor: 'zoom-out',
+            opacity: detailVisible ? 1 : 0,
+            transition: detailVisible ? 'opacity 200ms ease' : 'opacity 150ms ease',
+            overflowY: 'auto',
+            padding: '60px 20px 20px',
+            boxSizing: 'border-box',
+          }}
+        >
+          {/* Image wrapper — relative so tap zones can be absolute over the image */}
+          <div style={{ position: 'relative' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={items[currentIdx].src}
+              alt={items[currentIdx].alt}
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+            />
+            {/* Left third — previous card (stop propagation so backdrop doesn't close) */}
+            {currentIdx > 0 && (
+              <div
+                onClick={e => { e.stopPropagation(); detailNavTo(currentIdxRef.current - 1); }}
+                style={{ position: 'absolute', inset: 0, width: '33%', left: 0, cursor: 'w-resize', zIndex: 1 }}
+                aria-hidden="true"
+              />
+            )}
+            {/* Right third — next card */}
+            {currentIdx < items.length - 1 && (
+              <div
+                onClick={e => { e.stopPropagation(); detailNavTo(currentIdxRef.current + 1); }}
+                style={{ position: 'absolute', inset: 0, width: '33%', right: 0, left: 'auto', cursor: 'e-resize', zIndex: 1 }}
+                aria-hidden="true"
+              />
+            )}
+            {/* Center third — lets click bubble up to backdrop → closes modal */}
+          </div>
+        </div>
+      )}
+
       {/* ── Debug overlay ─────────────────────────────────────────────── */}
       {showDebug && (
         <div style={{

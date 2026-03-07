@@ -171,9 +171,14 @@ export default function Home() {
   const grainOpacity        = 0.20;        // change here to adjust grain intensity everywhere (background + cards)
   const whiteGrainOpacity   = 0.70;        // grain intensity on white areas (contact sections + Works framing)
 
-  // ── Header menu button controls ──────────────────────────────────────────────
-  const menuSquareSize   = 20;   // px — width & height of the white square / X icon
-  const menuSquareRadius = 0;    // px — corner radius of the white square (0 = sharp, higher = rounder)
+  // ── Header controls ──────────────────────────────────────────────────────────
+  const menuSquareSize        = 20;                          // px   — width & height of the white square / X icon
+  const menuSquareRadius      = 0;                           // px   — corner radius of the white square (0 = sharp)
+  const headerNamePaddingLeft = 37;                          // px   — gap from left edge to "ENOL VALLINA"
+  const headerMenuPaddingRight= 37;                          // px   — gap from right edge to the menu button
+  const headerNameSize        = '1.0rem';                  // size — font-size for "ENOL VALLINA" (e.g. '1rem', '14px')
+  const headerNameFont        = 'var(--font-sans)';          // font — font family for "ENOL VALLINA"
+  const headerNameBold        = true;                       // bool — true = bold, false = normal weight
 
   // ── Hero section: text content ───────────────────────────────────────────────
   const heroSeg1     = "Hi, I'm Enol Vallina,";
@@ -446,8 +451,10 @@ export default function Home() {
 
       {/* ── Fixed Header ── */}
       <header
-        className="fixed top-0 left-0 right-0 z-50 h-12 flex items-center px-6 transition-all duration-200"
+        className="fixed top-0 left-0 right-0 z-50 h-12 flex items-center transition-all duration-200"
         style={{
+          paddingLeft: headerNamePaddingLeft,
+          paddingRight: headerMenuPaddingRight,
           background: (scrolled || menuOpen) ? 'rgba(28, 28, 29, 0.92)' : 'transparent',
           backdropFilter: (scrolled || menuOpen) ? 'blur(8px)' : 'none',
           borderBottom: (scrolled || menuOpen) ? '1px solid rgba(255,255,255,0.08)' : 'none',
@@ -456,8 +463,15 @@ export default function Home() {
         {/* Name — also a HOME button */}
         <button
           onClick={() => { scrollToSection('hero'); resetHero(); }}
-          className="font-sans text-white text-sm font-medium tracking-wide shrink-0 hover:text-white/70 transition-colors cursor-pointer"
-          style={{ background: 'none', border: 'none', padding: 0 }}
+          className="shrink-0 hover:text-white/70 transition-colors cursor-pointer"
+          style={{
+            background: 'none', border: 'none', padding: 0,
+            color: 'white',
+            fontSize: headerNameSize,
+            fontFamily: headerNameFont,
+            fontWeight: headerNameBold ? 'bold' : 'normal',
+            letterSpacing: '0.05em',
+          }}
         >
           ENOL VALLINA
         </button>
@@ -467,7 +481,7 @@ export default function Home() {
           {NAV_ITEMS.map((item, i) => (
             <button
               key={item.label}
-              onClick={() => { scrollToSection(item.id); setMenuOpen(false); if (item.id === 'hero') resetHero(); }}
+              onClick={() => { if (item.id === 'trajectory') scrollToSectionBottom(item.id); else scrollToSection(item.id); setMenuOpen(false); if (item.id === 'hero') resetHero(); }}
               className="font-sans text-white text-xs uppercase tracking-[0.2em] px-3 shrink-0 hover:text-white/55 transition-colors cursor-pointer whitespace-nowrap"
               style={{
                 background: 'none', border: 'none',
@@ -766,13 +780,13 @@ export default function Home() {
             darkShapeBottomPanelHeight controls height;
             darkShapeBottomCornerRadius rounds the inner top corners */}
         <div className="absolute bottom-0 left-0 bg-white z-2 pointer-events-none"
-          style={{ width: darkShapeBottomCornerWidth, height: darkShapeBottomPanelHeight, borderTopRightRadius: darkShapeBottomCornerRadius }}>
+          style={{ width: darkShapeBottomCornerWidth, height: darkShapeBottomPanelHeight, borderTopRightRadius: darkShapeBottomCornerRadius, overflow: 'hidden' }}>
           <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: whiteGrainOpacity, pointerEvents: 'none' }}>
             <rect width="100%" height="100%" filter="url(#white-grain)" />
           </svg>
         </div>
         <div className="absolute bottom-0 right-0 bg-white z-2 pointer-events-none"
-          style={{ width: darkShapeBottomCornerWidth, height: darkShapeBottomPanelHeight, borderTopLeftRadius: darkShapeBottomCornerRadius }}>
+          style={{ width: darkShapeBottomCornerWidth, height: darkShapeBottomPanelHeight, borderTopLeftRadius: darkShapeBottomCornerRadius, overflow: 'hidden' }}>
           <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: whiteGrainOpacity, pointerEvents: 'none' }}>
             <rect width="100%" height="100%" filter="url(#white-grain)" />
           </svg>
