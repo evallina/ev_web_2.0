@@ -570,7 +570,7 @@
       "categoryScores": {
         "interactivity": 0,
         "publicRealm": 70,
-        "userOriented": 0,
+        "userOriented": 70,
         "dataDriven": 90,
         "strategy": 25,
         "places": 100

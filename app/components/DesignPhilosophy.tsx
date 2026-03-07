@@ -263,7 +263,7 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
       {onScrollDown && (
         <button
           onClick={onScrollDown}
-          className="font-sans text-[#282829]/35 text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:text-[#282829]/65 transition-colors cursor-pointer"
+          className="font-sans text-[#282829]/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-[#282829]/65 transition-colors cursor-pointer"
           style={{ position: 'absolute', bottom: '2.5rem', left: 0, right: 0, margin: '0 auto', width: 'fit-content', zIndex: 10 }}
         >
           <span>Works</span>
