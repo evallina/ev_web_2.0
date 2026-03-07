@@ -16,6 +16,7 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "Enol Vallina — Portfolio",
   description: "Portfolio of Enol Vallina",
+  robots: { index: true, follow: true, noimageindex: true },
 };
 
 export default function RootLayout({

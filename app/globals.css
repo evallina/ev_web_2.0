@@ -81,6 +81,13 @@ body {
   animation: down-arrow-hover 1s ease-in-out infinite;
 }
 
+/* ── Image protection — blocks casual right-click save and drag ── */
+.img-protected {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 /* ── ProjectCards nav arrow animations ── */
 @keyframes nav-bounce-left {
   0%   { transform: translateX(0);    }

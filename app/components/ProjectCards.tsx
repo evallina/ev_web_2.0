@@ -309,6 +309,7 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
             {items.map((item) => (
               <div
                 key={item.src}
+                onContextMenu={(e) => e.preventDefault()}
                 style={{
                   width: '100%',       // = container clientWidth (not 100vw to avoid scrollbar offset)
                   flexShrink: 0,
@@ -358,6 +359,7 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
                 <img
                   src={item.src}
                   alt={item.alt}
+                  className="img-protected"
                   style={{
                     maxWidth: '100%',
                     maxHeight: '100%',
@@ -499,11 +501,12 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
           }}
         >
           {/* Image wrapper — relative so tap zones can be absolute over the image */}
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative' }} onContextMenu={(e) => e.preventDefault()}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={items[currentIdx].src}
               alt={items[currentIdx].alt}
+              className="img-protected"
               style={{ width: '100%', height: 'auto', display: 'block' }}
             />
             {/* Left third — previous card (stop propagation so backdrop doesn't close) */}

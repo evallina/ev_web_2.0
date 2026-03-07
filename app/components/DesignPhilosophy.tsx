@@ -156,6 +156,7 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
           // Wrapper: positions the image's CENTER at the random (x, y) point
           <div
             key={item.key}
+            onContextMenu={(e) => e.preventDefault()}
             style={{
               position: 'absolute',
               left: item.x,
@@ -171,6 +172,7 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
                 src={photos[item.photoIdx]}
                 alt=""
                 aria-hidden="true"
+                className="img-protected"
                 style={{
                   maxWidth: '65vw',
                   maxHeight: '65vh',

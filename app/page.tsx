@@ -478,23 +478,44 @@ export default function Home() {
 
         {/* Nav items — slide in from right with stagger */}
         <div className="flex-1 flex items-center justify-end overflow-hidden">
-          {NAV_ITEMS.map((item, i) => (
-            <button
-              key={item.label}
-              onClick={() => { if (item.id === 'trajectory') scrollToSectionBottom(item.id); else scrollToSection(item.id); setMenuOpen(false); if (item.id === 'hero') resetHero(); }}
-              className="font-sans text-white text-xs uppercase tracking-[0.2em] px-3 shrink-0 hover:text-white/55 transition-colors cursor-pointer whitespace-nowrap"
-              style={{
-                background: 'none', border: 'none',
-                transform: menuOpen ? 'translateX(0)' : 'translateX(200%)',
-                opacity: menuOpen ? 1 : 0,
-                transition: 'transform 320ms ease, opacity 320ms ease',
-                transitionDelay: `${menuOpen ? (NAV_ITEMS.length - 1 - i) * 60 : i * 60}ms`,
-                pointerEvents: menuOpen ? 'auto' : 'none',
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
+          {NAV_ITEMS.flatMap((item, i) => {
+            const btn = (
+              <button
+                key={item.label}
+                onClick={() => { if (item.id === 'trajectory') scrollToSectionBottom(item.id); else scrollToSection(item.id); setMenuOpen(false); if (item.id === 'hero') resetHero(); }}
+                className="font-sans text-white text-xs uppercase tracking-[0.2em] px-3 shrink-0 hover:text-white/55 transition-colors cursor-pointer whitespace-nowrap"
+                style={{
+                  background: 'none', border: 'none',
+                  transform: menuOpen ? 'translateX(0)' : 'translateX(200%)',
+                  opacity: menuOpen ? 1 : 0,
+                  transition: 'transform 320ms ease, opacity 320ms ease',
+                  transitionDelay: `${menuOpen ? (NAV_ITEMS.length - 1 - i) * 60 : i * 60}ms`,
+                  pointerEvents: menuOpen ? 'auto' : 'none',
+                }}
+              >
+                {item.label}
+              </button>
+            );
+            if (i === 0) {
+              return [btn, (
+                <span
+                  key="sep-home-trajectory"
+                  style={{
+                    color: 'rgba(255,255,255,0.25)',
+                    fontSize: '0.6rem',
+                    transform: menuOpen ? 'translateX(0)' : 'translateX(200%)',
+                    opacity: menuOpen ? 1 : 0,
+                    transition: 'transform 320ms ease, opacity 320ms ease',
+                    transitionDelay: `${menuOpen ? (NAV_ITEMS.length - 1 - 0) * 60 : 0}ms`,
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                    flexShrink: 0,
+                  }}
+                >|</span>
+              )];
+            }
+            return [btn];
+          })}
         </div>
 
         {/* Hamburger / X toggle button */}
@@ -644,12 +665,12 @@ export default function Home() {
       >
         <h2 className="font-serif font-bold text-white text-4xl mb-12"> {/* Trajectory */}</h2>
 
-        <div className="w-full px-10">
+        <div className="w-full px-10" onContextMenu={(e) => e.preventDefault()}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/trajectory/2026-01-20_Timeline.jpg"
             alt="My Trajectory — Timeline"
-            className="w-full h-auto"
+            className="w-full h-auto img-protected"
           />
         </div>
       </section>
