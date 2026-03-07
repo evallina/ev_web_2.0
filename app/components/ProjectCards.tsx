@@ -12,16 +12,22 @@ const navArrowSize     =  20;                       // px    — font size of th
 const navArrowColor    = 'rgba(255,255,255,0.60)';  // color — resting color of the ◀ / ▶ arrows
 const backArrowSize    =  30;                       // px    — font size of the ↑ back-to-chart arrow
 const backArrowColor   = 'rgba(255,255,255,0.60)';  // color — resting color of the ↑ arrow
-const backArrowHover   = 'rgba(255,255,255,0.50)';  // color — hover color of the ↑ arrow
+const backArrowHover        = 'rgba(255,255,255,0.50)';  // color — hover color of the ↑ arrow
+// ── Breakdown strip
+const breakdownTitleColor   = 'rgba(255,255,255,0.60)';  // color — "Work Selection Category Breakdown" label
+const breakdownValuesColor  = 'rgba(255,255,255,0.80)';  // color — category values (e.g. "70%")
+const breakdownAbbrColor    = 'rgba(255,255,255,0.40)';  // color — abbreviation labels (e.g. "Pl=")
+const breakdownSepColor     = 'rgba(255,255,255,0.40)';  // color — pipe separators between values
+const breakdownCommentColor = 'rgba(255,255,255,0.40)';  // color — comment line (preset / custom)
 // └─────────────────────────────────────────────────────────────────────────────┘
 
-// ── Debug overlay ─────────────────────────────────────────────────────────────
-const showDebug = true; // set to false before going live
 
 // ── Internal layout constants (tied to page structure, not meant to be tweaked) ──
 const HEADER_H     = 48;  // px — height of the fixed header (set in layout.tsx)
 const SIDE_MARGIN  = 40;  // px — matches the px-10 side margins of all other sections
-const BOTTOM_NAV_H = 60;  // px — height of the bottom navigation bar
+const BOTTOM_NAV_H = 60;  // px — height of the arrow navigation row
+const BREAKDOWN_H  = 40;  // px — height of the work-selection breakdown strip above nav
+const BOTTOM_BAR_H = BOTTOM_NAV_H + BREAKDOWN_H; // px — total bottom bar height
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type ProjectEntry = (typeof projectsData.projects)[number];
@@ -32,13 +38,84 @@ interface CardItem {
   isFirstOfProject: boolean;
 }
 
+// ── Debug algorithm metadata (computed in page.tsx, displayed here) ──────────
+export interface DebugMeta {
+  dominantCategoryKeys: string[];   // radar keys ≥ DOMINANCE_THRESHOLD
+  singleDominantKey:    string | null;
+  presetBoostedIds:     string[];
+  domBonusMap:          Record<string, number>;
+  dominanceThreshold:   number;
+}
+
 interface Props {
   selectedProjectIds?:    string[];
   selectedProjectScores?: Record<string, number>;
+  radarValues?:           Record<string, number>;
+  activePresetName?:      string | null;
+  debugMeta?:             DebugMeta;
+  showDebug?:             boolean;
+}
+
+// Category display order and abbreviations for the breakdown strip
+const BREAKDOWN_CATS = [
+  { key: 'places',        abbr: 'Pl'  },
+  { key: 'userOriented',  abbr: 'UO'  },
+  { key: 'publicRealm',   abbr: 'PR'  },
+  { key: 'dataDriven',    abbr: 'DD'  },
+  { key: 'strategy',      abbr: 'Str' },
+  { key: 'interactivity', abbr: 'Int' },
+] as const;
+
+// ── Debug helpers ──────────────────────────────────────────────────────────────
+const CAT_META: Record<string, { label: string; abbr: string }> = {
+  interactivity: { label: 'Interactivity', abbr: 'Int' },
+  publicRealm:   { label: 'Public Realm',  abbr: 'PR'  },
+  userOriented:  { label: 'User-Oriented', abbr: 'UO'  },
+  dataDriven:    { label: 'Data-Driven',   abbr: 'DD'  },
+  strategy:      { label: 'Strategy',      abbr: 'Str' },
+  places:        { label: 'Places',        abbr: 'Pl'  },
+};
+
+function catContribs(p: ProjectEntry, rv: Record<string, number>) {
+  return Object.entries(p.categoryScores as Record<string, number>)
+    .map(([key, ps]) => ({
+      key,
+      label:   CAT_META[key]?.label ?? key,
+      abbr:    CAT_META[key]?.abbr  ?? key,
+      rv:      rv[key] ?? 0,
+      ps,
+      contrib: (rv[key] ?? 0) * ps / 100,
+    }))
+    .filter(c => c.contrib > 0)
+    .sort((a, b) => b.contrib - a.contrib);
+}
+
+function debugJustification(
+  p: ProjectEntry,
+  rank: number,
+  selected: ProjectEntry[],
+  scores: Record<string, number>,
+  rv: Record<string, number>,
+): string {
+  const myScore = scores[p.id] ?? 0;
+  if (rank === 0) return 'Top match — highest combined score';
+
+  const prevScore = scores[selected[rank - 1].id] ?? 0;
+  if (myScore === prevScore) return `Tied with #${rank} — order preserved`;
+
+  const gap = prevScore > 0 ? (prevScore - myScore) / prevScore : 0;
+  const top2 = catContribs(p, rv).slice(0, 2);
+  if (gap <= 0.10) {
+    const topLabel = top2[0]?.label ?? '—';
+    return `Close match — ${topLabel} drove the score`;
+  }
+  if (top2.length === 0) return 'Low overall fit';
+  if (top2.length === 1) return `Strong in ${top2[0].label}`;
+  return `Strong in ${top2[0].label} + ${top2[1].label}`;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function ProjectCards({ selectedProjectIds, selectedProjectScores = {} }: Props) {
+export default function ProjectCards({ selectedProjectIds, selectedProjectScores = {}, radarValues = {}, activePresetName = null, debugMeta, showDebug = false }: Props) {
   const { projects, other } = projectsData;
   const otherCards: string[] = other?.[0]?.cards ?? [];
 
@@ -180,7 +257,7 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
               top: HEADER_H,
               left: 0,
               right: 0,
-              bottom: BOTTOM_NAV_H,
+              bottom: BOTTOM_BAR_H,
               overflowX: 'scroll',
               overflowY: 'hidden',
               display: 'flex',
@@ -260,8 +337,9 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
           </div>
 
           {/*
-            Bottom navigation bar — three buttons centered in one row:
-            ◀ Previous  |  ↑ Back to chart  |  Next ▶
+            Bottom bar — two rows stacked:
+              1. Work-selection category breakdown strip
+              2. ◀ Previous  |  ↑ Back to chart  |  Next ▶
           */}
           <div
             style={{
@@ -269,13 +347,32 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
               bottom: 0,
               left: 0,
               right: 0,
-              height: BOTTOM_NAV_H,
+              height: BOTTOM_BAR_H,
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
+              flexDirection: 'column',
             }}
           >
+            {/* ── Breakdown strip ────────────────────────────────── */}
+            <div style={{ height: BREAKDOWN_H, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+              <div style={{ fontFamily: 'var(--font-sans, sans-serif)', fontSize: 8.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: breakdownTitleColor }}>
+                Work Selection Category Breakdown
+              </div>
+              <div style={{ fontFamily: 'var(--font-sans, sans-serif)', fontSize: 9, letterSpacing: '0.08em', color: breakdownValuesColor }}>
+                {BREAKDOWN_CATS.map((cat, i) => (
+                  <span key={cat.key}>
+                    {i > 0 && <span style={{ color: breakdownSepColor, margin: '0 5px' }}>|</span>}
+                    <span style={{ color: breakdownAbbrColor }}>{cat.abbr}=</span>
+                    <span>{radarValues[cat.key] ?? 0}%</span>
+                  </span>
+                ))}
+              </div>
+              <div style={{ fontFamily: 'var(--font-sans, sans-serif)', fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: breakdownCommentColor }}>
+                {activePresetName ? `(${activePresetName} preset selected)` : '(Custom work selection)'}
+              </div>
+            </div>
+
+            {/* ── Arrow navigation row ────────────────────────────── */}
+            <div style={{ height: BOTTOM_NAV_H, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {/* ◀ Previous card */}
             <button
               onClick={goPrev}
@@ -343,7 +440,8 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
                 }}
               >▶</span>
             </button>
-          </div>
+            </div>{/* end arrow row */}
+          </div>{/* end bottom bar */}
         </>
       )}
       {/* ── Debug overlay ─────────────────────────────────────────────── */}
@@ -353,33 +451,112 @@ export default function ProjectCards({ selectedProjectIds, selectedProjectScores
           top: HEADER_H + 8,
           right: 8,
           zIndex: 200,
-          background: 'rgba(0,0,0,0.78)',
+          background: 'rgba(0,0,0,0.82)',
           color: '#fff',
           fontFamily: 'monospace',
-          fontSize: 11,
-          lineHeight: 1.6,
+          fontSize: 10.5,
+          lineHeight: 1.55,
           padding: '8px 12px',
           borderRadius: 4,
-          maxWidth: 300,
+          maxWidth: 480,
           pointerEvents: 'none',
           backdropFilter: 'blur(4px)',
         }}>
           <div style={{ color: '#facc15', marginBottom: 4, fontWeight: 'bold' }}>◉ DEBUG: ProjectCards</div>
-          <div>Selected projects: <b>{selected.length}</b></div>
-          {selected.length === 0 ? (
-            <div style={{ color: '#9ca3af' }}>— none —</div>
-          ) : (
-            selected.map((p, rank) => (
-              <div key={p.id} style={{ display: 'flex', gap: 6 }}>
-                <span style={{ color: '#9ca3af' }}>#{rank + 1}</span>
-                <span>{p.id}</span>
-                {selectedProjectScores[p.id] !== undefined && (
-                  <span style={{ color: '#86efac' }}>({selectedProjectScores[p.id].toFixed(1)})</span>
-                )}
+          <div>Pl=Places | UO= User-Oriented | PR= PublicRealm | DD=Data-Driven | Str=Strategy | Int=Interactive</div>
+          <div style={{ marginBottom: 4 }}>Selected: <b>{selected.length}</b></div>
+
+          {/* ── Algorithm summary ──────────────────────────────── */}
+          {debugMeta && (
+            <div style={{ marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.12)', fontSize: 9.5 }}>
+              <div style={{ color: '#60a5fa' }}>
+                Dominant (≥{debugMeta.dominanceThreshold}%):&nbsp;
+                {debugMeta.dominantCategoryKeys.length > 0
+                  ? debugMeta.dominantCategoryKeys.map(k => CAT_META[k]?.abbr ?? k).join(', ')
+                  : '—'}
               </div>
-            ))
+              {debugMeta.singleDominantKey && (
+                <div style={{ color: '#a78bfa' }}>
+                  Single-dominant: {CAT_META[debugMeta.singleDominantKey]?.label ?? debugMeta.singleDominantKey} → category-first sort active
+                </div>
+              )}
+              {debugMeta.presetBoostedIds.length > 0 && (
+                <div style={{ color: '#fb923c' }}>
+                  Preset-boosted: {debugMeta.presetBoostedIds.join(', ')}
+                </div>
+              )}
+            </div>
           )}
-          <div style={{ marginTop: 6, borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 6 }}>
+
+          {selected.length === 0 ? (
+            <div style={{ color: '#6b7280' }}>— none —</div>
+          ) : (
+            selected.map((p, rank) => {
+              const score    = selectedProjectScores[p.id] ?? 0;
+              const priority = (p as ProjectEntry & { priority?: number }).priority ?? 0;
+              const titleShort = p.title.slice(0, 6);
+              const hasRadar = Object.keys(radarValues).length > 0;
+              const contribs = hasRadar ? catContribs(p, radarValues) : [];
+              const justification = hasRadar
+                ? debugJustification(p, rank, selected, selectedProjectScores, radarValues)
+                : null;
+              const domBonus = debugMeta?.domBonusMap[p.id] ?? 0;
+              const isPresetBoosted = debugMeta?.presetBoostedIds.includes(p.id) ?? false;
+
+              return (
+                <div
+                  key={p.id}
+                  style={{
+                    marginTop: rank > 0 ? 6 : 0,
+                    paddingTop: rank > 0 ? 6 : 0,
+                    borderTop: rank > 0 ? '1px solid rgba(255,255,255,0.10)' : 'none',
+                  }}
+                >
+                  {/* Header row: rank · id · short title · score · priority · bonuses */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'baseline' }}>
+                    {isPresetBoosted && <span style={{ color: '#fb923c' }}>[PRESET]</span>}
+                    <span style={{ color: '#6b7280' }}>#{rank + 1}</span>
+                    <span style={{ color: '#e5e7eb' }}>{p.id}</span>
+                    <span style={{ color: '#9ca3af' }}>({titleShort}…)</span>
+                    <span style={{ color: '#86efac' }}>Score: {score.toFixed(0)}</span>
+                    {priority > 0 && (
+                      <span style={{ color: '#fbbf24' }}>Priority: +{priority}</span>
+                    )}
+                    {domBonus > 0 && (
+                      <span style={{ color: '#60a5fa' }}>Dom: +{domBonus.toFixed(0)}</span>
+                    )}
+                  </div>
+
+                  {/* Category contributions */}
+                  {contribs.length > 0 && (
+                    <div style={{ color: '#4b5563', fontSize: 9.5, marginTop: 1 }}>
+                      {contribs.slice(0, 4).map(c => (
+                        <span key={c.key} style={{ marginRight: 7 }}>
+                          {c.abbr}:{c.rv}×{c.ps}={c.contrib.toFixed(0)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Primary category label */}
+                  {p.category && (
+                    <div style={{ color: '#4b5563', fontSize: 9.5 }}>
+                      Category: {p.category}
+                    </div>
+                  )}
+
+                  {/* Position justification */}
+                  {(justification || isPresetBoosted) && (
+                    <div style={{ color: '#9ca3af', fontSize: 9.5, marginTop: 1 }}>
+                      →{isPresetBoosted && <span style={{ color: '#fb923c', marginRight: 4 }}> PRESET SELECT</span>}{justification && ` ${justification}`}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+
+          <div style={{ marginTop: 6, borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 6, color: '#6b7280' }}>
             &quot;Other&quot; appended:{' '}
             <span style={{ color: otherCards.length > 0 ? '#86efac' : '#f87171' }}>
               {otherCards.length > 0 ? `yes — ${otherCards.length} card${otherCards.length !== 1 ? 's' : ''}` : 'no'}

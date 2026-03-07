@@ -18,7 +18,7 @@ const labelHoverScale    = 1.2;          // label scale factor on mouse hover
 const labelScaleDuration = 400;          // ms for label scale transition
 
 // ── Preset button styles ───────────────────────────────────────────────────────
-const presetNames            = ['Research', 'Spatial Experiences', 'Systems    Thinking'] as const;
+const presetNames            = ['Research', 'Spatial Experiences', 'Systems Thinking'] as const;
 const downArrowMarginTop     = 40;                        // px gap above the down-arrow button
 const presetTextSize         = 'text-xs';                 // Tailwind font-size class
 const presetBorderColor      = 'rgb(255,255,255,0.5)';  // static border when inactive - rgb(255,255,255,0.1)
@@ -36,6 +36,7 @@ const presetTextColorPressed = '#282829';                 // text when active
 const presetBorderRadius     = 30;                         // px corner radius for buttons
 const presetBorderWidth      = 1;                          // px border thickness
 const presetButtonHeight     = 45;                         // px fixed height for all buttons
+const presetContainerPadding = 24;                         // px minimum horizontal gap between buttons and parent edges
 
 // ── Chart geometry ─────────────────────────────────────────────────────────────
 const CX      = 400;   // SVG viewBox center x  (viewBox: 0 0 800 760)
@@ -137,7 +138,7 @@ const POPOUT_W = 300;
 
 // ── Component ──────────────────────────────────────────────────────────────────
 interface RadarChartProps {
-  onPlay?: (values: Record<string, number>) => void;
+  onPlay?: (values: Record<string, number>, presetName: string | null) => void;
 }
 
 // Popout anchor positioning:
@@ -158,6 +159,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
   const [activePreset,    setActivePreset]    = useState<string | null>(null);
   const [isAnimating,     setIsAnimating]     = useState(false);
   const [resetSpinning,  setResetSpinning]  = useState(false);
+  const [hasPlayed,       setHasPlayed]       = useState(false);
 
   const [openCat,       setOpenCat]       = useState<number | null>(null);
   const [popoutPos,     setPopoutPos]     = useState<PopoutPos | null>(null);
@@ -227,6 +229,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
   }, [cancelAutoPlay, stopResetSpin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const adjust = (i: number, delta: number) => {
+    setHasPlayed(false);
     cancelAutoPlay();
     stopResetSpin();
     // Cancel any in-progress preset animation and clear the selection.
@@ -308,8 +311,9 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
   }, [cancelAutoPlay, runAutoPlaySequence]);
 
   const handlePlay = () => {
+    setHasPlayed(true);
     setGhosts(prev => [...prev.slice(-4), [...values]]);
-    onPlay?.(Object.fromEntries(CAT_KEYS.map((key, i) => [key, values[i]])));
+    onPlay?.(Object.fromEntries(CAT_KEYS.map((key, i) => [key, values[i]])), activePreset);
   };
 
   const handleReset = () => {
@@ -517,7 +521,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
       </svg>
 
       {/* ── Preset buttons ────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 500, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 500, marginBottom: 8, paddingLeft: presetContainerPadding, paddingRight: presetContainerPadding, boxSizing: 'border-box' }}>
         {PRESETS.map((preset) => {
           const isActive  = activePreset === preset.name;
           const isHovered = hoveredPreset === preset.name;
@@ -528,7 +532,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
           return (
             <button
               key={preset.name}
-              onClick={() => { cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); }}
+              onClick={() => { setHasPlayed(false); cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); }}
               onMouseEnter={() => setHoveredPreset(preset.name)}
               onMouseLeave={() => setHoveredPreset(null)}
               className={`font-sans cursor-pointer ${presetTextSize}`}
@@ -587,6 +591,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
           onClick={handlePlay}
           aria-label="Save selection and load projects"
           className="radar-down-arrow-btn w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
+          style={{ opacity: hasPlayed ? 0.30 : 1, transition: 'opacity 400ms ease' }}
         >
           <svg
             width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"

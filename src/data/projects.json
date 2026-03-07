@@ -17,7 +17,8 @@
         "strategy": 5,
         "places": 15
       },
-      "priority": 3
+      "priority": 3,
+      "presets": ["Research"]
     },
     {
       "id": "EV-02",
@@ -36,7 +37,8 @@
         "strategy": 20,
         "places": 5
       },
-      "priority": 5
+      "priority": 5,
+      "presets": ["Research"]
     },
     {
       "id": "EV-03",
@@ -55,7 +57,8 @@
         "strategy": 0,
         "places": 0
       },
-      "priority": 2
+      "priority": 2,
+      "presets": null
     },
     {
       "id": "EV-04",
@@ -74,7 +77,8 @@
         "strategy": 0,
         "places": 0
       },
-      "priority": 2
+      "priority": 2,
+      "presets": null
     },
     {
       "id": "EV-05",
@@ -93,7 +97,8 @@
         "strategy": 0,
         "places": 0
       },
-      "priority": 1
+      "priority": 1,
+      "presets": null
     },
     {
       "id": "EV-06",
@@ -112,7 +117,8 @@
         "strategy": 0,
         "places": 0
       },
-      "priority": 2
+      "priority": 2,
+      "presets": null
     },
     {
       "id": "EV-07",
@@ -133,7 +139,8 @@
         "strategy": 40,
         "places": 75
       },
-      "priority": 5
+      "priority": 5,
+      "presets": ["Spatial Experiences","Systems Thinking"]
     },
     {
       "id": "EV-08",
@@ -152,7 +159,8 @@
         "strategy": 60,
         "places": 20
       },
-      "priority": 4
+      "priority": 4,
+      "presets": ["Research","Systems Thinking"]
     },
     {
       "id": "EV-09",
@@ -171,7 +179,8 @@
         "strategy": 0,
         "places": 60
       },
-      "priority": 3
+      "priority": 3,
+      "presets": ["Spatial Experiences"]
     },
     {
       "id": "EV-10",
@@ -187,10 +196,11 @@
         "publicRealm": 0,
         "userOriented": 80,
         "dataDriven": 0,
-        "strategy": 60,
-        "places": 70
+        "strategy": 40,
+        "places": 60
       },
-      "priority": 1
+      "priority": 1,
+      "presets": null
     },
     {
       "id": "EV-11",
@@ -203,13 +213,14 @@
       ],
       "categoryScores": {
         "interactivity": 0,
-        "publicRealm": 60,
+        "publicRealm": 50,
         "userOriented": 90,
         "dataDriven": 0,
         "strategy": 40,
-        "places": 70
+        "places": 60
       },
-      "priority": 3
+      "priority": 3,
+      "presets": ["Spatial Experiences"]
     },
     {
       "id": "EV-12",
@@ -228,7 +239,8 @@
         "strategy": 100,
         "places": 50
       },
-      "priority": 4
+      "priority": 4,
+      "presets": ["Systems Thinking"]
     },
     {
       "id": "EV-13",
@@ -247,7 +259,8 @@
         "strategy": 90,
         "places": 50
       },
-      "priority": 3
+      "priority": 3,
+      "presets": ["Spatial Experiences"]
     },
     {
       "id": "EV-14",
@@ -266,7 +279,8 @@
         "strategy": 80,
         "places": 20
       },
-      "priority": 3
+      "priority": 3,
+      "presets": null
     },
     {
       "id": "EV-15",
@@ -285,7 +299,8 @@
         "strategy": 50,
         "places": 40
       },
-      "priority": 3
+      "priority": 3,
+      "presets": ["Spatial Experiences","Systems Thinking"]
     },
     {
       "id": "EV-16",
@@ -304,7 +319,8 @@
         "strategy": 70,
         "places": 50
       },
-      "priority": 4
+      "priority": 4,
+      "presets": ["Systems Thinking"]
     },
     {
       "id": "EV-17",
@@ -323,7 +339,8 @@
         "strategy": 50,
         "places": 0
       },
-      "priority": 3
+      "priority": 3,
+      "presets": null
     },
     {
       "id": "EV-18",
@@ -342,7 +359,8 @@
         "strategy": 75,
         "places": 75
       },
-      "priority": 5
+      "priority": 5,
+      "presets": ["Spatial Experiences","Systems Thinking"]
     },
     {
       "id": "EV-19",
@@ -361,7 +379,8 @@
         "strategy": 50,
         "places": 0
       },
-      "priority": 2
+      "priority": 2,
+      "presets": ["Spatial Experiences"]
     },
     {
       "id": "EV-20",
@@ -380,7 +399,8 @@
         "strategy": 70,
         "places": 0
       },
-      "priority": 3
+      "priority": 3,
+      "presets": ["Systems Thinking"]
     },
     {
       "id": "EV-21",
@@ -400,7 +420,8 @@
         "strategy": 50,
         "places": 0
       },
-      "priority": 4
+      "priority": 4,
+      "presets": ["Research","Spatial Experiences","Systems Thinking"]
     },
     {
       "id": "EV-22",
@@ -419,7 +440,8 @@
         "strategy": 50,
         "places": 0
       },
-      "priority": 4
+      "priority": 4,
+      "presets": ["Research"]
     },
     {
       "id": "EV-23",
@@ -438,7 +460,8 @@
         "strategy": 80,
         "places": 0
       },
-      "priority": 4
+      "priority": 4,
+      "presets": ["Research"]
     },
     {
       "id": "EV-24",
@@ -457,7 +480,8 @@
         "strategy": 0,
         "places": 0
       },
-      "priority": 4
+      "priority": 4,
+      "presets": ["Research"]
     },
     {
       "id": "EV-25",
@@ -477,7 +501,8 @@
         "strategy": 75,
         "places": 0
       },
-      "priority": 4
+      "priority": 4,
+      "presets": ["Research"]
     },
     {
       "id": "EV-26",
@@ -496,7 +521,8 @@
         "strategy": 100,
         "places": 0
       },
-      "priority": 3
+      "priority": 3,
+      "presets": ["Research"]
     },
     {
       "id": "EV-27",
@@ -515,7 +541,8 @@
         "strategy": 90,
         "places": 0
       },
-      "priority": 2
+      "priority": 2,
+      "presets": null
     },
     {
       "id": "EV-28",
@@ -534,7 +561,8 @@
         "strategy": 100,
         "places": 0
       },
-      "priority": 5
+      "priority": 5,
+      "presets": ["Systems Thinking"]
     },
     {
       "id": "EV-29",
@@ -554,7 +582,8 @@
         "strategy": 10,
         "places": 100
       },
-      "priority": 5
+      "priority": 5,
+      "presets": ["Spatial Experiences"]
     },
     {
       "id": "EV-30",
@@ -575,7 +604,8 @@
         "strategy": 25,
         "places": 100
       },
-      "priority": 5
+      "priority": 5,
+      "presets": ["Spatial Experiences","Systems Thinking"]
     },
     {
       "id": "EV-31",
@@ -594,7 +624,8 @@
         "strategy": 90,
         "places": 90
       },
-      "priority": 4
+      "priority": 4,
+      "presets": ["Systems Thinking"]
     },
     {
       "id": "EV-32",
@@ -613,19 +644,21 @@
         "strategy": 0,
         "places": 50
       },
-      "priority": 1
+      "priority": 1,
+      "presets": null
     }
   ],
   "other": [
     {
       "id": "Other",
       "cards": [
-        "/images/projects/Other/2026-02_Other_Cartography.jpg",
-        "/images/projects/Other/2026-02_Other_Diagrams.jpg",
-        "/images/projects/Other/2026-02_Other_Photography_Page1.jpg",
-        "/images/projects/Other/2026-02_Other_Sketches.jpg",
-        "/images/projects/Other/2026-02_Other_Visualization.jpg",
-        "/images/projects/Other/2026-02_Other_Photography_Page2.jpg"
+        "/images/projects/Other/2026-02_Other_00.jpg",
+        "/images/projects/Other/2026-02_Other_01_Cartography.jpg",
+        "/images/projects/Other/2026-02_Other_02_Diagrams.jpg",
+        "/images/projects/Other/2026-02_Other_03_Visualization.jpg",
+        "/images/projects/Other/2026-02_Other_04_Sketches.jpg",
+        "/images/projects/Other/2026-02_Other_05_Photography_Page1.jpg",
+        "/images/projects/Other/2026-02_Other_06_Photography_Page2.jpg"
       ]
     }
   ]

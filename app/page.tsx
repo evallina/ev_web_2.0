@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import RadarChart from "./components/RadarChart";
-import ProjectCards from "./components/ProjectCards";
+import ProjectCards, { type DebugMeta } from "./components/ProjectCards";
 import DesignPhilosophy from "./components/DesignPhilosophy";
 import MorphingImages from "./components/MorphingImages";
 import projectsData from "@/src/data/projects.json";
@@ -134,6 +134,39 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Secret "debug" key sequence toggle ───────────────────────────────────────
+  useEffect(() => {
+    const SEQ = 'debug';
+    const TIMEOUT = 2000; // ms — window to type the full sequence
+    let buffer = '';
+    let timerId: ReturnType<typeof setTimeout> | undefined;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      // Ignore if focus is inside any input / textarea / contenteditable
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+
+      buffer += e.key.toLowerCase();
+      // Only keep the last N characters matching the sequence length
+      if (buffer.length > SEQ.length) buffer = buffer.slice(-SEQ.length);
+
+      clearTimeout(timerId);
+      if (buffer === SEQ) {
+        buffer = '';
+        setShowDebug(prev => {
+          const next = !prev;
+          setDebugFlash(next ? '🔧 Debug ON' : '🔧 Debug OFF');
+          return next;
+        });
+      } else {
+        timerId = setTimeout(() => { buffer = ''; }, TIMEOUT);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => { window.removeEventListener('keydown', onKeyDown); clearTimeout(timerId); };
+  }, []);
+
   // Global Design parameters
   const grainOpacity        = 0.20;        // change here to adjust grain intensity everywhere (background + cards)
   const whiteGrainOpacity   = 0.70;        // grain intensity on white areas (contact sections + Works framing)
@@ -245,41 +278,140 @@ export default function Home() {
   // ── Project selection — driven by RadarChart play button ─────────────────
   const [selectedProjectIds,     setSelectedProjectIds]     = useState<string[]>([]);
   const [selectedProjectScores,  setSelectedProjectScores]  = useState<Record<string, number>>({});
+  const [lastRadarValues,        setLastRadarValues]        = useState<Record<string, number>>({});
+  const [lastPresetName,         setLastPresetName]         = useState<string | null>(null);
+  const [lastDebugMeta,          setLastDebugMeta]          = useState<DebugMeta | null>(null);
+  const [showDebug,              setShowDebug]              = useState(false);
+  const [debugFlash,             setDebugFlash]             = useState<string | null>(null);
+
+  // Clear debug flash after 1 s
+  useEffect(() => {
+    if (!debugFlash) return;
+    const t = setTimeout(() => setDebugFlash(null), 1000);
+    return () => clearTimeout(t);
+  }, [debugFlash]);
 
   const resetHero = () => setHeroResetKey(k => k + 1);
 
-  const handleRadarPlay = (radarValues: Record<string, number>) => {
-    // Fit score = sum over categories of (radarValue × projectScore / 100).
-    // NOTE: projects.json has a `priority` field that is NOT yet factored in.
-    const MATCH_THRESHOLD = 20;
+  const handleRadarPlay = (radarValues: Record<string, number>, presetName: string | null = null) => {
+    const MATCH_THRESHOLD      = 20;
+    const DOMINANCE_THRESHOLD  = 80;
+    const DOMINANCE_MULTIPLIER = 2;
+    const MAX_PROJECTS         = 15;
 
     type Project = typeof projectsData.projects[number];
-    const rawScore = (p: Project) =>
-      Object.entries(p.categoryScores as Record<string, number>).reduce(
-        (sum, [key, val]) => sum + (radarValues[key] ?? 0) * val / 100, 0
-      );
 
-    // ── Debug logging ────────────────────────────────────────────────────
+    // Category label (from projects.json `category` field) → radar key
+    const CAT_LABEL_TO_KEY: Record<string, string> = {
+      'Interactive':   'interactivity',
+      'User-Oriented': 'userOriented',
+      'Strategy':      'strategy',
+      'Public Realm':  'publicRealm',
+      'Data-Driven':   'dataDriven',
+      'Places':        'places',
+    };
+
+    // ── 1. Detect dominant categories ──────────────────────────────────────
+    const dominantKeys = Object.entries(radarValues)
+      .filter(([, v]) => v >= DOMINANCE_THRESHOLD)
+      .map(([k]) => k);
+
+    // Single-dominant: exactly one category maxed out AND all others < 30%
+    const maxedKeys = Object.entries(radarValues).filter(([, v]) => v >= 100).map(([k]) => k);
+    const allOthersLow = Object.entries(radarValues)
+      .filter(([k]) => !maxedKeys.includes(k))
+      .every(([, v]) => v < 30);
+    const singleDominantKey = (maxedKeys.length === 1 && allOthersLow) ? maxedKeys[0] : null;
+
+    // ── 2. Detect preset-boosted projects ───────────────────────────────────
+    const presetBoostedIds: string[] = presetName
+      ? projectsData.projects
+          .filter(p => {
+            const presets = (p.presets as (string | string[])[] | null) ?? [];
+            return presets.some(item =>
+              typeof item === 'string'
+                ? item.toUpperCase() === presetName.toUpperCase()
+                : Array.isArray(item) && item.some(s => s.toUpperCase() === presetName.toUpperCase())
+            );
+          })
+          .map(p => p.id)
+      : [];
+
+    // ── 3. Compute scores ───────────────────────────────────────────────────
+    const domBonusMap: Record<string, number> = {};
+    const scoredRows = projectsData.projects.map(p => {
+      // Base score: dot product of radar values × project category scores
+      const raw = Object.entries(p.categoryScores as Record<string, number>)
+        .reduce((sum, [key, val]) => sum + (radarValues[key] ?? 0) * val / 100, 0);
+
+      const priority   = (p as Project & { priority?: number }).priority ?? 0;
+      const primaryKey = CAT_LABEL_TO_KEY[p.category] ?? '';
+
+      // Dominance bonus: project's primary category is in a dominated axis
+      const domBonus = (primaryKey && dominantKeys.includes(primaryKey))
+        ? (radarValues[primaryKey] ?? 0) * DOMINANCE_MULTIPLIER
+        : 0;
+      domBonusMap[p.id] = domBonus;
+
+      return {
+        id: p.id,
+        rawScore:     +raw.toFixed(2),
+        priorityBonus: priority,
+        domBonus,
+        finalScore:   +(raw + priority * 100 + domBonus).toFixed(2),
+        primaryKey,
+      };
+    });
+
+    // ── 4. Filter by threshold ──────────────────────────────────────────────
+    let matched = scoredRows.filter(r => r.finalScore >= MATCH_THRESHOLD);
+
+    // ── 5. Sort strategy ────────────────────────────────────────────────────
+    // Tier 1: preset-boosted projects first
+    // Tier 2: if single category dominates, primary-category-matching projects next
+    // Tier 3: descending score
+    matched.sort((a, b) => {
+      const aPreset = presetBoostedIds.includes(a.id) ? 1 : 0;
+      const bPreset = presetBoostedIds.includes(b.id) ? 1 : 0;
+      if (bPreset !== aPreset) return bPreset - aPreset;
+
+      if (singleDominantKey) {
+        const aMatch = a.primaryKey === singleDominantKey ? 1 : 0;
+        const bMatch = b.primaryKey === singleDominantKey ? 1 : 0;
+        if (bMatch !== aMatch) return bMatch - aMatch;
+      }
+
+      return b.finalScore - a.finalScore;
+    });
+
+    matched = matched.slice(0, MAX_PROJECTS);
+
+    // ── 6. Debug logging ────────────────────────────────────────────────────
     console.group('[RadarChart → ProjectCards] Play triggered');
     console.log('Radar values:', radarValues);
-    const debugRows = projectsData.projects.map(p => {
-      const raw      = rawScore(p);
-      const priority = (p as Project & { priority?: number }).priority ?? 0;
-      return { id: p.id, rawScore: +raw.toFixed(2), priorityBonus: priority, finalScore: +raw.toFixed(2) };
-    });
-    console.table(debugRows);
-    const matched = debugRows
-      .filter(r => r.finalScore >= MATCH_THRESHOLD)
-      .sort((a, b) => b.finalScore - a.finalScore);
+    console.log('Dominant keys (≥' + DOMINANCE_THRESHOLD + '%):', dominantKeys, '| Single dominant:', singleDominantKey);
+    console.log('Preset boosted:', presetBoostedIds);
+    console.table(scoredRows);
     console.log('Matched & sorted:', matched.map(r => `${r.id} (${r.finalScore})`).join(', ') || '— none —');
     console.groupEnd();
-    // ────────────────────────────────────────────────────────────────────
 
+    // ── 7. Update state ─────────────────────────────────────────────────────
     const scores: Record<string, number> = {};
     matched.forEach(r => { scores[r.id] = r.finalScore; });
 
+    const newDebugMeta: DebugMeta = {
+      dominantCategoryKeys: dominantKeys,
+      singleDominantKey,
+      presetBoostedIds,
+      domBonusMap,
+      dominanceThreshold: DOMINANCE_THRESHOLD,
+    };
+
     setSelectedProjectIds(matched.map(r => r.id));
     setSelectedProjectScores(scores);
+    setLastRadarValues(radarValues);
+    setLastPresetName(presetName);
+    setLastDebugMeta(newDebugMeta);
     scrollToSection('project-cards');
   };
 
@@ -664,7 +796,32 @@ export default function Home() {
       </section>
 
       {/* ── Section 6: Project Cards ── */}
-      <ProjectCards selectedProjectIds={selectedProjectIds} selectedProjectScores={selectedProjectScores} />
+      <ProjectCards selectedProjectIds={selectedProjectIds} selectedProjectScores={selectedProjectScores} radarValues={lastRadarValues} activePresetName={lastPresetName} debugMeta={lastDebugMeta ?? undefined} showDebug={showDebug} />
+
+      {/* ── Debug flash notification ── */}
+      {debugFlash && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 32,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            background: 'rgba(0,0,0,0.75)',
+            color: '#fff',
+            fontFamily: 'monospace',
+            fontSize: 13,
+            letterSpacing: '0.05em',
+            padding: '6px 16px',
+            borderRadius: 6,
+            pointerEvents: 'none',
+            backdropFilter: 'blur(6px)',
+            animation: 'philosophy-cursor-blink 500ms step-end 2',
+          }}
+        >
+          {debugFlash}
+        </div>
+      )}
 
       {/* ── Section 7: Contact (bottom) ── */}
       <section
