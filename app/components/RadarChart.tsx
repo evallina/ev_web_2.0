@@ -2,6 +2,8 @@
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import catDesc from '@/src/data/categoryDescriptions.json';
+import presetsData from '@/src/data/presets.json';
+import { CATEGORIES, CAT_KEYS } from '@/src/config/categories';
 
 // ── Design variables (edit these to restyle the chart) ─────────────────────────
 const activeStrokeWidth  = 3;            // line weight of the active polygon
@@ -18,7 +20,6 @@ const labelHoverScale    = 1.2;          // label scale factor on mouse hover
 const labelScaleDuration = 400;          // ms for label scale transition
 
 // ── Preset button styles ───────────────────────────────────────────────────────
-const presetNames            = ['Research', 'Spatial Experiences', 'Systems Thinking'] as const;
 const downArrowMarginTop     = 40;                        // px gap above the down-arrow button
 const presetTextSize         = 'text-xs';                 // Tailwind font-size class
 const presetBorderColor      = 'rgb(255,255,255,0.5)';  // static border when inactive - rgb(255,255,255,0.1)
@@ -55,28 +56,16 @@ const TEXT_SIZE_MAP: Record<string, number> = {
 };
 const catFontSize = TEXT_SIZE_MAP[categoryTextSize] ?? 12;
 
-// Categories in clockwise order starting from top
-const CATEGORIES = [
-  { name: 'Places',        angle: -90 },
-  { name: 'Strategy',      angle: -30 },
-  { name: 'Public Realm',  angle:  30 },
-  { name: 'Data-Driven',   angle:  90 },
-  { name: 'Interactivity', angle: 150 },
-  { name: 'User Oriented', angle: 210 },
-] as const;
-
-// categoryScores keys in projects.json, in the same order as CATEGORIES
-const CAT_KEYS = ['places', 'strategy', 'publicRealm', 'dataDriven', 'interactivity', 'userOriented'] as const;
 
 const DEFAULT_VALUES = [70, 70, 70, 70, 70, 70];
 
-// ── Presets ────────────────────────────────────────────────────────────────────
-// Values in CAT_KEYS order: places, strategy, publicRealm, dataDriven, interactivity, userOriented
-const PRESETS = [
-  { name: presetNames[0], values: [70,  60,  20, 100, 100,  30] },
-  { name: presetNames[1], values: [100, 10,  90,  10,  10, 100] },
-  { name: presetNames[2], values: [80,  70, 100,  20,  10,  50] },
-];
+// ── Presets — loaded from src/data/presets.json ────────────────────────────────
+// Values converted from named-key objects to CAT_KEYS-ordered arrays.
+// To add/edit presets, edit presets.json — no code changes needed.
+const PRESETS = presetsData.map(p => ({
+  name:   p.name,
+  values: CAT_KEYS.map(k => (p.values as Record<string, number>)[k] ?? 0),
+}));
 
 const PRESET_ANIM_DURATION  = 650;  // ms for preset morph animation (initial auto-play + manual clicks)
 const autoPlayPauseDuration = 150;  // ms to hold each preset during initial auto-play
@@ -84,8 +73,8 @@ const autoPlayPauseDuration = 150;  // ms to hold each preset during initial aut
 // ── Reset auto-play timing (independent from initial auto-play) ────────────────
 const resetAutoPlayPauseDuration = 100; // ms to hold each preset during reset auto-play
 const resetPresetAnimDuration    = 400;  // ms for each chart morph during reset auto-play
-// Total ms the reset sequence takes (initial delay + 3 steps + final morph):
-const RESET_TOTAL_DURATION = 200 + (resetPresetAnimDuration + resetAutoPlayPauseDuration) * 3 + resetPresetAnimDuration;
+// Total ms the reset sequence takes (initial delay + N steps + final morph):
+const RESET_TOTAL_DURATION = 200 + (resetPresetAnimDuration + resetAutoPlayPauseDuration) * PRESETS.length + resetPresetAnimDuration;
 const resetIconRotations   = 3; // how many full rotations the reset icon makes during the sequence
 
 // Ghost stroke opacities indexed oldest → newest (5 slots)
@@ -130,8 +119,7 @@ function smoothClosedPath(pts: { x: number; y: number }[]): string {
 }
 
 // ── Category data ──────────────────────────────────────────────────────────────
-type CatKey = typeof CAT_KEYS[number];
-const catData = catDesc as Record<CatKey, { description: string; image: string }>;
+const catData = catDesc as Record<string, { description: string; image: string }>;
 
 // Popout width (px)
 const POPOUT_W = 300;
@@ -200,10 +188,10 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
       const id = setTimeout(fn, delay);
       autoTimersRef.current.push(id);
     };
-    schedule(500,            () => animateToPresetRef.current(PRESETS[0].values, presetNames[0]));
-    schedule(500 + STEP,     () => animateToPresetRef.current(PRESETS[1].values, presetNames[1]));
-    schedule(500 + STEP * 2, () => animateToPresetRef.current(PRESETS[2].values, presetNames[2]));
-    schedule(500 + STEP * 3, () => animateToPresetRef.current([...DEFAULT_VALUES], null));
+    PRESETS.forEach((preset, i) => {
+      schedule(500 + STEP * i, () => animateToPresetRef.current(preset.values, preset.name));
+    });
+    schedule(500 + STEP * PRESETS.length, () => animateToPresetRef.current([...DEFAULT_VALUES], null));
   }, [cancelAutoPlay]);
 
   // Like runAutoPlaySequence but uses reset-specific timing, and drives the spin animation.
@@ -222,10 +210,10 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
       const id = setTimeout(fn, delay);
       autoTimersRef.current.push(id);
     };
-    schedule(500,           () => animateToPresetRef.current(PRESETS[0].values, presetNames[0], resetPresetAnimDuration));
-    schedule(500 + STEP,    () => animateToPresetRef.current(PRESETS[1].values, presetNames[1], resetPresetAnimDuration));
-    schedule(500 + STEP * 2, () => animateToPresetRef.current(PRESETS[2].values, presetNames[2], resetPresetAnimDuration));
-    schedule(500 + STEP * 3, () => animateToPresetRef.current([...DEFAULT_VALUES], null, resetPresetAnimDuration));
+    PRESETS.forEach((preset, i) => {
+      schedule(500 + STEP * i, () => animateToPresetRef.current(preset.values, preset.name, resetPresetAnimDuration));
+    });
+    schedule(500 + STEP * PRESETS.length, () => animateToPresetRef.current([...DEFAULT_VALUES], null, resetPresetAnimDuration));
   }, [cancelAutoPlay, stopResetSpin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const adjust = (i: number, delta: number) => {
@@ -491,7 +479,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
                       : 'none',
                   }}
                 >
-                  {cat.name.toUpperCase()}
+                  {cat.displayLabel.toUpperCase()}
                 </text>
               </g>
 
@@ -669,7 +657,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
               {above && (
                 <button
                   onClick={() => adjust(openCat, 10)}
-                  aria-label={`Increase ${CATEGORIES[openCat].name}`}
+                  aria-label={`Increase ${CATEGORIES[openCat].displayLabel}`}
                   style={arrowBtnStyle}
                 >+</button>
               )}
@@ -677,7 +665,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
               {/* Popout card */}
               <div
                 role="dialog"
-                aria-label={`${CATEGORIES[openCat].name} description`}
+                aria-label={`${CATEGORIES[openCat].displayLabel} description`}
                 style={{
                   background: 'white',
                   borderRadius: popoutBorderRadius,
@@ -725,7 +713,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
               {!above && (
                 <button
                   onClick={() => adjust(openCat, -10)}
-                  aria-label={`Decrease ${CATEGORIES[openCat].name}`}
+                  aria-label={`Decrease ${CATEGORIES[openCat].displayLabel}`}
                   style={arrowBtnStyle}
                 >−</button>
               )}

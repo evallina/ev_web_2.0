@@ -7,12 +7,14 @@ import Trajectory from "./components/Trajectory";
 import Hero from "./components/Hero";
 import DesignPhilosophy from "./components/DesignPhilosophy";
 import RadarChart from "./components/RadarChart";
-import ProjectCards, { type DebugMeta } from "./components/ProjectCards";
+import ProjectCards from "./components/ProjectCards";
+import { selectProjects } from "@/src/lib/selectProjects";
+import type { DebugMeta } from "@/src/types";
 import ContactBottom from "./components/ContactBottom";
 import projectsData from "@/src/data/projects.json";
 
 // ── Shared design variables ───────────────────────────────────────────────────
-const grainOpacity      = 0.40; // grain intensity for dark sections (background + header)
+const grainOpacity      = 0.20; // grain intensity for dark sections (background + header)
 const whiteGrainOpacity = 0.70; // grain intensity for white areas (contact + Works framing)
 
 // ── Works section dark-shape controls ────────────────────────────────────────
@@ -126,92 +128,22 @@ export default function Home() {
 
   // ── Project selection algorithm ────────────────────────────────────────────
   const handleRadarPlay = (radarValues: Record<string, number>, presetName: string | null = null) => {
-    const MATCH_THRESHOLD      = 20;
-    const DOMINANCE_THRESHOLD  = 80;
-    const DOMINANCE_MULTIPLIER = 2;
-    const MAX_PROJECTS         = 15;
+    const result = selectProjects(radarValues, projectsData.projects as Parameters<typeof selectProjects>[1], presetName);
 
-    type Project = typeof projectsData.projects[number];
-
-    const CAT_LABEL_TO_KEY: Record<string, string> = {
-      'Interactive':   'interactivity',
-      'User-Oriented': 'userOriented',
-      'Strategy':      'strategy',
-      'Public Realm':  'publicRealm',
-      'Data-Driven':   'dataDriven',
-      'Places':        'places',
-    };
-
-    // 1. Detect dominant categories
-    const dominantKeys = Object.entries(radarValues)
-      .filter(([, v]) => v >= DOMINANCE_THRESHOLD)
-      .map(([k]) => k);
-
-    const maxedKeys    = Object.entries(radarValues).filter(([, v]) => v >= 100).map(([k]) => k);
-    const allOthersLow = Object.entries(radarValues)
-      .filter(([k]) => !maxedKeys.includes(k))
-      .every(([, v]) => v < 30);
-    const singleDominantKey = (maxedKeys.length === 1 && allOthersLow) ? maxedKeys[0] : null;
-
-    // 2. Detect preset-boosted projects
-    const presetBoostedIds: string[] = presetName
-      ? projectsData.projects
-          .filter(p => {
-            const presets = (p.presets as (string | string[])[] | null) ?? [];
-            return presets.some(item =>
-              typeof item === 'string'
-                ? item.toUpperCase() === presetName.toUpperCase()
-                : Array.isArray(item) && item.some(s => s.toUpperCase() === presetName.toUpperCase())
-            );
-          })
-          .map(p => p.id)
-      : [];
-
-    // 3. Compute scores
-    const domBonusMap: Record<string, number> = {};
-    const scoredRows = projectsData.projects.map(p => {
-      const raw = Object.entries(p.categoryScores as Record<string, number>)
-        .reduce((sum, [key, val]) => sum + (radarValues[key] ?? 0) * val / 100, 0);
-      const priority   = (p as Project & { priority?: number }).priority ?? 0;
-      const primaryKey = CAT_LABEL_TO_KEY[p.category] ?? '';
-      const domBonus   = (primaryKey && dominantKeys.includes(primaryKey))
-        ? (radarValues[primaryKey] ?? 0) * DOMINANCE_MULTIPLIER : 0;
-      domBonusMap[p.id] = domBonus;
-      return { id: p.id, rawScore: +raw.toFixed(2), priorityBonus: priority, domBonus, finalScore: +(raw + priority * 100 + domBonus).toFixed(2), primaryKey };
-    });
-
-    // 4. Filter + sort (preset → single-dominant primary-cat → score)
-    let matched = scoredRows.filter(r => r.finalScore >= MATCH_THRESHOLD);
-    matched.sort((a, b) => {
-      const aPreset = presetBoostedIds.includes(a.id) ? 1 : 0;
-      const bPreset = presetBoostedIds.includes(b.id) ? 1 : 0;
-      if (bPreset !== aPreset) return bPreset - aPreset;
-      if (singleDominantKey) {
-        const aMatch = a.primaryKey === singleDominantKey ? 1 : 0;
-        const bMatch = b.primaryKey === singleDominantKey ? 1 : 0;
-        if (bMatch !== aMatch) return bMatch - aMatch;
-      }
-      return b.finalScore - a.finalScore;
-    });
-    matched = matched.slice(0, MAX_PROJECTS);
-
-    // 5. Debug logging
+    // Debug logging
     console.group('[RadarChart → ProjectCards] Play triggered');
     console.log('Radar values:', radarValues);
-    console.log('Dominant keys (≥' + DOMINANCE_THRESHOLD + '%):', dominantKeys, '| Single dominant:', singleDominantKey);
-    console.log('Preset boosted:', presetBoostedIds);
-    console.table(scoredRows);
-    console.log('Matched & sorted:', matched.map(r => `${r.id} (${r.finalScore})`).join(', ') || '— none —');
+    console.log('Dominant keys (≥' + result.debugMeta.dominanceThreshold + '%):', result.debugMeta.dominantCategoryKeys, '| Single dominant:', result.debugMeta.singleDominantKey);
+    console.log('Preset boosted:', result.debugMeta.presetBoostedIds);
+    console.table(result._scoredRows);
+    console.log('Matched & sorted:', result.ids.join(', ') || '— none —');
     console.groupEnd();
 
-    // 6. Update state
-    const scores: Record<string, number> = {};
-    matched.forEach(r => { scores[r.id] = r.finalScore; });
-    setSelectedProjectIds(matched.map(r => r.id));
-    setSelectedProjectScores(scores);
+    setSelectedProjectIds(result.ids);
+    setSelectedProjectScores(result.scores);
     setLastRadarValues(radarValues);
     setLastPresetName(presetName);
-    setLastDebugMeta({ dominantCategoryKeys: dominantKeys, singleDominantKey, presetBoostedIds, domBonusMap, dominanceThreshold: DOMINANCE_THRESHOLD });
+    setLastDebugMeta(result.debugMeta);
     scrollToSection('project-cards');
   };
 

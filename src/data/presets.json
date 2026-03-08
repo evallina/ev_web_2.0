@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Research",
+    "values": { "places": 70, "strategy": 60, "publicRealm": 20, "dataDriven": 100, "interactivity": 100, "userOriented": 30 }
+  },
+  {
+    "name": "Spatial Experiences",
+    "values": { "places": 100, "strategy": 10, "publicRealm": 90, "dataDriven": 10, "interactivity": 10, "userOriented": 100 }
+  },
+  {
+    "name": "Systems Thinking",
+    "values": { "places": 80, "strategy": 70, "publicRealm": 100, "dataDriven": 20, "interactivity": 10, "userOriented": 50 }
+  }
+]

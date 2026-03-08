@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "generate-projects": "node scripts/generate-projects.js",
-    "generate-philosophy": "node scripts/generate-philosophy.js"
+    "generate-philosophy": "node scripts/generate-philosophy.js",
+    "migrate-category": "node scripts/migrate-category.js"
   },
   "dependencies": {
     "@types/three": "^0.183.1",

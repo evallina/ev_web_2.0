@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import projectsData from '@/src/data/projects.json';
+import { BREAKDOWN_CATS, CAT_META } from '@/src/config/categories';
+import type { DebugMeta } from '@/src/types';
 
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │  DESIGN VARIABLES — edit these to tune the feel of the section             │
@@ -40,14 +42,8 @@ interface CardItem {
   isFirstOfProject: boolean;
 }
 
-// ── Debug algorithm metadata (computed in page.tsx, displayed here) ──────────
-export interface DebugMeta {
-  dominantCategoryKeys: string[];   // radar keys ≥ DOMINANCE_THRESHOLD
-  singleDominantKey:    string | null;
-  presetBoostedIds:     string[];
-  domBonusMap:          Record<string, number>;
-  dominanceThreshold:   number;
-}
+// re-export so page.tsx can keep its import path unchanged if desired
+export type { DebugMeta } from '@/src/types';
 
 interface Props {
   selectedProjectIds?:    string[];
@@ -58,25 +54,6 @@ interface Props {
   showDebug?:             boolean;
 }
 
-// Category display order and abbreviations for the breakdown strip
-const BREAKDOWN_CATS = [
-  { key: 'places',        abbr: 'Pl'  },
-  { key: 'userOriented',  abbr: 'UO'  },
-  { key: 'publicRealm',   abbr: 'PR'  },
-  { key: 'dataDriven',    abbr: 'DD'  },
-  { key: 'strategy',      abbr: 'Str' },
-  { key: 'interactivity', abbr: 'Int' },
-] as const;
-
-// ── Debug helpers ──────────────────────────────────────────────────────────────
-const CAT_META: Record<string, { label: string; abbr: string }> = {
-  interactivity: { label: 'Interactivity', abbr: 'Int' },
-  publicRealm:   { label: 'Public Realm',  abbr: 'PR'  },
-  userOriented:  { label: 'User-Oriented', abbr: 'UO'  },
-  dataDriven:    { label: 'Data-Driven',   abbr: 'DD'  },
-  strategy:      { label: 'Strategy',      abbr: 'Str' },
-  places:        { label: 'Places',        abbr: 'Pl'  },
-};
 
 function catContribs(p: ProjectEntry, rv: Record<string, number>) {
   return Object.entries(p.categoryScores as Record<string, number>)
