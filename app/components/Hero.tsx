@@ -25,7 +25,7 @@ const underlineStagger  = 200;  // ms between successive underlines
 const underlineDuration = 300;  // ms for each underline to draw left → right
 
 // ── Morphing category images ──────────────────────────────────────────────────
-const morphTransitionDuration = 1750;  // ms for the WebGL warp transition between images
+const morphTransitionDuration = 2000;  // ms for the WebGL warp transition between images
 const morphPauseDuration      = 0;     // ms each image stays fully visible before morphing
 const morphIntensity          = 0.8;   // warp strength (0.0 = plain crossfade, 1.0 = heavy distortion)
 const morphImageSize          = '30vw'; // canvas size in side-by-side (horizontal) layout

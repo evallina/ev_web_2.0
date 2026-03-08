@@ -197,11 +197,87 @@ export default function MorphingImages({
     });
     ro.observe(wrap);
 
+    // ── Animation state ───────────────────────────────────────────────────────
+    // currentIdx is the ONLY place that tracks which image is "current".
+    // It is advanced in exactly one place: inside the step() completion branch.
+    let currentIdx  = 0;
+    let rafId       = 0;
+    let timerId: ReturnType<typeof setTimeout> | undefined;
+
+    // Pause/resume bookkeeping:
+    //   pausePhase    — which phase the animation was in when paused
+    //   pausedP       — raw progress value (0–1) captured at pause (morphing only)
+    //   waitStartTime — performance.now() when the inter-morph pause timer was started
+    //   isVisible     — tracks IO state to avoid redundant transitions
+    type PausePhase = 'morphing' | 'waiting' | null;
+    let pausePhase:    PausePhase = null;
+    let pausedP        = 0;
+    let waitStartTime  = 0;
+    let isVisible      = true;
+
+    const render = () => renderer.render(scene, camera);
+
+    // ── Core animation functions ───────────────────────────────────────────────
+
+    // Set up the next morph from currentIdx → nextIdx and start the RAF loop.
+    // fromProgress > 0 → resume mid-morph: uniforms are already set, skip randomisation.
+    const beginMorph = (fromProgress = 0) => {
+      const nextIdx = (currentIdx + 1) % images.length;
+      pausePhase = 'morphing';
+
+      if (fromProgress === 0) {
+        // Fresh morph: randomise warp direction and noise region
+        uniforms.uAngle.value    = Math.random() * Math.PI * 2;
+        uniforms.uOffset.value   = new THREE.Vector2(Math.random(), Math.random());
+        uniforms.uTex1.value     = textures[currentIdx];
+        uniforms.uTex2.value     = textures[nextIdx];
+        uniforms.uProgress.value = 0.0;
+      }
+      // fromProgress > 0: uniforms already set from before the pause; just restart RAF.
+
+      // Adjust t0 so the step function picks up from exactly fromProgress.
+      const t0 = performance.now() - fromProgress * morphTransitionDuration;
+
+      const step = (now: number) => {
+        const raw = (now - t0) / morphTransitionDuration;
+        const p   = Math.min(raw, 1.0);
+        // Smoothstep easing: slow start → fast middle → slow end
+        uniforms.uProgress.value = p * p * (3 - 2 * p);
+        render();
+        pausedP = p; // keep current for IO snapshot
+
+        if (p < 1.0) {
+          rafId = requestAnimationFrame(step);
+        } else {
+          // ── Transition complete ────────────────────────────────────────────
+          // uProgress is now 1.0 → shader shows uTex2 at full opacity.
+          // Advance currentIdx here (the only place), then begin the inter-morph pause.
+          // beginMorph will swap textures and reset uProgress at the next transition start.
+          currentIdx    = nextIdx;
+          pausePhase    = 'waiting';
+          waitStartTime = performance.now();
+          timerId       = setTimeout(beginMorph, morphPauseDuration);
+        }
+      };
+
+      rafId = requestAnimationFrame(step);
+    };
+
+    // Show the first image immediately and queue the first morph.
+    const kickoff = () => {
+      uniforms.uTex1.value     = textures[0];
+      uniforms.uTex2.value     = textures[1 % images.length];
+      uniforms.uProgress.value = 0.0;
+      render();
+      pausePhase    = 'waiting';
+      waitStartTime = performance.now();
+      // Only start timer if currently visible; IO will resume us otherwise.
+      if (isVisible) timerId = setTimeout(beginMorph, morphPauseDuration);
+    };
+
     // ── Texture loading ───────────────────────────────────────────────────────
     const textures: (THREE.Texture | null)[] = new Array(images.length).fill(null);
     let loadedCount = 0;
-    let rafId  = 0;
-    let timerId: ReturnType<typeof setTimeout> | undefined;
 
     const loader = new THREE.TextureLoader();
     images.forEach((src, i) => {
@@ -212,65 +288,44 @@ export default function MorphingImages({
       });
     });
 
-    // ── Animation state machine ───────────────────────────────────────────────
-    // currentIdx is the ONLY place that tracks which image is "current".
-    // It is advanced in exactly one place: inside the step() completion branch.
-    let currentIdx = 0;
+    // ── IntersectionObserver — pause WebGL when off-screen ────────────────────
+    const io = new IntersectionObserver(([entry]) => {
+      const nowVisible = entry.isIntersecting;
+      if (nowVisible === isVisible) return; // no change
+      isVisible = nowVisible;
 
-    const render = () => renderer.render(scene, camera);
+      if (!nowVisible) {
+        // ── PAUSE ───────────────────────────────────────────────────────────
+        // Cancel whatever is running; pausePhase/pausedP/waitStartTime hold
+        // the snapshot needed to resume cleanly.
+        cancelAnimationFrame(rafId);
+        clearTimeout(timerId);
+        rafId   = 0;
+        timerId = undefined;
 
-    // Show the first image and start the pause before the first morph.
-    const kickoff = () => {
-      uniforms.uTex1.value     = textures[0];
-      uniforms.uTex2.value     = textures[1 % images.length];
-      uniforms.uProgress.value = 0.0;
-      render();
-      timerId = setTimeout(beginMorph, morphPauseDuration);
-    };
+      } else if (pausePhase === 'morphing') {
+        // ── RESUME mid-morph ────────────────────────────────────────────────
+        // Uniforms (uTex1, uTex2, uAngle, uOffset) are still set from before
+        // the pause; just restart the RAF from the saved progress value.
+        beginMorph(pausedP);
 
-    // Set up the next morph from currentIdx → nextIdx and start the RAF loop.
-    const beginMorph = () => {
-      const nextIdx = (currentIdx + 1) % images.length;
+      } else if (pausePhase === 'waiting') {
+        // ── RESUME from inter-morph pause ────────────────────────────────────
+        const elapsed   = performance.now() - waitStartTime;
+        const remaining = Math.max(0, morphPauseDuration - elapsed);
+        timerId = setTimeout(beginMorph, remaining);
 
-      // Randomise warp direction and noise region for every transition
-      uniforms.uAngle.value  = Math.random() * Math.PI * 2;
-      uniforms.uOffset.value = new THREE.Vector2(Math.random(), Math.random());
+      }
+      // pausePhase === null: textures not loaded yet; kickoff() will check isVisible.
+    }, { threshold: 0 });
 
-      uniforms.uTex1.value     = textures[currentIdx];
-      uniforms.uTex2.value     = textures[nextIdx];
-      uniforms.uProgress.value = 0.0;
-
-      const t0 = performance.now();
-
-      const step = (now: number) => {
-        const raw = (now - t0) / morphTransitionDuration;
-        const p   = Math.min(raw, 1.0);
-        // Smoothstep easing: slow start → fast middle → slow end
-        uniforms.uProgress.value = p * p * (3 - 2 * p);
-        render();
-
-        if (p < 1.0) {
-          rafId = requestAnimationFrame(step);
-        } else {
-          // ── Transition complete ──────────────────────────────────────────
-          // uProgress is now 1.0 → the shader already shows uTex2 at full
-          // opacity. We advance currentIdx here (the only place), then wait
-          // through the pause WITHOUT touching the uniforms or rendering —
-          // the canvas holds the correct last frame automatically.
-          // beginMorph will swap textures and reset uProgress at the start
-          // of the next transition, preventing any flash.
-          currentIdx = nextIdx;
-          timerId = setTimeout(beginMorph, morphPauseDuration);
-        }
-      };
-
-      rafId = requestAnimationFrame(step);
-    };
+    io.observe(wrap);
 
     // ── Cleanup ───────────────────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(rafId);
       clearTimeout(timerId);
+      io.disconnect();
       ro.disconnect();
       geo.dispose();
       mat.dispose();
