@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import catDesc from '@/src/data/categoryDescriptions.json';
 import presetsData from '@/src/data/presets.json';
 import { CATEGORIES, CAT_KEYS } from '@/src/config/categories';
+import IconCardReel from './IconCardReel';
 
 // ── Design variables (edit these to restyle the chart) ─────────────────────────
 const activeStrokeWidth  = 3;            // line weight of the active polygon
@@ -37,7 +38,13 @@ const labelHoverScale    = 1.2;          // label scale factor on mouse hover
 const labelScaleDuration = 400;          // ms for label scale transition
 
 // ── Preset button styles ───────────────────────────────────────────────────────
-const downArrowMarginTop     = 40;                        // px gap above the down-arrow button
+// px to trim from the SVG's rendered bottom, compensating for the empty viewBox
+// area below the lowest arrow buttons (~49 SVG units ≈ 30–40 px at typical widths).
+// Increase this value to close the gap between the chart and the icon reel;
+// pair with reelMarginTop in IconCardReel.tsx for fine control.
+const svgBottomClip          = 30;                         // px
+
+const downArrowMarginTop     = 15;                        // px gap above the down-arrow button
 const presetTextSize         = 'text-xs';                 // Tailwind font-size class
 const presetBorderColor      = 'rgb(255,255,255,0.5)';  // static border when inactive
 // IMPORTANT: fill colors must be opaque — the border trick works by placing a spinning
@@ -78,10 +85,13 @@ const DEFAULT_VALUES = [70, 70, 70, 70, 70];
 // ── Presets — loaded from src/data/presets.json ────────────────────────────────
 // Values converted from named-key objects to CAT_KEYS-ordered arrays.
 // To add/edit presets, edit presets.json — no code changes needed.
-const PRESETS = presetsData.map(p => ({
-  name:   p.name,
-  values: CAT_KEYS.map(k => (p.values as Record<string, number>)[k] ?? 0),
+const PRESETS = (presetsData as Array<{ name: string; isDefault?: boolean; values: Record<string, number> }>).map(p => ({
+  name:      p.name,
+  isDefault: p.isDefault ?? false,
+  values:    CAT_KEYS.map(k => p.values[k] ?? 0),
 }));
+// Presets shown as buttons and used in auto-play (excludes the invisible Default reset target)
+const NON_DEFAULT_PRESETS = PRESETS.filter(p => !p.isDefault);
 
 const PRESET_ANIM_DURATION  = 650;  // ms for preset morph animation (initial auto-play + manual clicks)
 const autoPlayPauseDuration = 150;  // ms to hold each preset during initial auto-play
@@ -90,7 +100,7 @@ const autoPlayPauseDuration = 150;  // ms to hold each preset during initial aut
 const resetAutoPlayPauseDuration = 100; // ms to hold each preset during reset auto-play
 const resetPresetAnimDuration    = 400;  // ms for each chart morph during reset auto-play
 // Total ms the reset sequence takes (initial delay + N steps + final morph):
-const RESET_TOTAL_DURATION = 200 + (resetPresetAnimDuration + resetAutoPlayPauseDuration) * PRESETS.length + resetPresetAnimDuration;
+const RESET_TOTAL_DURATION = 200 + (resetPresetAnimDuration + resetAutoPlayPauseDuration) * NON_DEFAULT_PRESETS.length + resetPresetAnimDuration;
 const resetIconRotations   = 3; // how many full rotations the reset icon makes during the sequence
 
 // Ghost stroke opacities indexed oldest → newest (5 slots)
@@ -149,8 +159,10 @@ function getLabelLines(label: string): [string] | [string, string] {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 interface RadarChartProps {
-  onPlay?:           (values: Record<string, number>, presetName: string | null) => void;
-  onCategoryFilter?: (catKey: string) => void;
+  onPlay?:             (values: Record<string, number>, presetName: string | null) => void;
+  onCategoryFilter?:   (catKey: string) => void;
+  /** Fired once when the initial (or reset) autoplay sequence finishes returning to defaults. */
+  onAutoPlayComplete?: () => void;
 }
 
 // Popout anchor positioning:
@@ -160,7 +172,7 @@ interface RadarChartProps {
 // `bottom:` without needing window.innerHeight at render time.
 interface PopoutPos { left: number; top: number; bottom: number; above: boolean; }
 
-export default function RadarChart({ onPlay, onCategoryFilter }: RadarChartProps) {
+export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplete }: RadarChartProps) {
   const [values,        setValues]        = useState<number[]>([...DEFAULT_VALUES]);
   const [ghosts,        setGhosts]        = useState<number[][]>([]);
   const [arrowKeys,     setArrowKeys]     = useState<Record<string, number>>({});
@@ -172,6 +184,10 @@ export default function RadarChart({ onPlay, onCategoryFilter }: RadarChartProps
   const [isAnimating,     setIsAnimating]     = useState(false);
   const [resetSpinning,  setResetSpinning]  = useState(false);
   const [hasPlayed,       setHasPlayed]       = useState(false);
+
+  // true after the chart's autoplay sequence (initial or reset) returns to defaults.
+  // Passed to IconCardReel as `chartReady` to gate its entrance animation.
+  const [chartIntroComplete, setChartIntroComplete] = useState(false);
 
   const [openCat,          setOpenCat]          = useState<number | null>(null);
   const [popoutPos,        setPopoutPos]        = useState<PopoutPos | null>(null);
@@ -215,15 +231,22 @@ export default function RadarChart({ onPlay, onCategoryFilter }: RadarChartProps
       const id = setTimeout(fn, delay);
       autoTimersRef.current.push(id);
     };
-    PRESETS.forEach((preset, i) => {
+    NON_DEFAULT_PRESETS.forEach((preset, i) => {
       schedule(500 + STEP * i, () => animateToPresetRef.current(preset.values, preset.name));
     });
-    schedule(500 + STEP * PRESETS.length, () => animateToPresetRef.current([...DEFAULT_VALUES], null));
-  }, [cancelAutoPlay]);
+    schedule(500 + STEP * NON_DEFAULT_PRESETS.length, () => animateToPresetRef.current([...DEFAULT_VALUES], null));
+    // Signal the reel after the last morph completes + a brief pause (200ms).
+    const completionDelay = 500 + STEP * NON_DEFAULT_PRESETS.length + PRESET_ANIM_DURATION + 200;
+    schedule(completionDelay, () => {
+      setChartIntroComplete(true);
+      onAutoPlayComplete?.();
+    });
+  }, [cancelAutoPlay, onAutoPlayComplete]);
 
   // Like runAutoPlaySequence but uses reset-specific timing, and drives the spin animation.
   const runResetAutoPlaySequence = useCallback(() => {
     cancelAutoPlay();
+    setChartIntroComplete(false); // hide the reel immediately while chart re-animates
     setResetSpinning(true);
     if (spinTimerRef.current) clearTimeout(spinTimerRef.current);
     // Stop spin exactly when the last morph finishes
@@ -237,10 +260,13 @@ export default function RadarChart({ onPlay, onCategoryFilter }: RadarChartProps
       const id = setTimeout(fn, delay);
       autoTimersRef.current.push(id);
     };
-    PRESETS.forEach((preset, i) => {
+    NON_DEFAULT_PRESETS.forEach((preset, i) => {
       schedule(500 + STEP * i, () => animateToPresetRef.current(preset.values, preset.name, resetPresetAnimDuration));
     });
-    schedule(500 + STEP * PRESETS.length, () => animateToPresetRef.current([...DEFAULT_VALUES], null, resetPresetAnimDuration));
+    schedule(500 + STEP * NON_DEFAULT_PRESETS.length, () => animateToPresetRef.current([...DEFAULT_VALUES], null, resetPresetAnimDuration));
+    // Signal the reel to reappear after the last morph ends + brief pause.
+    const completionDelay = 500 + STEP * NON_DEFAULT_PRESETS.length + resetPresetAnimDuration + 200;
+    schedule(completionDelay, () => setChartIntroComplete(true));
   }, [cancelAutoPlay, stopResetSpin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const adjust = (i: number, delta: number) => {
@@ -342,9 +368,14 @@ export default function RadarChart({ onPlay, onCategoryFilter }: RadarChartProps
     onPlay?.(Object.fromEntries(CAT_KEYS.map((key, i) => [key, values[i]])), activePreset);
   };
 
+  const radarValuesObj = useMemo(
+    () => Object.fromEntries(CAT_KEYS.map((key, i) => [key, values[i]])),
+    [values],
+  );
+
   const handleReset = () => {
     setHasPlayed(false);
-    runResetAutoPlaySequence();
+    runResetAutoPlaySequence(); // also sets chartIntroComplete=false → hides reel
   };
 
   // Convert an SVG viewBox point to viewport (screen) coordinates.
@@ -402,9 +433,10 @@ export default function RadarChart({ onPlay, onCategoryFilter }: RadarChartProps
         ref={svgRef}
         viewBox="0 0 800 760"
         style={{
-          width: '100%',
-          maxHeight: '60vh',
-          fontFamily: 'var(--font-roboto, Roboto, sans-serif)',
+          width:        '100%',
+          maxHeight:    '60vh',
+          fontFamily:   'var(--font-roboto, Roboto, sans-serif)',
+          marginBottom: -svgBottomClip,
         }}
         aria-label="Radar chart — select project types"
       >
@@ -632,9 +664,17 @@ export default function RadarChart({ onPlay, onCategoryFilter }: RadarChartProps
 
       </svg>
 
+      {/* ── Icon card reel ────────────────────────────────────────────────── */}
+      <IconCardReel
+        radarValues={radarValuesObj}
+        presetName={activePreset}
+        confirmed={hasPlayed}
+        chartReady={chartIntroComplete}
+      />
+
       {/* ── Preset buttons ────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 500, marginBottom: 8, paddingLeft: presetContainerPadding, paddingRight: presetContainerPadding, boxSizing: 'border-box' }}>
-        {PRESETS.map((preset) => {
+        {NON_DEFAULT_PRESETS.map((preset) => {
           const isActive  = activePreset === preset.name;
           const isHovered = hoveredPreset === preset.name;
           const bg    = isActive ? presetFillColorPressed : (isHovered ? presetFillColorHover : presetFillColor);

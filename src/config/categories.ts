@@ -7,7 +7,7 @@
 
 export const CATEGORIES = [
   { key: 'futures',             label: 'Futures',                abbr: 'F',  angle: -126, jsonCategory: 'Futures'                },
-  { key: 'artifactsInterfaces', label: 'Artifacts & Interfaces', abbr: 'AI', angle:  -54, jsonCategory: 'Artifacts & Interfaces' },
+  { key: 'artifactsInterfaces', label: 'Artifacts & Interfaces', abbr: 'A+I', angle:  -54, jsonCategory: 'Artifacts & Interfaces' },
   { key: 'architecture',        label: 'Architecture',           abbr: 'A',  angle:   18, jsonCategory: 'Architecture'           },
   { key: 'publicRealm',         label: 'Public Realm',           abbr: 'PR', angle:   90, jsonCategory: 'Public Realm'           },
   { key: 'computationalDesign', label: 'Computational Design',   abbr: 'CD', angle:  162, jsonCategory: 'Computational Design'   },

@@ -4,6 +4,8 @@
 // Called by page.tsx handleRadarPlay; state updates and navigation happen there.
 
 import { CAT_LABEL_TO_KEY } from '@/src/config/categories';
+import { MIN_DISPLAYED_PROJECTS, MAX_DISPLAYED_PROJECTS } from '@/src/config/selection';
+import presetsData from '@/src/data/presets.json';
 import type { DebugMeta } from '@/src/types';
 
 type AnyProject = {
@@ -29,6 +31,18 @@ export interface SelectResult {
   _scoredRows: { id: string; rawScore: number; priorityBonus: number; domBonus: number; finalScore: number; primaryKey: string }[];
 }
 
+// Compute dynamic max from the average radar signal.
+// Low signal (avg ≈ 0) → MIN projects;  high signal (avg ≈ 100) → MAX projects.
+function computeDynamicMax(radarValues: Record<string, number>): number {
+  const vals = Object.values(radarValues);
+  if (vals.length === 0) return MAX_DISPLAYED_PROJECTS;
+  const avg = vals.reduce((s, v) => s + v, 0) / vals.length;
+  return Math.round(
+    MIN_DISPLAYED_PROJECTS +
+    (MAX_DISPLAYED_PROJECTS - MIN_DISPLAYED_PROJECTS) * (avg / 100)
+  );
+}
+
 export function selectProjects(
   radarValues: Record<string, number>,
   projects:    AnyProject[],
@@ -38,7 +52,21 @@ export function selectProjects(
   const MATCH_THRESHOLD      = config.matchThreshold      ?? 20;
   const DOMINANCE_THRESHOLD  = config.dominanceThreshold  ?? 80;
   const DOMINANCE_MULTIPLIER = config.dominanceMultiplier ?? 2;
-  const MAX_PROJECTS         = config.maxProjects         ?? 15;
+
+  // Max projects priority:
+  //   1. Explicit config.maxProjects override
+  //   2. Preset-defined maxProjects (looked up from presets.json by name)
+  //   3. Dynamic value derived from average radar signal
+  let MAX_PROJECTS: number;
+  if (config.maxProjects !== undefined) {
+    MAX_PROJECTS = config.maxProjects;
+  } else {
+    const presetEntry = presetName
+      ? (presetsData as Array<{ name: string; maxProjects?: number }>)
+          .find(p => p.name.toUpperCase() === presetName.toUpperCase())
+      : null;
+    MAX_PROJECTS = presetEntry?.maxProjects ?? computeDynamicMax(radarValues);
+  }
 
   // 1. Detect dominant categories
   const dominantKeys = Object.entries(radarValues)

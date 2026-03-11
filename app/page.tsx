@@ -241,9 +241,9 @@ export default function Home() {
         <div className="h-2" />
         <h2 className="relative z-10 font-serif font-bold text-white text-4xl text-center mb-3">Work Selection</h2>
         <p className="relative z-10 font-sans text-white/40 text-sm leading-relaxed text-center mx-auto" style={{ maxWidth: "65%" }}>
-          Please configure a custom project showcase based on the design solution categories.
+          Select a preset or tune the chart. Use the arrow below to see the projects.
         </p>
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-start w-full min-h-0">
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-start w-full min-h-0 -mt-6">
           <RadarChart onPlay={handleRadarPlay} onCategoryFilter={handleCategoryFilter} />
         </div>
       </section>

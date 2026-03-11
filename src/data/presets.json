@@ -1,14 +1,22 @@
 [
   {
+    "name": "Default",
+    "isDefault": true,
+    "values": { "computationalDesign": 70, "artifactsInterfaces": 70, "publicRealm": 70, "architecture": 70, "futures": 70 }
+  },
+  {
     "name": "Research",
-    "values": { "computationalDesign": 100, "artifactsInterfaces": 60, "publicRealm": 10, "architecture": 10, "futures": 40 }
+    "values": { "computationalDesign": 100, "artifactsInterfaces": 60, "publicRealm": 10, "architecture": 10, "futures": 40 },
+    "maxProjects": 12
   },
   {
     "name": "Spatial Experiences",
-    "values": { "computationalDesign": 30, "artifactsInterfaces": 10, "publicRealm": 75, "architecture": 100, "futures": 10 }
+    "values": { "computationalDesign": 30, "artifactsInterfaces": 10, "publicRealm": 75, "architecture": 100, "futures": 10 },
+    "maxProjects": 11
   },
   {
     "name": "Systems Thinking",
-    "values": { "computationalDesign": 70, "artifactsInterfaces": 35, "publicRealm": 20, "architecture": 20, "futures": 100 }
+    "values": { "computationalDesign": 70, "artifactsInterfaces": 35, "publicRealm": 20, "architecture": 20, "futures": 100 },
+    "maxProjects": 13
   }
 ]
