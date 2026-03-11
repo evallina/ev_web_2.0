@@ -13,6 +13,23 @@ const categoryTextSize   = 'text-base';  // Tailwind-style size token for catego
 const arrowColor         = 'white';      // color of the + / − buttons
 const arrowOpacity       = 0.30;         // resting opacity of the + / − buttons (0–1)
 const arrowFontSize      = 25;           // font size of the + / − buttons in viewBox units
+// Circles behind + / − symbols (outline only — no fill)
+const arrowCircleRadius  = 13;           // viewBox units
+const arrowCircleColor   = 'white';
+const arrowCircleOpacity = 0.15;         // resting opacity; full white on hover
+const arrowCircleStroke  = 1;            // strokeWidth in viewBox units
+// + / − symbol vertical positions — separate values for 1-line vs 2-line labels
+const arrowUpOffsetY1      = -39;        // 1-line labels: negative = above label anchor (viewBox units)
+const arrowUpOffsetY2      = -40;        // 2-line labels: negative = above label anchor (viewBox units)
+const arrowDnPaddingBelow1 =  15;        // 1-line labels: gap below hit-rect bottom edge (viewBox units)
+const arrowDnPaddingBelow2 =  23;        // 2-line labels: gap below hit-rect bottom edge (viewBox units)
+// Circle micro-adjustment (fine-tune centering on top of dominantBaseline="mathematical")
+const circleUpAdjY = 2.7;                  // extra cy offset for the + circle (viewBox units, + = down)
+const circleDnAdjY = 1.7;                  // extra cy offset for the − circle (viewBox units, + = down)
+// Arrow-up-right icon positioning (aligned to last line of label text)
+const infoIconCharWidth = 0.65;         // estimated char width multiplier for Roboto Bold (× catFontSize)
+const infoIconGap       =  8;          // gap between text right edge and icon left edge (viewBox units)
+const infoIconYOffset   =  0;          // vertical fine-tune (viewBox units, + = down)
 const popoutFadeDuration = 1100;         // ms for popout fade in / out
 const popoutBorderRadius = 0;            // px corner radius of the popout card
 const popoutOpenScale    = 1.4;          // label scale factor while its popout is open
@@ -22,8 +39,7 @@ const labelScaleDuration = 400;          // ms for label scale transition
 // ── Preset button styles ───────────────────────────────────────────────────────
 const downArrowMarginTop     = 40;                        // px gap above the down-arrow button
 const presetTextSize         = 'text-xs';                 // Tailwind font-size class
-const presetBorderColor      = 'rgb(255,255,255,0.5)';  // static border when inactive - rgb(255,255,255,0.1)
-const presetBorderAnimColor  = '#FFFFFF';                 // animated border color when active
+const presetBorderColor      = 'rgb(255,255,255,0.5)';  // static border when inactive
 // IMPORTANT: fill colors must be opaque — the border trick works by placing a spinning
 // gradient behind the button; the button's solid fill hides the gradient in the center,
 // leaving it visible only through the border-width gap at the edges.
@@ -57,7 +73,7 @@ const TEXT_SIZE_MAP: Record<string, number> = {
 const catFontSize = TEXT_SIZE_MAP[categoryTextSize] ?? 12;
 
 
-const DEFAULT_VALUES = [70, 70, 70, 70, 70, 70];
+const DEFAULT_VALUES = [70, 70, 70, 70, 70];
 
 // ── Presets — loaded from src/data/presets.json ────────────────────────────────
 // Values converted from named-key objects to CAT_KEYS-ordered arrays.
@@ -124,9 +140,17 @@ const catData = catDesc as Record<string, { description: string; image: string }
 // Popout width (px)
 const POPOUT_W = 300;
 
+// Returns one or two uppercase lines for a category label.
+function getLabelLines(label: string): [string] | [string, string] {
+  if (label === 'Computational Design')   return ['COMPUTATIONAL', 'DESIGN'];
+  if (label === 'Artifacts & Interfaces') return ['ARTIFACTS', '& INTERFACES'];
+  return [label.toUpperCase()];
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 interface RadarChartProps {
-  onPlay?: (values: Record<string, number>, presetName: string | null) => void;
+  onPlay?:           (values: Record<string, number>, presetName: string | null) => void;
+  onCategoryFilter?: (catKey: string) => void;
 }
 
 // Popout anchor positioning:
@@ -136,7 +160,7 @@ interface RadarChartProps {
 // `bottom:` without needing window.innerHeight at render time.
 interface PopoutPos { left: number; top: number; bottom: number; above: boolean; }
 
-export default function RadarChart({ onPlay }: RadarChartProps) {
+export default function RadarChart({ onPlay, onCategoryFilter }: RadarChartProps) {
   const [values,        setValues]        = useState<number[]>([...DEFAULT_VALUES]);
   const [ghosts,        setGhosts]        = useState<number[][]>([]);
   const [arrowKeys,     setArrowKeys]     = useState<Record<string, number>>({});
@@ -149,14 +173,17 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
   const [resetSpinning,  setResetSpinning]  = useState(false);
   const [hasPlayed,       setHasPlayed]       = useState(false);
 
-  const [openCat,       setOpenCat]       = useState<number | null>(null);
-  const [popoutPos,     setPopoutPos]     = useState<PopoutPos | null>(null);
-  const [popoutVisible, setPopoutVisible] = useState(false);
+  const [openCat,          setOpenCat]          = useState<number | null>(null);
+  const [popoutPos,        setPopoutPos]        = useState<PopoutPos | null>(null);
+  const [popoutVisible,    setPopoutVisible]    = useState(false);
+  const [hoveredDownArrow, setHoveredDownArrow] = useState(false);
+  const [hoveredArrow,     setHoveredArrow]     = useState<{ cat: number; dir: 'up' | 'dn' } | null>(null);
 
   const svgRef             = useRef<SVGSVGElement>(null);
   const containerRef       = useRef<HTMLDivElement>(null);
   const closeTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animFrameRef       = useRef<number | null>(null);
+  const downArrowBtnRef    = useRef<HTMLButtonElement>(null);
   const autoTimersRef      = useRef<ReturnType<typeof setTimeout>[]>([]);
   const hasAutoPlayedRef   = useRef(false);
   const spinTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -298,6 +325,17 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
     return () => { observer.disconnect(); cancelAutoPlay(); };
   }, [cancelAutoPlay, runAutoPlaySequence]);
 
+  // ── Down-arrow bounce — set animation directly on the DOM node so React
+  // re-renders (which happen every RAF frame during preset animation) never
+  // interrupt it.  Only re-runs when the two meaningful state values change.
+  useEffect(() => {
+    const btn = downArrowBtnRef.current;
+    if (!btn) return;
+    btn.style.animation = hasPlayed
+      ? 'none'
+      : `radar-btn-bounce ${hoveredDownArrow ? '0.45s' : '1.5s'} ease-in-out infinite`;
+  }, [hasPlayed, hoveredDownArrow]);
+
   const handlePlay = () => {
     setHasPlayed(true);
     setGhosts(prev => [...prev.slice(-4), [...values]]);
@@ -305,6 +343,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
   };
 
   const handleReset = () => {
+    setHasPlayed(false);
     runResetAutoPlaySequence();
   };
 
@@ -426,17 +465,53 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
               ? labelHoverScale
               : 1;
 
+          // Multi-line label support
+          const lines   = getLabelLines(cat.label);
+          const isMulti = lines.length > 1;
+          const hitH    = isMulti ? 46 : 32;
+
+          // For two-line labels, shift text down so the visual block is
+          // centered between the + and − symbols.
+          const textY   = isMulti ? y + 11 : y;
+
+          // Arrow button vertical positions — use per-line-count variables
+          const upSymY  = y + (isMulti ? arrowUpOffsetY2  : arrowUpOffsetY1);
+          const dnSymY  = y + hitH / 2 + (isMulti ? arrowDnPaddingBelow2 : arrowDnPaddingBelow1);
+
+          // dominantBaseline="mathematical" aligns glyph centre to y; fine-tune with adj vars
+          const circleCyUp = upSymY + circleUpAdjY;
+          const circleCyDn = dnSymY + circleDnAdjY;
+
+          // Hover states for this category's arrow circles
+          const upHovered = hoveredArrow?.cat === i && hoveredArrow.dir === 'up';
+          const dnHovered = hoveredArrow?.cat === i && hoveredArrow.dir === 'dn';
+
           return (
             <g key={`label-${i}`}>
 
               {/* ▲ Increase — hidden while its popout covers it */}
               {!hideUp && (
-                <g onClick={() => adjust(i, 10)} style={{ cursor: 'pointer' }}>
-                  <rect x={x - 28} y={y - 44} width={56} height={26} fill="transparent" />
+                <g
+                  onClick={() => adjust(i, 10)}
+                  onMouseEnter={() => setHoveredArrow({ cat: i, dir: 'up' })}
+                  onMouseLeave={() => setHoveredArrow(null)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Outline circle behind + — full white on hover */}
+                  <circle
+                    cx={x} cy={circleCyUp} r={arrowCircleRadius}
+                    fill="none"
+                    stroke={arrowCircleColor}
+                    strokeOpacity={upHovered ? 1 : arrowCircleOpacity}
+                    strokeWidth={arrowCircleStroke}
+                    style={{ transition: 'stroke-opacity 150ms ease' }}
+                  />
+                  <rect x={x - 28} y={upSymY - 16} width={56} height={26} fill="transparent" />
                   <text
                     key={`arrow-up-${i}-${arrowKeys[upKey] ?? 0}`}
-                    x={x} y={y - 28}
+                    x={x} y={upSymY}
                     textAnchor="middle"
+                    dominantBaseline="mathematical"
                     fill={arrowColor} fillOpacity={arrowOpacity}
                     fontSize={arrowFontSize} fontWeight="bold"
                     style={{
@@ -448,7 +523,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
                 </g>
               )}
 
-              {/* Category label — click to open/close popout; hover to hint scale */}
+              {/* Category label + info icon — scale together as one group */}
               <g
                 onClick={() => handleLabelClick(i, x, y)}
                 onMouseEnter={() => setHoveredCat(i)}
@@ -456,17 +531,20 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
                 style={{
                   cursor: 'pointer',
                   transform: `scale(${labelScale})`,
-                  transformBox: 'fill-box',
-                  transformOrigin: 'center',
+                  transformBox: 'view-box',
+                  transformOrigin: `${x}px ${textY}px`,
                   transition: `transform ${labelScaleDuration}ms ease-out`,
                 }}
               >
-                {/* Transparent hit area */}
-                <rect x={x - 70} y={y - 16} width={140} height={32} fill="transparent" />
+                {/* Transparent hit area — taller for two-line labels */}
+                <rect x={x - 70} y={textY - hitH / 2} width={140} height={hitH} fill="transparent" />
+
+                {/* Category text */}
                 <text
                   key={`cat-text-${i}-${textKeys[i] ?? 0}`}
-                  x={x} y={y}
-                  textAnchor="middle" dominantBaseline="middle"
+                  x={x} y={textY}
+                  textAnchor="middle"
+                  dominantBaseline={isMulti ? undefined : 'middle'}
                   fill="white"
                   fontSize={catFontSize} fontWeight="bold"
                   style={{
@@ -479,18 +557,64 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
                       : 'none',
                   }}
                 >
-                  {cat.displayLabel.toUpperCase()}
+                  {isMulti ? (
+                    <>
+                      <tspan x={x} dy={-(catFontSize * 0.65)}>{lines[0]}</tspan>
+                      <tspan x={x} dy={catFontSize * 1.3}>{lines[1]}</tspan>
+                    </>
+                  ) : lines[0]}
                 </text>
+
+                {/* ↗ Arrow icon — inline after last line of text, scales with label group */}
+                {(() => {
+                  // X: align to right edge of last line using estimated text width
+                  const lastLine     = lines[lines.length - 1];
+                  const lastHalfW    = (lastLine.length * catFontSize * infoIconCharWidth) / 2;
+                  const iconCX       = x + lastHalfW + infoIconGap + catFontSize / 2;
+                  // Y: visual centre of last line
+                  // - single-line: dominantBaseline="middle" makes textY the visual centre
+                  // - multi-line: second tspan baseline = textY + 0.65×fs; visual centre ≈ baseline − 0.35×fs = textY + 0.30×fs
+                  const iconCY = (isMulti ? textY + catFontSize * 0.30 : textY) + infoIconYOffset;
+                  const s      = catFontSize;   // rendered size (viewBox units)
+                  return (
+                    <g
+                      transform={`translate(${iconCX - s / 2}, ${iconCY - s / 2}) scale(${s / 24})`}
+                      style={{
+                        opacity: hoveredCat === i || isOpen ? 0.80 : 0.40,
+                        transition: 'opacity 200ms ease',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <path d="M7 7h10v10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                      <path d="M7 17 17 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    </g>
+                  );
+                })()}
               </g>
 
               {/* ▼ Decrease — hidden while its popout covers it */}
               {!hideDown && (
-                <g onClick={() => adjust(i, -10)} style={{ cursor: 'pointer' }}>
-                  <rect x={x - 28} y={y + 28} width={56} height={26} fill="transparent" />
+                <g
+                  onClick={() => adjust(i, -10)}
+                  onMouseEnter={() => setHoveredArrow({ cat: i, dir: 'dn' })}
+                  onMouseLeave={() => setHoveredArrow(null)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Outline circle behind − — full white on hover */}
+                  <circle
+                    cx={x} cy={circleCyDn} r={arrowCircleRadius}
+                    fill="none"
+                    stroke={arrowCircleColor}
+                    strokeOpacity={dnHovered ? 1 : arrowCircleOpacity}
+                    strokeWidth={arrowCircleStroke}
+                    style={{ transition: 'stroke-opacity 150ms ease' }}
+                  />
+                  <rect x={x - 28} y={dnSymY - 10} width={56} height={26} fill="transparent" />
                   <text
                     key={`arrow-down-${i}-${arrowKeys[downKey] ?? 0}`}
-                    x={x} y={y + 42}
+                    x={x} y={dnSymY}
                     textAnchor="middle"
+                    dominantBaseline="mathematical"
                     fill={arrowColor} fillOpacity={arrowOpacity}
                     fontSize={arrowFontSize} fontWeight="bold"
                     style={{
@@ -547,16 +671,28 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
         })}
       </div>
 
-      {/* ── Reset + Down-arrow buttons ─────────────────────────────────────── */}
-      <div className="flex flex-col items-center gap-2" style={{ marginTop: downArrowMarginTop }}>
+      {/* ── Down-arrow / Reset crossfade ──────────────────────────────────── */}
+      {/* Both buttons occupy the same 48×48 slot. Down arrow is active when
+          !hasPlayed; reset takes over when hasPlayed. 200ms crossfade. */}
+      <div style={{ position: 'relative', width: 48, height: 48, marginTop: downArrowMarginTop }}>
 
-        {/* Reset button — restarts the auto-play sequence */}
+        {/* Reset button — fades IN when hasPlayed */}
         <button
           onClick={handleReset}
           aria-label="Restart auto-play sequence"
-          className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.10)',
+            border: '1px solid rgba(255,255,255,0.20)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+            opacity: hasPlayed ? 1 : 0,
+            transition: 'opacity 200ms ease',
+            pointerEvents: hasPlayed ? 'auto' : 'none',
+          }}
         >
-          {/* refresh-cw icon from /public/images/ui/icons/refresh-cw.svg (inlined for animation) */}
           <svg
             width="14" height="14" viewBox="0 0 24 24" fill="none"
             stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -574,12 +710,26 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
           </svg>
         </button>
 
-        {/* Down-arrow button — confirms selection and loads projects */}
+        {/* Down-arrow button — fades OUT when hasPlayed.
+            Animation driven via downArrowBtnRef / useEffect (bypasses React renders). */}
         <button
+          ref={downArrowBtnRef}
           onClick={handlePlay}
+          onMouseEnter={() => setHoveredDownArrow(true)}
+          onMouseLeave={() => setHoveredDownArrow(false)}
           aria-label="Save selection and load projects"
-          className="radar-down-arrow-btn w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
-          style={{ opacity: hasPlayed ? 0.30 : 1, transition: 'opacity 400ms ease' }}
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            borderRadius: '50%',
+            background: hoveredDownArrow ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.10)',
+            border: `${activeStrokeWidth}px solid white`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+            opacity: hasPlayed ? 0 : 1,
+            transition: 'opacity 200ms ease, background 200ms ease',
+            pointerEvents: hasPlayed ? 'none' : 'auto',
+          }}
         >
           <svg
             width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"
@@ -657,7 +807,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
               {above && (
                 <button
                   onClick={() => adjust(openCat, 10)}
-                  aria-label={`Increase ${CATEGORIES[openCat].displayLabel}`}
+                  aria-label={`Increase ${CATEGORIES[openCat].label}`}
                   style={arrowBtnStyle}
                 >+</button>
               )}
@@ -665,7 +815,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
               {/* Popout card */}
               <div
                 role="dialog"
-                aria-label={`${CATEGORIES[openCat].displayLabel} description`}
+                aria-label={`${CATEGORIES[openCat].label} description`}
                 style={{
                   background: 'white',
                   borderRadius: popoutBorderRadius,
@@ -694,6 +844,7 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
                     lineHeight: 1.7,
                     color: '#444',
                     fontFamily: 'var(--font-roboto, Roboto, sans-serif)',
+                    fontWeight: 700,
                   }}>
                     {data?.description}
                   </p>
@@ -707,13 +858,43 @@ export default function RadarChart({ onPlay }: RadarChartProps) {
                   aria-hidden="true"
                   style={{ width: '100%', display: 'block' }}
                 />
+
+                {/* Show All button */}
+                <div style={{ padding: '10px 18px 14px' }}>
+                  <button
+                    onClick={() => {
+                      const key = CAT_KEYS[openCat];
+                      closePopout();
+                      setHasPlayed(true);
+                      onCategoryFilter?.(key);
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#111'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#333'; }}
+                    style={{
+                      width: '100%',
+                      background: '#333',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'white',
+                      fontSize: 10,
+                      letterSpacing: '0.13em',
+                      textTransform: 'uppercase',
+                      fontFamily: 'var(--font-roboto, Roboto, sans-serif)',
+                      textAlign: 'center',
+                      padding: '10px 0',
+                      transition: 'background 200ms',
+                    }}
+                  >
+                    Show {CATEGORIES[openCat].label} Projects
+                  </button>
+                </div>
               </div>
 
               {/* − button rendered below the card for `!above` labels */}
               {!above && (
                 <button
                   onClick={() => adjust(openCat, -10)}
-                  aria-label={`Decrease ${CATEGORIES[openCat].displayLabel}`}
+                  aria-label={`Decrease ${CATEGORIES[openCat].label}`}
                   style={arrowBtnStyle}
                 >−</button>
               )}

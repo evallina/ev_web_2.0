@@ -1,26 +1,22 @@
 {
-  "interactivity": {
-    "description": "Projects and Studies that explore design solutions that bridge between the digital and the tangible.",
-    "image": "/images/categories/dark_background/Interactive_01.jpg"
+  "computationalDesign": {
+    "description": "Parametric Geometry · Algorithmic Workflows · Data Visualization · Tool Building · Urban Analytics · Scripting",
+    "image": "/images/categories/dark_background/ComputationalDesign_01.jpg"
+  },
+  "artifactsInterfaces": {
+    "description": "Installations · Prototypes · Kinetic Systems · Data Experiences",
+    "image": "/images/categories/dark_background/ArtifactsAndInterfaces_01.jpg"
   },
   "publicRealm": {
-    "description": "Work that ambitions to improve the public environment through interventions in different design scales.",
+    "description": "Urban Design · Civic Infrastructure · Public Spaces · Landscape · Connectivity · Masterplanning",
     "image": "/images/categories/dark_background/Public_Realm_01.jpg"
   },
-  "userOriented": {
-    "description": "A project that results on a taxonomy exercise of the user in order to create an environment that would represent them.",
-    "image": "/images/categories/dark_background/User_Oriented_01.jpg"
+  "architecture": {
+    "description": "Buildings · Interiors · Renovation · Envelope Systems · Construction · Spatial Programming",
+    "image": "/images/categories/dark_background/Architecture_01.jpg"
   },
-  "dataDriven": {
-    "description": "Solutions that ambition to unveil insights that help to make design-driven decisions, as well as storytelling pieces.",
-    "image": "/images/categories/dark_background/Data-Driven.jpg"
-  },
-  "strategy": {
-    "description": "Ideas and Conceptualization of the solutions to a problem in predetermined range of time, and that would create an exciting and hopeful future.",
-    "image": "/images/categories/dark_background/Strategy.jpg"
-  },
-  "places": {
-    "description": "Projects and studies which ultimate goal is to improve and engage the user experience.",
-    "image": "/images/categories/dark_background/Places_01.jpg"
+  "futures": {
+    "description": "Vision · Strategic Planning · Competitions · Proposals · Speculative Narratives",
+    "image": "/images/categories/dark_background/Futures.jpg"
   }
 }

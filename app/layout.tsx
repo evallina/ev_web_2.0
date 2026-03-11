@@ -14,9 +14,12 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Enol Vallina — Portfolio",
+  title: "Enol Vallina | Design",
   description: "Portfolio of Enol Vallina",
   robots: { index: true, follow: true, noimageindex: true },
+  icons: {
+    icon: [{ url: '/images/ui/icons/ev_square.svg', type: 'image/svg+xml' }],
+  },
 };
 
 export default function RootLayout({

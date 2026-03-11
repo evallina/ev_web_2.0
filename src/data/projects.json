@@ -2,649 +2,888 @@
   "projects": [
     {
       "id": "EV-01",
-      "title": "Amsterdam Light Festival 2020",
-      "category": "Interactive",
-      "organization": "Architecture+Netherlands",
-      "date": "2026-02",
+      "title": "Animap",
+      "subtitle": "",
+      "category": "Artifacts & Interfaces",
+      "organization": "LMN Tech Studio",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-01_Interactive_Amsterdam Light Festival 2020/2026-02_Interactive_EV-01_Amsterdam Light Festival 2020_Architecture+Netherlands.jpg"
+        "/images/projects/EV-01_ARTIFACTSANDINTERFACES_Animap/2026-03_ArtifactsAndInterfaces_EV-01_Animap_LMNTechStudio.png"
       ],
       "categoryScores": {
-        "interactivity": 80,
-        "publicRealm": 50,
-        "userOriented": 20,
-        "dataDriven": 35,
-        "strategy": 5,
-        "places": 15
+        "computationalDesign": 0,
+        "artifactsInterfaces": 80,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 3,
-      "presets": ["Research"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-02",
-      "title": "Animap",
-      "category": "Interactive",
+      "title": "Amsterdam Light Festival2020",
+      "subtitle": "",
+      "category": "Artifacts & Interfaces",
       "organization": "LMN Tech Studio",
-      "date": "2026-02",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-02_Interactive_Animap/2026-02_Interactive_EV-02_Animap_LMN Tech Studio.jpg"
+        "/images/projects/EV-02_ARTIFACTSANDINTERFACES_AmsterdamLightFestival2020/2026-03_ArtifactsAndInterfaces_EV-02_AmsterdamLightFestival2020_LMNTechStudio.png"
       ],
       "categoryScores": {
-        "interactivity": 100,
-        "publicRealm": 5,
-        "userOriented": 20,
-        "dataDriven": 70,
-        "strategy": 20,
-        "places": 5
+        "computationalDesign": 0,
+        "artifactsInterfaces": 80,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 5,
-      "presets": ["Research"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-03",
-      "title": "Following the Conversation",
-      "category": "Interactive",
+      "title": "Following The Conversation",
+      "subtitle": "",
+      "category": "Artifacts & Interfaces",
       "organization": "Harvard GSD",
-      "date": "2026-02",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-03_Interactive_Following the Conversation/2026-02_Interactive_EV-03_Following the Conversation_Harvard GSD.jpg"
+        "/images/projects/EV-03_ARTIFACTSANDINTERFACES_FollowingTheConversation/2026-03_ArtifactsAndInterfaces_EV-03_FollowingTheConversation_HarvardGSD.png"
       ],
       "categoryScores": {
-        "interactivity": 85,
+        "computationalDesign": 0,
+        "artifactsInterfaces": 80,
         "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 60,
-        "strategy": 0,
-        "places": 0
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 2,
+      "priority": 0,
       "presets": null
     },
     {
       "id": "EV-04",
-      "title": "Music Footprint",
-      "category": "Interactive",
-      "organization": "Harvard SEAS",
-      "date": "2026-02",
+      "title": "Borealis Festival Of Light Masterplan",
+      "subtitle": "",
+      "category": "Artifacts & Interfaces",
+      "organization": "SHY Studio",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-04_Interactive_Music Footprint/2026-02_Interactive_EV-04_Music Footprint_Harvard SEAS.jpg"
+        "/images/projects/EV-04_ARTIFACTSANDINTERFACES_BorealisFestivalOfLightMasterplan/2026-03_ArtifactsAndInterfaces_EV-04_BorealisFestivalOfLightMasterplan_SHYStudio.png"
       ],
       "categoryScores": {
-        "interactivity": 85,
+        "computationalDesign": 0,
+        "artifactsInterfaces": 80,
         "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 40,
-        "strategy": 0,
-        "places": 0
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 2,
+      "priority": 0,
       "presets": null
     },
     {
       "id": "EV-05",
-      "title": "Vestige Augmented",
-      "category": "Interactive",
-      "organization": "Harvard SEAS",
-      "date": "2026-02",
+      "title": "Music Footprint",
+      "subtitle": "",
+      "category": "Artifacts & Interfaces",
+      "organization": "Harvard DECO",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-05_Interactive_Vestige Augmented/2026-02_Interactive_EV-05_Vestige Augmented_Harvard SEAS.jpg"
+        "/images/projects/EV-05_ARTIFACTSANDINTERFACES_MusicFootprint/2026-03_ArtifactsAndInterfaces_EV-05_MusicFootprint_HarvardDECO.png"
       ],
       "categoryScores": {
-        "interactivity": 90,
-        "publicRealm": 60,
-        "userOriented": 0,
-        "dataDriven": 10,
-        "strategy": 0,
-        "places": 0
+        "computationalDesign": 0,
+        "artifactsInterfaces": 80,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 1,
+      "priority": 0,
       "presets": null
     },
     {
       "id": "EV-06",
-      "title": "Open Walk",
-      "category": "Interactive",
-      "organization": "Harvard USD",
-      "date": "2026-02",
+      "title": "Vestige Augmented",
+      "subtitle": "",
+      "category": "Artifacts & Interfaces",
+      "organization": "Harvard DECO",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-06_Interactive_Open Walk/2026-02_Interactive_EV-06_Open Walk_Harvard USD.jpg"
+        "/images/projects/EV-06_ARTIFACTSANDINTERFACES_VestigeAugmented/2026-03_ArtifactsAndInterfaces_EV-06_VestigeAugmented_HarvardDECO.png"
       ],
       "categoryScores": {
-        "interactivity": 80,
+        "computationalDesign": 0,
+        "artifactsInterfaces": 80,
         "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 10,
-        "strategy": 0,
-        "places": 0
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 2,
+      "priority": 0,
       "presets": null
     },
     {
       "id": "EV-07",
-      "title": "University of Nevada Reno John Tulloch Business Building",
-      "category": "User-Oriented",
-      "organization": "LMN Architects",
-      "date": "2026-02",
+      "title": "Open Walk",
+      "subtitle": "",
+      "category": "Artifacts & Interfaces",
+      "organization": "Harvard GSD",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-07_User-Oriented_University of Nevada Reno John Tulloch Business Building/2026-02_User-Oriented_EV-07_University of Nevada Reno John Tulloch Business Building_LMN Architects_Page1.jpg",
-        "/images/projects/EV-07_User-Oriented_University of Nevada Reno John Tulloch Business Building/2026-02_User-Oriented_EV-07_University of Nevada Reno John Tulloch Business Building_LMN Architects_Page2.jpg",
-        "/images/projects/EV-07_User-Oriented_University of Nevada Reno John Tulloch Business Building/2026-02_User-Oriented_EV-07_University of Nevada Reno John Tulloch Business Building_LMN Architects_Page3.jpg"
+        "/images/projects/EV-07_ARTIFACTSANDINTERFACES_OpenWalk/2026-03_ArtifactsAndInterfaces_EV-07_OpenWalk_HarvardGSD.png"
       ],
       "categoryScores": {
-        "interactivity": 5,
-        "publicRealm": 50,
-        "userOriented": 100,
-        "dataDriven": 30,
-        "strategy": 40,
-        "places": 75
+        "computationalDesign": 0,
+        "artifactsInterfaces": 80,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 5,
-      "presets": ["Spatial Experiences","Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-08",
-      "title": "iUA Interactive Urban Analysis",
-      "category": "User-Oriented",
-      "organization": "Harvard GSD",
-      "date": "2026-02",
+      "title": "University Of Nevada Reno John Tulloch Business Building",
+      "subtitle": "",
+      "category": "Architecture",
+      "organization": "LMN Architects",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-08_User-Oriented_iUA Interactive Urban Analysis/2026-02_User-Oriented_EV-08_iUA Interactive Urban Analysis_Harvard GSD.jpg"
+        "/images/projects/EV-08_ARCHITECTURE_UniversityOfNevadaRenoJohnTullochBusinessBuilding/2026-03_Architecture_EV-08_UniversityOfNevadaRenoJohnTullochBusinessBuilding_LMNArchitects_page1.png",
+        "/images/projects/EV-08_ARCHITECTURE_UniversityOfNevadaRenoJohnTullochBusinessBuilding/2026-03_Architecture_EV-08_UniversityOfNevadaRenoJohnTullochBusinessBuilding_LMNArchitects_page2.png",
+        "/images/projects/EV-08_ARCHITECTURE_UniversityOfNevadaRenoJohnTullochBusinessBuilding/2026-03_Architecture_EV-08_UniversityOfNevadaRenoJohnTullochBusinessBuilding_LMNArchitects_page3.png"
       ],
       "categoryScores": {
-        "interactivity": 70,
-        "publicRealm": 50,
-        "userOriented": 100,
-        "dataDriven": 70,
-        "strategy": 60,
-        "places": 20
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 80,
+        "futures": 0
       },
-      "priority": 4,
-      "presets": ["Research","Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-09",
-      "title": "Coya VI",
-      "category": "User-Oriented",
-      "organization": "Freelance Architect",
-      "date": "2026-02",
+      "title": "Convention And Events Center Proposal",
+      "subtitle": "",
+      "category": "Architecture",
+      "organization": "LMN Architects",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-09_User-Oriented_Coya VI/2026-02_User-Oriented_EV-09_Coya VI_Freelance Architect.jpg"
+        "/images/projects/EV-09_ARCHITECTURE_ConventionAndEventsCenterProposal/2026-03_Architecture_EV-09_ConventionAndEventsCenterProposal_LMNArchitects_page1.png",
+        "/images/projects/EV-09_ARCHITECTURE_ConventionAndEventsCenterProposal/2026-03_Architecture_EV-09_ConventionAndEventsCenterProposal_LMNArchitects_page2.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
         "publicRealm": 0,
-        "userOriented": 90,
-        "dataDriven": 0,
-        "strategy": 0,
-        "places": 60
+        "architecture": 80,
+        "futures": 0
       },
-      "priority": 3,
-      "presets": ["Spatial Experiences"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-10",
-      "title": "Hotel Luanda",
-      "category": "User-Oriented",
-      "organization": "Freelance Architect",
-      "date": "2026-02",
+      "title": "West Seattle To Ballard Link Extension",
+      "subtitle": "",
+      "category": "Architecture",
+      "organization": "LMN Architects",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-10_User-Oriented_Hotel Luanda/2026-02_User-Oriented_EV-10_Hotel Luanda_Freelance Architect.jpg"
+        "/images/projects/EV-10_ARCHITECTURE_WestSeattleToBallardLinkExtension/2026-03_Architecture_EV-10_WestSeattleToBallardLinkExtension_LMNArchitects.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
         "publicRealm": 0,
-        "userOriented": 80,
-        "dataDriven": 0,
-        "strategy": 40,
-        "places": 60
+        "architecture": 80,
+        "futures": 0
       },
-      "priority": 1,
+      "priority": 0,
       "presets": null
     },
     {
       "id": "EV-11",
-      "title": "Multi-Religious Center at El Raval",
-      "category": "User-Oriented",
-      "organization": "ETSAB Barcelona",
-      "date": "2026-02",
+      "title": "Austin Convention Center Expansion",
+      "subtitle": "",
+      "category": "Architecture",
+      "organization": "LMN Architects",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-11_User-Oriented_Multi-Religious Center at El Raval/2026-02_User-Oriented_EV-11_Multi-Religious Center at El Raval_ETSAB Barcelona.jpg"
+        "/images/projects/EV-11_ARCHITECTURE_AustinConventionCenterExpansion/2026-03_Architecture_EV-11_AustinConventionCenterExpansion_LMNArchitects.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 50,
-        "userOriented": 90,
-        "dataDriven": 0,
-        "strategy": 40,
-        "places": 60
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 80,
+        "futures": 0
       },
-      "priority": 3,
-      "presets": ["Spatial Experiences"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-12",
-      "title": "Columbus Convention Center Passenger Rail Station",
-      "category": "Strategy",
+      "title": "Fort Worth Convention Center Expansion",
+      "subtitle": "",
+      "category": "Architecture",
       "organization": "LMN Architects",
-      "date": "2026-02",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-12_Strategy_Columbus Convention Center Passenger Rail Station/2026-02_Strategy_EV-12_Columbus Convention Center Passenger Rail Station_LMN Architects.jpg"
+        "/images/projects/EV-12_ARCHITECTURE_FortWorthConventionCenterExpansion/2026-03_Architecture_EV-12_FortWorthConventionCenterExpansion-RaleighConventionCenterAndAmphitheater_LMNArchitects.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 60,
-        "userOriented": 40,
-        "dataDriven": 60,
-        "strategy": 100,
-        "places": 50
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 80,
+        "futures": 0
       },
-      "priority": 4,
-      "presets": ["Systems Thinking"]
-    },
-    {
-      "id": "EV-13",
-      "title": "Austin Convention Center Expansion",
-      "category": "Strategy",
-      "organization": "LMN Architects",
-      "date": "2026-02",
-      "cards": [
-        "/images/projects/EV-13_Strategy_Austin Convention Center Expansion/2026-02_Strategy_EV-13_Austin Convention Center Expansion_LMN Architects.jpg"
-      ],
-      "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 50,
-        "userOriented": 50,
-        "dataDriven": 0,
-        "strategy": 90,
-        "places": 50
-      },
-      "priority": 3,
-      "presets": ["Spatial Experiences"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-14",
-      "title": "520 Montlake & Roanoke Lid",
-      "category": "Strategy",
-      "organization": "LMN Architects",
-      "date": "2026-02",
+      "title": "Cova VI",
+      "subtitle": "",
+      "category": "Architecture",
+      "organization": "Freelance Architect",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-14_Strategy_520 Montlake & Roanoke Lid/2026-02_Strategy_EV-14_520 Montlake & Roanoke Lid_LMN Architects.jpg"
+        "/images/projects/EV-14_ARCHITECTURE_CovaVI/2026-03_Architecture_EV-14_CovaVI_FreelanceArchitect.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 60,
-        "userOriented": 0,
-        "dataDriven": 50,
-        "strategy": 80,
-        "places": 20
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 80,
+        "futures": 0
       },
-      "priority": 3,
+      "priority": 0,
       "presets": null
     },
     {
       "id": "EV-15",
       "title": "Stanford University Town Center Project",
+      "subtitle": "",
       "category": "Public Realm",
       "organization": "LMN Architects",
-      "date": "2026-02",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-15_Public Realm_Stanford University Town Center Project/2026-02_Public Realm_EV-15_Stanford University Town Center Project_LMN Architects.jpg"
+        "/images/projects/EV-15_PUBLICREALM_StanfordUniversityTownCenterProject/2026-03_PublicRealm_EV-15_StanfordUniversityTownCenterProject_LMNArchitects.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 100,
-        "userOriented": 50,
-        "dataDriven": 0,
-        "strategy": 50,
-        "places": 40
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 80,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 3,
-      "presets": ["Spatial Experiences","Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-16",
-      "title": "Imperial College Masterplan",
+      "title": "Google Campus Masterplan",
+      "subtitle": "",
       "category": "Public Realm",
-      "organization": "Skidmore Owings & Merritt",
-      "date": "2026-02",
+      "organization": "Heatherwick Studio",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-16_Public Realm_Imperial College Masterplan/2026-02_Public Realm_EV-16_Imperial College Masterplan_Skidmore Owings & Merritt.jpg"
+        "/images/projects/EV-16_PUBLICREALM_GoogleCampusMasterplan/2026-03_PublicRealm_EV-16_GoogleCampusMasterplan_HeatherwickStudio.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 100,
-        "userOriented": 10,
-        "dataDriven": 0,
-        "strategy": 70,
-        "places": 50
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 80,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 4,
-      "presets": ["Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-17",
-      "title": "New Covent Garden Redevelopment",
+      "title": "Imperial College Masterplan",
+      "subtitle": "",
       "category": "Public Realm",
-      "organization": "Skidmore Owings & Merritt",
-      "date": "2026-02",
+      "organization": "Shiftone Outpost And Ward",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-17_Public Realm_New Covent Garden Redevelopment/2026-02_Public Realm_EV-17_New Covent Garden Redevelopment_Skidmore Owings & Merritt.jpg"
+        "/images/projects/EV-17_PUBLICREALM_ImperialCollegeMasterplan/2026-03_PublicRealm_EV-17_ImperialCollegeMasterplan_ShiftoneOutpostAndWard.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 90,
-        "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 50,
-        "places": 0
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 80,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 3,
+      "priority": 0,
       "presets": null
     },
     {
       "id": "EV-18",
-      "title": "Google Campus Masterplan",
+      "title": "New Covent Garden Redevelopment",
+      "subtitle": "",
       "category": "Public Realm",
-      "organization": "Heatherwick Studio",
-      "date": "2026-02",
+      "organization": "Shiftone Outpost And Ward",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-18_Public Realm_Google Campus Masterplan/2026-02_Public Realm_EV-18_Google Campus Masterplan_Heatherwick Studio.jpg"
+        "/images/projects/EV-18_PUBLICREALM_NewCoventGardenRedevelopment/2026-03_PublicRealm_EV-18_NewCoventGardenRedevelopment_ShiftoneOutpostAndWard.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 100,
-        "userOriented": 50,
-        "dataDriven": 0,
-        "strategy": 75,
-        "places": 75
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 80,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 5,
-      "presets": ["Spatial Experiences","Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-19",
-      "title": "Proxemics",
+      "title": "Friends Of Little Saigon",
+      "subtitle": "",
       "category": "Public Realm",
-      "organization": "Harvard GSD",
-      "date": "2026-02",
+      "organization": "LMN Architects",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-19_Public Realm_Proxemics/2026-02_Public Realm_EV-19_Proxemics_Harvard GSD.jpg"
+        "/images/projects/EV-19_PUBLICREALM_FriendsOfLittleSaigon/2026-03_PublicRealm_EV-19_FriendsOfLittleSaigon_LMNArchitects.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
         "publicRealm": 80,
-        "userOriented": 0,
-        "dataDriven": 60,
-        "strategy": 50,
-        "places": 0
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 2,
-      "presets": ["Spatial Experiences"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-20",
-      "title": "Living Infrastructure",
+      "title": "Union Station Revitalization",
+      "subtitle": "",
       "category": "Public Realm",
-      "organization": "USC SPPD",
-      "date": "2026-02",
+      "organization": "LMN Architects",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-20_Public Realm_Living Infrastructure/2026-02_Public Realm_EV-20_Living Infrastructure_USC SPPD.jpg"
+        "/images/projects/EV-20_PUBLICREALM_UnionStationRevitalization/2026-03_PublicRealm_EV-20_UnionStationRevitalization_LMNArchitects.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 90,
-        "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 70,
-        "places": 0
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 80,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 3,
-      "presets": ["Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-21",
-      "title": "West Seattle to Ballard Link Extension",
-      "category": "Data-Driven",
+      "title": "520 Montlake And Roanoke Lid",
+      "subtitle": "",
+      "category": "Public Realm",
       "organization": "LMN Architects",
-      "date": "2026-02",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-21_Data-Driven_West Seattle to Ballard Link Extension/2026-02_Data-Driven_EV-21_West Seattle to Ballard Link Extension_LMN Architects.jpg",
-        "/images/projects/EV-21_Data-Driven_West Seattle to Ballard Link Extension/2026-02_Data-Driven_EV-21_West Seattle to Ballard Link Extension_LMN Architects_Page2.jpg"
+        "/images/projects/EV-21_PUBLICREALM_520MontlakeAndRoanokeLid/2026-03_PublicRealm_EV-21_520MontlakeAndRoanokeLid_LMNArchitects.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
         "publicRealm": 80,
-        "userOriented": 50,
-        "dataDriven": 100,
-        "strategy": 50,
-        "places": 0
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 4,
-      "presets": ["Research","Spatial Experiences","Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-22",
-      "title": "WSBLE Station Feasibility Iterative Tool",
-      "category": "Data-Driven",
-      "organization": "LMN Architects",
-      "date": "2026-02",
+      "title": "Living Infrastructure",
+      "subtitle": "",
+      "category": "Public Realm",
+      "organization": "Bartlett School Of Architecture",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-22_Data-Driven_WSBLE Station Feasibility Iterative Tool/2026-02_Data-Driven_EV-22_WSBLE Station Feasibility Iterative Tool_LMN Architects.jpg"
+        "/images/projects/EV-22_PUBLICREALM_LivingInfrastructure/2026-03_PublicRealm_EV-22_LivingInfrastructure_BartlettSchoolOfArchitecture.png"
       ],
       "categoryScores": {
-        "interactivity": 40,
-        "publicRealm": 20,
-        "userOriented": 20,
-        "dataDriven": 100,
-        "strategy": 50,
-        "places": 0
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 80,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 4,
-      "presets": ["Research"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-23",
-      "title": "Public Transit Planning Tool",
-      "category": "Data-Driven",
-      "organization": "LMN Tech Studio",
-      "date": "2026-02",
+      "title": "Urban Design Quick Studies",
+      "subtitle": "",
+      "category": "Public Realm",
+      "organization": "Multiple Organizations",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-23_Data-Driven_Public Transit Planning Tool/2026-02_Data-Driven_EV-23_Public Transit Planning Tool_LMN Tech Studio.jpg"
+        "/images/projects/EV-23_PUBLICREALM_UrbanDesignQuickStudies/2026-03_PublicRealm_EV-23_UrbanDesignQuickStudies_MultipleOrganizations.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 50,
-        "userOriented": 0,
-        "dataDriven": 100,
-        "strategy": 80,
-        "places": 0
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 80,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 4,
-      "presets": ["Research"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-24",
-      "title": "Drone Video Urban Analysis",
-      "category": "Data-Driven",
-      "organization": "LMN Tech Studio",
-      "date": "2026-02",
+      "title": "I UA",
+      "subtitle": "",
+      "category": "Computational Design",
+      "organization": "Harvard GSD",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-24_Data-Driven_Drone Video Urban Analysis/2026-02_Data-Driven_EV-24_Drone Video Urban Analysis_LMN Tech Studio.jpg"
+        "/images/projects/EV-24_COMPUTATIONALDESIGN_iUA/2026-03_ComputationalDesign_EV-24_iUA_HarvardGSD.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 70,
-        "userOriented": 0,
-        "dataDriven": 90,
-        "strategy": 0,
-        "places": 0
+        "computationalDesign": 80,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 4,
-      "presets": ["Research"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-25",
-      "title": "Urban Analysis Toolkit",
-      "category": "Data-Driven",
-      "organization": "LMN Tech Studio",
-      "date": "2026-02",
+      "title": "Perth Convention And Events Center Expansion",
+      "subtitle": "",
+      "category": "Computational Design",
+      "organization": "LMN Architects+COX",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-25_Data-Driven_Urban Analysis Toolkit/2026-02_Data-Driven_EV-25_Urban Analysis Toolkit v1.0_LMN Tech Studio.jpg",
-        "/images/projects/EV-25_Data-Driven_Urban Analysis Toolkit/2026-02_Data-Driven_EV-25_Urban Analysis Toolkit v2.0_LMN Tech Studio.jpg"
+        "/images/projects/EV-25_COMPUTATIONALDESIGN_PerthConventionAndEventsCenterExpansion/2026-03_ComputationalDesign_EV-25_PerthConventionAndEventsCenterExpansion_LMNArchitects+COX_page1.png",
+        "/images/projects/EV-25_COMPUTATIONALDESIGN_PerthConventionAndEventsCenterExpansion/2026-03_ComputationalDesign_EV-25_PerthConventionAndEventsCenterExpansion_LMNArchitects+COX_page2.png",
+        "/images/projects/EV-25_COMPUTATIONALDESIGN_PerthConventionAndEventsCenterExpansion/2026-03_ComputationalDesign_EV-25_PerthConventionAndEventsCenterExpansion_LMNArchitects+COX_page3.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 50,
-        "userOriented": 0,
-        "dataDriven": 100,
-        "strategy": 75,
-        "places": 0
+        "computationalDesign": 80,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 4,
-      "presets": ["Research"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-26",
-      "title": "Google Campus Commuting Futures",
-      "category": "Strategy",
-      "organization": "Heatherwick Studio",
-      "date": "2026-02",
+      "title": "Station Transfer Times Calculation Methodology",
+      "subtitle": "",
+      "category": "Computational Design",
+      "organization": "LMN Architects",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-26_Strategy_Google Campus Commuting Futures/2026-02_Strategy_EV-26_Google Campus Commuting Futures_Heatherwick Studio.jpg"
+        "/images/projects/EV-26_COMPUTATIONALDESIGN_StationTransferTimesCalculationMethodology/2026-03_ComputationalDesign_EV-26_StationTransferTimesCalculationMethodology_LMNArchitects.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 50,
-        "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 100,
-        "places": 0
+        "computationalDesign": 80,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 3,
-      "presets": ["Research"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-27",
-      "title": "Life Custodian",
-      "category": "Strategy",
-      "organization": "Harvard GSD",
-      "date": "2026-02",
+      "title": "WSBLE Station Feasibility Iterative Tool",
+      "subtitle": "",
+      "category": "Computational Design",
+      "organization": "LMN Architects",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-27_Strategy_Life Custodian/2026-02_Strategy_EV-27_Life Custodian_Harvard GSD.jpg"
+        "/images/projects/EV-27_COMPUTATIONALDESIGN_WSBLEStationFeasibilityIterativeTool/2026-03_ComputationalDesign_EV-27_WSBLEStationFeasibilityIterativeTool_LMNArchitects.png"
       ],
       "categoryScores": {
-        "interactivity": 15,
+        "computationalDesign": 80,
+        "artifactsInterfaces": 0,
         "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 90,
-        "places": 0
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 2,
+      "priority": 0,
       "presets": null
     },
     {
       "id": "EV-28",
-      "title": "The Future of Fabrication at LMN",
-      "category": "Strategy",
+      "title": "Public Transit Planning Tool",
+      "subtitle": "",
+      "category": "Computational Design",
       "organization": "LMN Tech Studio",
-      "date": "2026-02",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-28_Strategy_The Future of Fabrication at LMN/2026-02_Strategy_EV-28_The Future of Fabrication at LMN_LMN Tech Studio.jpg"
+        "/images/projects/EV-28_COMPUTATIONALDESIGN_PublicTransitPlanningTool/2026-03_ComputationalDesign_EV-28_PublicTransitPlanningTool_LMNTechStudio.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
+        "computationalDesign": 80,
+        "artifactsInterfaces": 0,
         "publicRealm": 0,
-        "userOriented": 70,
-        "dataDriven": 0,
-        "strategy": 100,
-        "places": 0
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 5,
-      "presets": ["Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-29",
-      "title": "Convention & Events Center Proposal",
-      "category": "Places",
-      "organization": "LMN Architects",
-      "date": "2026-02",
+      "title": "Drone Video Urban Analysis",
+      "subtitle": "",
+      "category": "Computational Design",
+      "organization": "LMN Tech Studio",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-29_Places_Convention & Events Center Proposal/2026-02_Places_EV-29_Convention & Events Center Proposal_LMN Architects_Page1.jpg",
-        "/images/projects/EV-29_Places_Convention & Events Center Proposal/2026-02_Places_EV-29_Convention & Events Center Proposal_LMN Architects_Page2.jpg"
+        "/images/projects/EV-29_COMPUTATIONALDESIGN_DroneVideoUrbanAnalysis/2026-03_ComputationalDesign_EV-29_DroneVideoUrbanAnalysis_LMNTechStudio.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 75,
-        "userOriented": 0,
-        "dataDriven": 20,
-        "strategy": 10,
-        "places": 100
+        "computationalDesign": 80,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 5,
-      "presets": ["Spatial Experiences"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-30",
-      "title": "Perth Convention & Events Center Expansion",
-      "category": "Places",
-      "organization": "LMN Architects",
-      "date": "2026-02",
+      "title": "Urban Analysis Toolkit V1",
+      "subtitle": "",
+      "category": "Computational Design",
+      "organization": "LMN Tech Studio",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-30_Places_Perth Convention & Events Center Expansion/2026-02_Places_EV-30_Perth Convention & Events Center Expansion_LMN Architects_Page1.jpg",
-        "/images/projects/EV-30_Places_Perth Convention & Events Center Expansion/2026-02_Places_EV-30_Perth Convention & Events Center Expansion_LMN Architects_Page2.jpg",
-        "/images/projects/EV-30_Places_Perth Convention & Events Center Expansion/2026-02_Places_EV-30_Perth Convention & Events Center Expansion_LMN Architects_Page3.jpg"
+        "/images/projects/EV-30_COMPUTATIONALDESIGN_UrbanAnalysisToolkitV1/2026-03_ComputationalDesign_EV-30_UrbanAnalysisToolkitV1_LMNTechStudio.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 70,
-        "userOriented": 70,
-        "dataDriven": 90,
-        "strategy": 25,
-        "places": 100
+        "computationalDesign": 80,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 5,
-      "presets": ["Spatial Experiences","Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-31",
-      "title": "Son Tra Peninsula",
-      "category": "Places",
-      "organization": "Skidmore Owings & Merritt",
-      "date": "2026-02",
+      "title": "Urban Analysis Toolkit V2",
+      "subtitle": "",
+      "category": "Computational Design",
+      "organization": "LMN Tech Studio",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-31_Places_Son Tra Peninsula/2026-02_Places_EV-31_Son Tra Peninsula_Skidmore Owings & Merritt.jpg"
+        "/images/projects/EV-31_COMPUTATIONALDESIGN_UrbanAnalysisToolkitV2/2026-03_ComputationalDesign_EV-31_UrbanAnalysisToolkitV2_LMNTechStudio_page1.png",
+        "/images/projects/EV-31_COMPUTATIONALDESIGN_UrbanAnalysisToolkitV2/2026-03_ComputationalDesign_EV-31_UrbanAnalysisToolkitV2_LMNTechStudio_page2.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
-        "publicRealm": 25,
-        "userOriented": 0,
-        "dataDriven": 75,
-        "strategy": 90,
-        "places": 90
+        "computationalDesign": 80,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 0
       },
-      "priority": 4,
-      "presets": ["Systems Thinking"]
+      "priority": 0,
+      "presets": null
     },
     {
       "id": "EV-32",
-      "title": "Urban Design Quick Studies",
-      "category": "Places",
-      "organization": "Skidmore Owings & Merritt",
-      "date": "2026-02",
+      "title": "The Future Of Fabrication At LMN",
+      "subtitle": "",
+      "category": "Futures",
+      "organization": "LMN Tech Studio",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
       "cards": [
-        "/images/projects/EV-32_Places_Urban Design Quick Studies/2026-02_Places_EV-32_Urban Design Quick Studies_Skidmore Owings & Merritt.jpg"
+        "/images/projects/EV-32_FUTURES_TheFutureOfFabricationAtLMN/2026-03_Futures_EV-32_TheFutureOfFabricationAtLMN_LMNTechStudio.png"
       ],
       "categoryScores": {
-        "interactivity": 0,
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
         "publicRealm": 0,
-        "userOriented": 0,
-        "dataDriven": 0,
-        "strategy": 0,
-        "places": 50
+        "architecture": 0,
+        "futures": 80
       },
-      "priority": 1,
+      "priority": 0,
+      "presets": null
+    },
+    {
+      "id": "EV-33",
+      "title": "Columbus Convention Center Passenger Rail Station",
+      "subtitle": "",
+      "category": "Futures",
+      "organization": "LMN Architects",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
+      "cards": [
+        "/images/projects/EV-33_FUTURES_ColumbusConventionCenterPassengerRailStation/2026-03_Futures_EV-33_ColumbusConventionCenterPassengerRailStation_LMNArchitects.png"
+      ],
+      "categoryScores": {
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 80
+      },
+      "priority": 0,
+      "presets": null
+    },
+    {
+      "id": "EV-34",
+      "title": "Son Tra Peninsula",
+      "subtitle": "",
+      "category": "Futures",
+      "organization": "Shiftone Outpost And Ward",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
+      "cards": [
+        "/images/projects/EV-34_FUTURES_SonTraPeninsula/2026-03_Futures_EV-34_SonTraPeninsula_ShiftoneOutpostAndWard.png"
+      ],
+      "categoryScores": {
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 80
+      },
+      "priority": 0,
+      "presets": null
+    },
+    {
+      "id": "EV-35",
+      "title": "Google Campus Commuting Futures",
+      "subtitle": "",
+      "category": "Futures",
+      "organization": "Heatherwick Studio",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
+      "cards": [
+        "/images/projects/EV-35_FUTURES_GoogleCampusCommutingFutures/2026-03_Futures_EV-35_GoogleCampusCommutingFutures_HeatherwickStudio.png"
+      ],
+      "categoryScores": {
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 80
+      },
+      "priority": 0,
+      "presets": null
+    },
+    {
+      "id": "EV-36",
+      "title": "Life Custodian",
+      "subtitle": "",
+      "category": "Futures",
+      "organization": "Harvard GSD",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
+      "cards": [
+        "/images/projects/EV-36_FUTURES_LifeCustodian/2026-03_Futures_EV-36_LifeCustodian_HarvardGSD.png"
+      ],
+      "categoryScores": {
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 80
+      },
+      "priority": 0,
+      "presets": null
+    },
+    {
+      "id": "EV-37",
+      "title": "Proxemics",
+      "subtitle": "",
+      "category": "Futures",
+      "organization": "Harvard GSD",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
+      "cards": [
+        "/images/projects/EV-37_FUTURES_Proxemics/2026-03_Futures_EV-37_Proxemics_HarvardGSD.png"
+      ],
+      "categoryScores": {
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 80
+      },
+      "priority": 0,
+      "presets": null
+    },
+    {
+      "id": "EV-38",
+      "title": "Pluit City",
+      "subtitle": "",
+      "category": "Futures",
+      "organization": "Shiftone Outpost And Ward",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
+      "cards": [
+        "/images/projects/EV-38_FUTURES_PluitCity/2026-03_Futures_EV-38_PluitCity-DaNangEcoUrbanDevelopment_ShiftoneOutpostAndWard.png"
+      ],
+      "categoryScores": {
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 80
+      },
+      "priority": 0,
+      "presets": null
+    },
+    {
+      "id": "EV-40",
+      "title": "Cendere Vadisi",
+      "subtitle": "",
+      "category": "Futures",
+      "organization": "Shiftone Outpost And Ward",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
+      "cards": [
+        "/images/projects/EV-40_FUTURES_CendereVadisi/2026-03_Futures_EV-40_CendereVadisi-BaishaCluster_ShiftoneOutpostAndWard.png"
+      ],
+      "categoryScores": {
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 0,
+        "futures": 80
+      },
+      "priority": 0,
+      "presets": null
+    },
+    {
+      "id": "EV-49",
+      "title": "Hotel Luanda",
+      "subtitle": "",
+      "category": "Architecture",
+      "organization": "Freelance Architect",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
+      "cards": [
+        "/images/projects/EV-49_ARCHITECTURE_HotelLuanda/2026-03_Architecture_EV-49_HotelLuanda_FreelanceArchitect.png"
+      ],
+      "categoryScores": {
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 80,
+        "futures": 0
+      },
+      "priority": 0,
+      "presets": null
+    },
+    {
+      "id": "EV-50",
+      "title": "Multi Religious Center At El Raval",
+      "subtitle": "",
+      "category": "Architecture",
+      "organization": "ETSA-U Barcelona",
+      "role": "",
+      "location": "",
+      "date": "2026-03",
+      "cards": [
+        "/images/projects/EV-50_ARCHITECTURE_MultiReligiousCenterAtElRaval/2026-03_Architecture_EV-50_MultiReligiousCenterAtElRaval_ETSA-UBarcelona.png"
+      ],
+      "categoryScores": {
+        "computationalDesign": 0,
+        "artifactsInterfaces": 0,
+        "publicRealm": 0,
+        "architecture": 80,
+        "futures": 0
+      },
+      "priority": 0,
       "presets": null
     }
   ],
@@ -652,13 +891,14 @@
     {
       "id": "Other",
       "cards": [
-        "/images/projects/Other/2026-02_Other_00.jpg",
-        "/images/projects/Other/2026-02_Other_01_Cartography.jpg",
-        "/images/projects/Other/2026-02_Other_02_Diagrams.jpg",
-        "/images/projects/Other/2026-02_Other_03_Visualization.jpg",
-        "/images/projects/Other/2026-02_Other_04_Sketches.jpg",
-        "/images/projects/Other/2026-02_Other_05_Photography_Page1.jpg",
-        "/images/projects/Other/2026-02_Other_06_Photography_Page2.jpg"
+        "/images/projects/Other/2026-03-09_ev_Portfolio_Projects52.png",
+        "/images/projects/Other/2026-03-09_ev_Portfolio_Projects53.png",
+        "/images/projects/Other/2026-03-09_ev_Portfolio_Projects54.png",
+        "/images/projects/Other/2026-03-09_ev_Portfolio_Projects55.png",
+        "/images/projects/Other/2026-03-09_ev_Portfolio_Projects56.png",
+        "/images/projects/Other/2026-03-09_ev_Portfolio_Projects57.png",
+        "/images/projects/Other/2026-03-09_ev_Portfolio_Projects58.png",
+        "/images/projects/Other/2026-03-09_ev_Portfolio_Projects59.png"
       ]
     }
   ]

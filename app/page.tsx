@@ -10,6 +10,7 @@ import RadarChart from "./components/RadarChart";
 import ProjectCards from "./components/ProjectCards";
 import { selectProjects } from "@/src/lib/selectProjects";
 import type { DebugMeta } from "@/src/types";
+import { CAT_KEYS } from "@/src/config/categories";
 import ContactBottom from "./components/ContactBottom";
 import projectsData from "@/src/data/projects.json";
 
@@ -127,6 +128,25 @@ export default function Home() {
   const resetHero = () => setHeroResetKey(k => k + 1);
 
   // ── Project selection algorithm ────────────────────────────────────────────
+  const handleCategoryFilter = (catKey: string) => {
+    const radarValues = Object.fromEntries(CAT_KEYS.map(k => [k, k === catKey ? 100 : 0]));
+    const allProjects = projectsData.projects as Parameters<typeof selectProjects>[1];
+    const filteredProjects = allProjects.filter(p => (p.categoryScores[catKey] ?? 0) >= 80);
+    const result = selectProjects(radarValues, filteredProjects, null);
+
+    console.group('[RadarChart → ProjectCards] Category filter triggered');
+    console.log('Category key:', catKey, '| Matched:', filteredProjects.length, 'projects');
+    console.log('Selected:', result.ids.join(', ') || '— none —');
+    console.groupEnd();
+
+    setSelectedProjectIds(result.ids);
+    setSelectedProjectScores(result.scores);
+    setLastRadarValues(radarValues);
+    setLastPresetName(null);
+    setLastDebugMeta(result.debugMeta);
+    scrollToSection('project-cards');
+  };
+
   const handleRadarPlay = (radarValues: Record<string, number>, presetName: string | null = null) => {
     const result = selectProjects(radarValues, projectsData.projects as Parameters<typeof selectProjects>[1], presetName);
 
@@ -218,14 +238,13 @@ export default function Home() {
           </svg>
         </div>
         {/* Content */}
-        <div className="h-10" />
+        <div className="h-2" />
         <h2 className="relative z-10 font-serif font-bold text-white text-4xl text-center mb-3">Work Selection</h2>
         <p className="relative z-10 font-sans text-white/40 text-sm leading-relaxed text-center mx-auto" style={{ maxWidth: "65%" }}>
           Please configure a custom project showcase based on the design solution categories.
         </p>
-        <div className="h-5" />
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-start pt-4 w-full min-h-0">
-          <RadarChart onPlay={handleRadarPlay} />
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-start w-full min-h-0">
+          <RadarChart onPlay={handleRadarPlay} onCategoryFilter={handleCategoryFilter} />
         </div>
       </section>
 

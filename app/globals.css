@@ -57,15 +57,18 @@ body {
   to   { transform: rotate(360deg); }
 }
 
-/* ── RadarChart down-arrow hover pulse ── */
-@keyframes down-arrow-hover {
-  0%   { transform: translateY(0); }
-  50%  { transform: translateY(6px); }
-  100% { transform: translateY(0); }
+/* ── RadarChart down-arrow bounce ── */
+@keyframes radar-btn-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(7px); }
 }
 
-.radar-down-arrow-btn:hover svg {
-  animation: down-arrow-hover 1s ease-in-out infinite;
+.radar-btn-bounce-slow {
+  animation: radar-btn-bounce 1.5s ease-in-out infinite;
+}
+
+.radar-btn-bounce-fast {
+  animation: radar-btn-bounce 0.45s ease-in-out infinite;
 }
 
 /* ── Image protection — blocks casual right-click save and drag ── */
