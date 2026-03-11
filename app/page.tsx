@@ -208,14 +208,14 @@ export default function Home() {
       <DesignPhilosophy onScrollDown={() => scrollToSection('project-selection')} />
 
       {/* ── Section 5: Project Selection (Works) ── */}
-      <section id="project-selection" className="relative h-screen flex flex-col items-center px-10 pt-20 pb-10">
+      <section id="project-selection" className="relative h-screen flex flex-col items-center pt-20 pb-10" style={{ paddingLeft: 'var(--page-margin)', paddingRight: 'var(--page-margin)' }}>
         {/* White side strips */}
-        <div className="absolute inset-y-0 left-0 w-10 bg-white z-2 pointer-events-none">
+        <div className="absolute inset-y-0 left-0 bg-white z-2 pointer-events-none" style={{ width: 'var(--page-margin)' }}>
           <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: whiteGrainOpacity, pointerEvents: 'none' }}>
             <rect width="100%" height="100%" filter="url(#white-grain)" />
           </svg>
         </div>
-        <div className="absolute inset-y-0 right-0 w-10 bg-white z-2 pointer-events-none">
+        <div className="absolute inset-y-0 right-0 bg-white z-2 pointer-events-none" style={{ width: 'var(--page-margin)' }}>
           <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: whiteGrainOpacity, pointerEvents: 'none' }}>
             <rect width="100%" height="100%" filter="url(#white-grain)" />
           </svg>

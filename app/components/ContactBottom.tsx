@@ -23,8 +23,9 @@ export default function ContactBottom({ config, onScrollToHero, onResetHero }: P
     >
       {/* Outer wrapper — border-radius on bottom corners; overflow:hidden clips the inner container. */}
       <div
-        className="mx-10"
         style={{
+          marginLeft:              'var(--page-margin)',
+          marginRight:             'var(--page-margin)',
           borderBottomLeftRadius:  containerRadius,
           borderBottomRightRadius: containerRadius,
           overflow: 'hidden',

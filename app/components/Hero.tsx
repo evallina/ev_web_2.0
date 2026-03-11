@@ -14,7 +14,7 @@ const heroSeg3     = "I use design to question, reveal, and reshape the systems 
 
 // ── Typewriter timing ─────────────────────────────────────────────────────────
 const heroTypingSpeed      = 40;    // ms per character while typing
-const heroErasingSpeed     = 15;    // ms per character while erasing on HOME reset
+const heroErasingSpeed     = 5;    // ms per character while erasing on HOME reset
 const heroPauseAfterSeg1   = 1200;  // ms pause after segment 1
 const heroPauseAfterSeg2   = 1200;  // ms pause after segment 2
 const heroCursorBlinkSpeed = 500;   // ms cursor blink interval (on + off = 2× this value)
@@ -29,8 +29,17 @@ const morphTransitionDuration = 2000;  // ms for the WebGL warp transition betwe
 const morphPauseDuration      = 0;     // ms each image stays fully visible before morphing
 const morphIntensity          = 0.8;   // warp strength (0.0 = plain crossfade, 1.0 = heavy distortion)
 const morphImageSize          = '30vw'; // canvas size in side-by-side (horizontal) layout
-const heroImageSizeVertical   = '75vw'; // canvas size in vertical/stacked layout
+const heroImageMaxVertical     = '38vh'; // max size (width & height) of image in stacked layout — keeps it square and in-screen
 const heroVerticalBreakpoint  = 1024;   // px — window width below which layout stacks vertically
+
+// ── Morphing image position offsets ───────────────────────────────────────────
+// Wide layout  (side-by-side, > heroVerticalBreakpoint px)
+const heroImageWideOffsetX   = '0rem';   // positive = right,  negative = left
+const heroImageWideOffsetY   = '0rem';   // positive = down,   negative = up
+// Narrow layout (stacked, ≤ heroVerticalBreakpoint px)
+const heroImageNarrowOffsetX = '0rem';   // positive = right,  negative = left
+const heroImageNarrowOffsetY = '2.5rem';   // positive = down,   negative = up
+const heroTextExtraPadding    = '5vw';  // extra horizontal padding added to both sides of the text column (on top of --page-margin)
 // └─────────────────────────────────────────────────────────────────────────────┘
 
 const CATEGORY_IMAGES = [
@@ -220,8 +229,30 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) 
         }}
       >
         {/* Text column */}
-        <div style={{ width: heroIsVertical ? '100%' : '50%' }} className="pl-16 pr-8">
-          <h1 className="font-serif font-normal text-[2.75rem] leading-[1.2] text-white">
+        <div style={{ width: heroIsVertical ? '100%' : '50%', position: 'relative', paddingLeft: `calc(var(--page-margin) + ${heroTextExtraPadding})`, paddingRight: `calc(var(--page-margin) + ${heroTextExtraPadding})` }}>
+          {/* Ghost — full final text, invisible, locks the container height so
+              flexbox centres based on the complete block from the very first frame. */}
+          <h1
+            aria-hidden="true"
+            className="font-serif font-normal leading-[1.2] text-white"
+            style={{ visibility: 'hidden', pointerEvents: 'none', fontSize: 'clamp(1.8rem, 5.87vw, 2.75rem)' }}
+          >
+            <div>
+              {heroSeg1.slice(0, heroBoldStart)}
+              <span className="font-bold">{heroBoldName}</span>
+              {heroSeg1.slice(heroBoldEnd)}
+            </div>
+            <div>{heroSeg2}</div>
+            <div>{heroSeg3}</div>
+          </h1>
+
+          {/* Live typing — sits exactly on top of the ghost.
+              Padding must match the parent div's padding since position:absolute
+              ignores the containing block's padding. */}
+          <h1
+            className="font-serif font-normal leading-[1.2] text-white"
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, margin: 0, paddingLeft: `calc(var(--page-margin) + ${heroTextExtraPadding})`, paddingRight: `calc(var(--page-margin) + ${heroTextExtraPadding})`, fontSize: 'clamp(1.8rem, 5.87vw, 2.75rem)' }}
+          >
             {/* Line 1: greeting with bold name */}
             <div>
               {heroLine1.slice(0, Math.min(heroLine1.length, heroBoldStart))}
@@ -260,16 +291,24 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) 
         </div>
 
         {/* Image column */}
-        <div style={{ width: heroIsVertical ? '100%' : '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingRight: heroIsVertical ? 0 : '3rem' }}>
+        <div style={{
+          width:          heroIsVertical ? '100%' : '50%',
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'center',
+          transform:      heroIsVertical
+            ? `translate(${heroImageNarrowOffsetX}, ${heroImageNarrowOffsetY})`
+            : `translate(${heroImageWideOffsetX},   ${heroImageWideOffsetY})`,
+        }}>
           <MorphingImages
             images={CATEGORY_IMAGES}
             morphTransitionDuration={morphTransitionDuration}
             morphPauseDuration={morphPauseDuration}
             morphIntensity={morphIntensity}
             style={{
-              width:     heroIsVertical ? heroImageSizeVertical : morphImageSize,
-              height:    heroIsVertical ? heroImageSizeVertical : morphImageSize,
-              maxHeight: '65vh',
+              width:     heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
+              height:    heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
+              maxHeight: heroIsVertical ? 'none' : '65vh',
             }}
           />
         </div>

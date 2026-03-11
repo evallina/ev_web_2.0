@@ -5,8 +5,16 @@
   --font-sans: var(--font-roboto);
 }
 
+/* ── Responsive page margin — used site-wide for left/right gutters ───────────
+   40px on wide screens (1440px+), scales down proportionally, min 12px mobile.
+   Reference in inline styles as: var(--page-margin)                          */
+:root {
+  --page-margin: clamp(12px, 2.8vw, 40px);
+}
+
 html {
   overscroll-behavior-y: none;
+  overflow-x: hidden;
 }
 
 /* ── ProjectCards: hide scrollbar on the isolated inner scroll container ── */
@@ -15,6 +23,7 @@ html {
 }
 
 body {
+  overflow-x: hidden;
   background: linear-gradient(160deg, #262627 0%, #1c1c1d 100%);
   background-attachment: fixed;
   color: #ffffff;

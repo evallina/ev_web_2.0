@@ -8,9 +8,11 @@ import philosophyImages from '@/src/data/philosophyImages.json';
 const typingSpeed       = 60;                        // ms per character while typing
 const erasingSpeed      = 20;                        // ms per character while erasing
 const pauseDuration     = 3200;                      // ms to hold the fully-typed phrase
-const photoDropInterval   = 4000;                       // ms between each photo appearing
-const photoFadeInDuration = 2000;                       // ms for each photo to fade in
-const photoOpacity        = 0.9;                       // opacity of background photos (0–1)
+const photoDropInterval    = 4000;  // ms between each new photo appearing
+const photoFadeInDuration  = 1400;  // ms — incoming image fades in
+const photoFadeOutDuration = 1000;  // ms — outgoing image fades out
+const photoFadeOutDelay    = 300;   // ms after new image starts before old begins to fade out (0 = fully simultaneous)
+const photoOpacity         = 0.9;  // peak opacity of background photos (0–1)
 const grainOpacity        = 0.60;                      // opacity of grain overlay (0–1)
 const headingSize         = 'clamp(3rem, 5vw, 5rem)'; // font-size of the heading
 const headingColor        = '#1C1C1C';                 // color of "Design" and the typed phrase, '#282829' is the Default. '#ffffff'(White)
@@ -22,7 +24,8 @@ const maxOffsetX = 0; // horizontal scatter range: ±maxOffsetX , before was 80
 const maxOffsetY = 0; // vertical scatter range:   ±maxOffsetY, before was 30
 
 // ── Internal constants ──────────────────────────────────────────────────────
-const MAX_STACK_VISIBLE = 1;
+// Keep at most 2 items alive at once (the incoming + the outgoing during crossfade)
+const MAX_STACK_VISIBLE = 2;
 
 const PLACEHOLDER_COLORS = [
   'hsl(220, 10%, 86%)',
@@ -37,11 +40,12 @@ const PLACEHOLDER_COLORS = [
 
 // ── Types ───────────────────────────────────────────────────────────────────
 interface StackItem {
-  photoIdx: number;
-  x: number;       // center x position in px
-  y: number;       // center y position in px
-  key: number;
-  visible: boolean; // false on first paint → true after browser paints → triggers CSS transition
+  photoIdx:  number;
+  x:         number;    // center x position in px
+  y:         number;    // center y position in px
+  key:       number;
+  visible:   boolean;   // false → true triggers fade-in CSS transition
+  fadingOut: boolean;   // false → true triggers fade-out CSS transition
 }
 
 // ── Typewriter hook ─────────────────────────────────────────────────────────
@@ -94,33 +98,54 @@ function useTypewriter(phrases: string[]) {
 
 // ── Photo stack hook ────────────────────────────────────────────────────────
 function usePhotoStack(photoCount: number) {
-  const [stack, setStack] = useState<StackItem[]>([]);
-  const photoIdxRef = useRef(0);
-  const keyRef      = useRef(0);
+  const [stack, setStack]   = useState<StackItem[]>([]);
+  const photoIdxRef         = useRef(0);
+  const keyRef              = useRef(0);
+  const fadeOutTimerRef     = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const removeTimerRef      = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (photoCount === 0) return;
 
     const addPhoto = () => {
-      const x = window.innerWidth  / 2 + (Math.random() * 2 - 1) * maxOffsetX;
-      const y = window.innerHeight / 2 + (Math.random() * 2 - 1) * maxOffsetY;
+      const x        = window.innerWidth  / 2 + (Math.random() * 2 - 1) * maxOffsetX;
+      const y        = window.innerHeight / 2 + (Math.random() * 2 - 1) * maxOffsetY;
       const photoIdx = photoIdxRef.current % photoCount;
       photoIdxRef.current += 1;
       keyRef.current      += 1;
       const key = keyRef.current;
-      setStack(prev => [...prev, { photoIdx, x, y, key, visible: false }].slice(-MAX_STACK_VISIBLE));
-      // Two rAF frames ensure the browser has painted opacity:0 before we flip to
-      // opacity:photoOpacity, so the CSS transition actually fires.
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setStack(prev => prev.map(i => i.key === key ? { ...i, visible: true } : i));
-        });
-      });
+
+      // Add new photo (invisible) alongside existing ones, capped at MAX_STACK_VISIBLE
+      setStack(prev =>
+        [...prev, { photoIdx, x, y, key, visible: false, fadingOut: false }]
+          .slice(-MAX_STACK_VISIBLE)
+      );
+
+      // Two rAF frames: let the browser paint opacity:0 first so the transition fires
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        setStack(prev => prev.map(i => i.key === key ? { ...i, visible: true } : i));
+      }));
+
+      // After photoFadeOutDelay, begin fading out every photo that isn't the new one
+      clearTimeout(fadeOutTimerRef.current);
+      fadeOutTimerRef.current = setTimeout(() => {
+        setStack(prev => prev.map(i => i.key !== key ? { ...i, fadingOut: true } : i));
+      }, photoFadeOutDelay);
+
+      // After the fade-out finishes, prune them from the DOM
+      clearTimeout(removeTimerRef.current);
+      removeTimerRef.current = setTimeout(() => {
+        setStack(prev => prev.filter(i => i.key === key));
+      }, photoFadeOutDelay + photoFadeOutDuration);
     };
 
-    addPhoto(); // first photo immediately, no delay
+    addPhoto(); // first photo immediately
     const id = setInterval(addPhoto, photoDropInterval);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      clearTimeout(fadeOutTimerRef.current);
+      clearTimeout(removeTimerRef.current);
+    };
   }, [photoCount]);
 
   return stack;
@@ -162,8 +187,10 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
               left: item.x,
               top: item.y,
               transform: 'translate(-50%, -50%)',
-              opacity: item.visible ? photoOpacity : 0,
-              transition: `opacity ${photoFadeInDuration}ms ease-out`,
+              opacity:    item.fadingOut ? 0 : (item.visible ? photoOpacity : 0),
+              transition: item.fadingOut
+                ? `opacity ${photoFadeOutDuration}ms ease-in`
+                : `opacity ${photoFadeInDuration}ms ease-out`,
             }}
           >
             {hasPhotos ? (

@@ -37,8 +37,9 @@ export default function ContactTop({ config, onScrollToHero, onResetHero }: Prop
           clip-path and border-radius cannot coexist on the same element, so the radius
           lives here and the notch clip-path lives on the inner div. */}
       <div
-        className="mx-10"
         style={{
+          marginLeft:           'var(--page-margin)',
+          marginRight:          'var(--page-margin)',
           borderTopLeftRadius:  containerRadius,
           borderTopRightRadius: containerRadius,
           overflow: 'hidden',
