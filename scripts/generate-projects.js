@@ -1,29 +1,30 @@
 #!/usr/bin/env node
 /**
  * generate-projects.js
- * Scans /public/images/projects/ and MERGES into /src/data/projects.json.
+ * Reads portfolio_database2.csv for project metadata, scans
+ * /public/images/projects/ folders, and REGENERATES /src/data/projects.json.
+ *
  * Re-run whenever new project folders or images are added:
  *   npm run generate-projects
  *   npm run generate-projects -- --dry-run
  *
  * Folder naming:  PROJECT_ID_UPPERCASECATEGORY_TitleInCamelCase
- *   e.g.  EV-08_ARCHITECTURE_UniversityOfNevadaRenoJohnTullochBusinessBuilding
+ *   e.g.  EV-09_ARCHITECTURE_UniversityOfNevadaRenoJohnTullochBusinessBuilding
  *
  * File naming:    Date_Category_ID_Name_Organization[_pageN].png
- *   e.g.  2026-03_Architecture_EV-08_UniversityOfNevadaRenoJohnTullochBusinessBuilding_LMNArchitects_page1.png
+ *   e.g.  2026-03_Architecture_EV-09_UniversityOfNevadaRenoJohnTullochBusinessBuilding_LMNArchitects_page1.png
  *
- * CSV enrichment (optional):
- *   If public/images/projects/portfolio_database.csv exists, the script reads
- *   subtitle, role, and location from it (matched by ProjectID column).
- *   If the CSV is absent, those fields default to "".
+ * CSV source: public/images/projects/portfolio_database2.csv
+ *   Columns: ProjectID, Category, Name, Subtitle, Organization, Role, Location
  *
- * Merge rules:
- *   - Existing project ID  → update `cards` only; all other fields are preserved.
- *   - New project ID       → full entry created with default scores/priority/presets.
- *   - Removed folder       → WARNING printed; entry kept in JSON (user must delete manually).
- *   - "Other" folder       → only `cards` updated (same merge rules, no scoring fields).
+ * Rules:
+ *   - Each project entry is built fresh from the CSV + folder images.
+ *   - If a folder has no CSV entry: WARNING printed, entry included with data from folder name.
+ *   - If a CSV entry has no folder: WARNING printed, entry skipped.
+ *   - "Others" folder → scanned and put in top-level "other" array.
+ *   - Skipped folders: CategoryDividers, any file (non-directory), any name starting with ".".
  *
- * Skipped folders: CategoryDividers, any folder starting with "." or not a directory.
+ * Output field: fileDate (extracted from first image filename prefix YYYY-MM).
  */
 
 const fs   = require('fs');
@@ -32,82 +33,89 @@ const path = require('path');
 const ROOT        = path.join(__dirname, '..');
 const IMG_DIR     = path.join(ROOT, 'public', 'images', 'projects');
 const OUTPUT_FILE = path.join(ROOT, 'src', 'data', 'projects.json');
-const CSV_FILE    = path.join(IMG_DIR, 'portfolio_database.csv');
+const CSV_FILE    = path.join(IMG_DIR, 'portfolio_database2.csv');
 const IMG_EXTS    = /\.(jpg|jpeg|png|gif|webp|avif)$/i;
 const DRY_RUN     = process.argv.includes('--dry-run');
 
-// ── Category definitions (must stay in sync with src/config/categories.ts) ────
-// Keys are uppercase folder segment names.
+// ── Category definitions ───────────────────────────────────────────────────────
+// Keys: uppercase CSV category code OR uppercase folder segment → JSON camelCase key
 const CATEGORY_KEY = {
-  ARTIFACTSANDINTERFACES: 'artifactsInterfaces',
-  COMPUTATIONALDESIGN:    'computationalDesign',
-  PUBLICREALM:            'publicRealm',
-  ARCHITECTURE:           'architecture',
-  FUTURES:                'futures',
+  // CSV category codes
+  'Architecture':            'architecture',
+  'ComputationalDesign':     'computationalDesign',
+  'PublicRealm':             'publicRealm',
+  'Artifacts&Interfaces':    'artifactsInterfaces',
+  'ArtifactsAndInterfaces':  'artifactsInterfaces',
+  'ArtifactsInterfaces':     'artifactsInterfaces',
+  'Futures':                 'futures',
+  // Folder segment variants (uppercase)
+  'ARCHITECTURE':            'architecture',
+  'COMPUTATIONALDESIGN':     'computationalDesign',
+  'PUBLICREALM':             'publicRealm',
+  'ARTIFACTS&INTERFACES':    'artifactsInterfaces',
+  'ARTIFACTSANDINTERFACES':  'artifactsInterfaces',
+  'ARTIFACTSINTERFACES':     'artifactsInterfaces',
+  'FUTURES':                 'futures',
 };
 
 const CATEGORY_DISPLAY = {
-  ARTIFACTSANDINTERFACES: 'Artifacts & Interfaces',
-  COMPUTATIONALDESIGN:    'Computational Design',
-  PUBLICREALM:            'Public Realm',
-  ARCHITECTURE:           'Architecture',
-  FUTURES:                'Futures',
+  'architecture':         'Architecture',
+  'computationalDesign':  'Computational Design',
+  'publicRealm':          'Public Realm',
+  'artifactsInterfaces':  'Artifacts & Interfaces',
+  'futures':              'Futures',
 };
 
-// Folders to skip during project scanning (Other is handled separately in the loop)
+// Folders to skip entirely during project scanning
 const SKIP_FOLDERS = new Set(['CategoryDividers']);
+// The "other" folder name on disk
+const OTHERS_FOLDER = 'Others';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 /**
  * Convert a CamelCase or PascalCase string to a space-separated display string.
  * 'LMNArchitects' → 'LMN Architects'
- * 'UniversityOfNevadaReno' → 'University Of Nevada Reno'
  */
 function fromCamelCase(s) {
   const result = s
-    .replace(/([a-z\d])([A-Z])/g, '$1 $2')   // 'lA' → 'l A'
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2'); // 'LMNAr' → 'LMN Ar'
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
-/** Parse a folder name: "EV-08_ARCHITECTURE_UniversityOfNevadaReno..." */
+/**
+ * Parse a folder name: "EV-09_ARCHITECTURE_UniversityOfNevadaReno..."
+ * Returns { id, categoryRaw, categoryKey, categoryDisplay, title }
+ */
 function parseFolderName(folder) {
-  const underscoreIdx = folder.indexOf('_');
-  const secondIdx     = folder.indexOf('_', underscoreIdx + 1);
-  const id            = folder.slice(0, underscoreIdx);
-  const categoryRaw   = folder.slice(underscoreIdx + 1, secondIdx);
-  const titleRaw      = folder.slice(secondIdx + 1);
+  const firstUnderscore  = folder.indexOf('_');
+  const secondUnderscore = folder.indexOf('_', firstUnderscore + 1);
+  const id               = folder.slice(0, firstUnderscore);
+  const categoryRaw      = folder.slice(firstUnderscore + 1, secondUnderscore);
+  const titleRaw         = folder.slice(secondUnderscore + 1);
+  const categoryKey      = CATEGORY_KEY[categoryRaw] ?? null;
+  const categoryDisplay  = categoryKey ? (CATEGORY_DISPLAY[categoryKey] ?? fromCamelCase(categoryRaw)) : fromCamelCase(categoryRaw);
   return {
     id,
-    categoryRaw,           // uppercase, e.g. 'ARCHITECTURE'
-    category: CATEGORY_DISPLAY[categoryRaw] ?? fromCamelCase(categoryRaw),
-    title:    fromCamelCase(titleRaw),
+    categoryRaw,
+    categoryKey,
+    categoryDisplay,
+    title: fromCamelCase(titleRaw),
   };
 }
 
 /**
- * Parse a filename (without extension).
- * Format: Date_Category_ID_Name_Organization[_pageN]
+ * Extract fileDate from a filename.
+ * Filenames start with YYYY-MM_... — extract the YYYY-MM prefix.
  */
-function parseFileName(filename) {
-  const base  = filename.replace(/\.[^.]+$/, '');
-  const parts = base.split('_');
-
-  let pageNum = 1;
-  if (/^page\d+$/i.test(parts[parts.length - 1])) {
-    pageNum = parseInt(parts[parts.length - 1].replace(/\D/g, ''), 10);
-    parts.pop();
-  }
-
-  const date         = parts[0];
-  const organization = fromCamelCase(parts[parts.length - 1]);
-
-  return { date, organization, pageNum };
+function extractFileDate(filename) {
+  const match = filename.match(/^(\d{4}-\d{2})/);
+  return match ? match[1] : '0000-00';
 }
 
-/** Build a categoryScores object with the primary category set to 80, others 0. */
-function buildCategoryScores(categoryRaw) {
+/** Build a categoryScores object with the primary category key set to 80, all others 0. */
+function buildCategoryScores(categoryKey) {
   const scores = {
     computationalDesign:  0,
     artifactsInterfaces:  0,
@@ -115,35 +123,19 @@ function buildCategoryScores(categoryRaw) {
     architecture:         0,
     futures:              0,
   };
-  const key = CATEGORY_KEY[categoryRaw];
-  if (key && key in scores) scores[key] = 80;
+  if (categoryKey && categoryKey in scores) scores[categoryKey] = 80;
   return scores;
 }
 
-/** Return image files in a folder sorted by (pageNum, filename). */
+/** Return image file public paths in a folder sorted alphabetically. */
 function getSortedCards(folderPath, publicFolder) {
   return fs.readdirSync(folderPath)
     .filter(f => IMG_EXTS.test(f) && !f.startsWith('.'))
-    .map(f => ({
-      filename:   f,
-      publicPath: `/images/projects/${publicFolder}/${f}`,
-      pageNum:    parseFileName(f).pageNum,
-    }))
-    .sort((a, b) =>
-      a.pageNum !== b.pageNum
-        ? a.pageNum - b.pageNum
-        : a.filename.localeCompare(b.filename)
-    )
-    .map(c => c.publicPath);
+    .sort()
+    .map(f => `/images/projects/${publicFolder}/${f}`);
 }
 
-/** Deep-equal check for two arrays of strings. */
-function arraysEqual(a, b) {
-  if (a.length !== b.length) return false;
-  return a.every((v, i) => v === b[i]);
-}
-
-// ── CSV enrichment (optional) ──────────────────────────────────────────────────
+// ── CSV parsing ────────────────────────────────────────────────────────────────
 
 function parseCsvLine(line) {
   const cells = [];
@@ -164,181 +156,223 @@ function parseCsvLine(line) {
   return cells;
 }
 
-function readCsvEnrichment() {
+/**
+ * Read portfolio_database2.csv.
+ * Returns a Map: ProjectID → { title, subtitle, category, categoryKey, categoryDisplay, organization, role, location }
+ */
+function readCsv() {
   if (!fs.existsSync(CSV_FILE)) {
-    console.log('  ℹ  No portfolio_database.csv found — subtitle/role/location will be empty.');
-    return {};
+    console.warn(`  WARNING: CSV file not found at ${CSV_FILE}`);
+    return new Map();
   }
 
-  const lines = fs.readFileSync(CSV_FILE, 'utf8').split(/\r?\n/);
-  if (lines.length < 2) return {};
+  const lines   = fs.readFileSync(CSV_FILE, 'utf8').split(/\r?\n/);
+  if (lines.length < 2) return new Map();
 
-  const headers    = parseCsvLine(lines[0]);
-  const idCol       = headers.findIndex(h => /projectid/i.test(h));
-  const subtitleCol = headers.findIndex(h => /subtitle/i.test(h));
-  const roleCol     = headers.findIndex(h => /\brole\b/i.test(h));
-  const locationCol = headers.findIndex(h => /location/i.test(h));
+  const headers     = parseCsvLine(lines[0]);
+  const col = name  => headers.findIndex(h => h.trim().toLowerCase() === name.toLowerCase());
+
+  const idCol       = col('ProjectID');
+  const catCol      = col('Category');
+  const nameCol     = col('Name');
+  const subtitleCol = col('Subtitle');
+  const orgCol      = col('Organization');
+  const roleCol     = col('Role');
+  const locationCol = col('Location');
 
   if (idCol === -1) {
-    console.warn('  ⚠ CSV found but no "ProjectID" column — skipping enrichment.');
-    return {};
+    console.warn('  WARNING: CSV has no "ProjectID" column — aborting CSV read.');
+    return new Map();
   }
 
-  const result = {};
+  const result = new Map();
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    const cells = parseCsvLine(line);
-    const id = cells[idCol]?.trim();
+    const cells     = parseCsvLine(line);
+    const id        = cells[idCol]?.trim();
     if (!id) continue;
-    result[id] = {
-      subtitle: subtitleCol !== -1 ? (cells[subtitleCol]?.trim() ?? '') : '',
-      role:     roleCol     !== -1 ? (cells[roleCol]?.trim()     ?? '') : '',
-      location: locationCol !== -1 ? (cells[locationCol]?.trim() ?? '') : '',
-    };
+
+    const categoryRaw     = catCol      !== -1 ? (cells[catCol]?.trim()      ?? '') : '';
+    const categoryKey     = CATEGORY_KEY[categoryRaw] ?? null;
+    const categoryDisplay = categoryKey ? (CATEGORY_DISPLAY[categoryKey] ?? categoryRaw) : categoryRaw;
+
+    result.set(id, {
+      title:        nameCol     !== -1 ? (cells[nameCol]?.trim()     ?? '') : '',
+      subtitle:     subtitleCol !== -1 ? (cells[subtitleCol]?.trim() ?? '') : '',
+      category:     categoryDisplay,
+      categoryKey,
+      organization: orgCol      !== -1 ? (cells[orgCol]?.trim()      ?? '') : '',
+      role:         roleCol     !== -1 ? (cells[roleCol]?.trim()     ?? '') : '',
+      location:     locationCol !== -1 ? (cells[locationCol]?.trim() ?? '') : '',
+    });
   }
-  console.log(`  ✓ CSV: enriched data for ${Object.keys(result).length} project(s).`);
+
+  console.log(`  CSV: loaded metadata for ${result.size} project(s).`);
   return result;
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 
 function main() {
-  if (DRY_RUN) console.log('🔍 Dry-run mode — no files will be written.\n');
+  if (DRY_RUN) console.log('Dry-run mode — no files will be written.\n');
 
-  // ── Load existing JSON ─────────────────────────────────────────────────────
-  let existing = { projects: [], other: [] };
-  if (fs.existsSync(OUTPUT_FILE)) {
-    existing = JSON.parse(fs.readFileSync(OUTPUT_FILE, 'utf8'));
-  }
-
-  const existingById  = Object.fromEntries((existing.projects ?? []).map(p => [p.id, p]));
-  const existingOther = (existing.other ?? [])[0] ?? null;
-
-  // ── CSV enrichment ─────────────────────────────────────────────────────────
-  const csvData = readCsvEnrichment();
+  // ── Read CSV ───────────────────────────────────────────────────────────────
+  const csvData = readCsv();
 
   // ── Scan disk ──────────────────────────────────────────────────────────────
-  const folders = fs.readdirSync(IMG_DIR)
-    .filter(f => {
-      if (f.startsWith('.'))    return false;
-      if (SKIP_FOLDERS.has(f))  return false;
-      return fs.statSync(path.join(IMG_DIR, f)).isDirectory();
-    })
-    .sort();
+  const allEntries = fs.readdirSync(IMG_DIR).filter(f => !f.startsWith('.'));
 
-  const diskIds    = new Set();
-  const projects   = [];
-  let   otherEntry = null;
+  // Separate regular project folders from Others and files
+  const projectFolders = [];
+  let   othersEntry    = null;
 
-  const added     = [];
-  const updated   = [];
-  const unchanged = [];
-
-  for (const folder of folders) {
-    const folderPath = path.join(IMG_DIR, folder);
-
-    // ── "Other" folder ────────────────────────────────────────────────────────
-    if (folder === 'Other') {
-      const newCards = getSortedCards(folderPath, 'Other');
-      const oldCards = existingOther?.cards ?? [];
-
-      if (existingOther && arraysEqual(oldCards, newCards)) {
-        otherEntry = existingOther;
-      } else {
-        otherEntry = { id: 'Other', cards: newCards };
-        console.log(existingOther
-          ? `  ↻ Other: cards updated (${oldCards.length} → ${newCards.length})`
-          : `  + Other: new entry (${newCards.length} cards)`);
-      }
+  for (const entry of allEntries) {
+    const fullPath = path.join(IMG_DIR, entry);
+    if (!fs.statSync(fullPath).isDirectory()) continue;  // skip files (e.g. .csv)
+    if (SKIP_FOLDERS.has(entry))              continue;
+    if (entry === OTHERS_FOLDER) {
+      othersEntry = entry;
       continue;
     }
+    projectFolders.push(entry);
+  }
 
-    // ── Project folders ───────────────────────────────────────────────────────
-    const { id, categoryRaw, category, title } = parseFolderName(folder);
-    diskIds.add(id);
+  // ── Build set of folder IDs ────────────────────────────────────────────────
+  const folderIdMap = new Map();   // ProjectID → folder name
+  for (const folder of projectFolders) {
+    const underscoreIdx = folder.indexOf('_');
+    if (underscoreIdx === -1) {
+      console.warn(`  WARNING: Cannot parse folder name (no underscore): ${folder}`);
+      continue;
+    }
+    const id = folder.slice(0, underscoreIdx);
+    folderIdMap.set(id, folder);
+  }
 
-    const imageFiles = fs.readdirSync(folderPath)
+  // Warn: CSV entries with no folder
+  const warnings = [];
+  for (const [id] of csvData) {
+    if (!folderIdMap.has(id)) {
+      warnings.push(`WARNING: CSV entry ${id} has no matching folder on disk — skipping.`);
+      console.warn(`  WARNING: CSV entry ${id} has no matching folder on disk — skipping.`);
+    }
+  }
+
+  // Warn: folders with no CSV entry
+  for (const [id] of folderIdMap) {
+    if (!csvData.has(id)) {
+      warnings.push(`WARNING: Folder for ${id} has no matching CSV entry — including with data from folder name.`);
+      console.warn(`  WARNING: Folder for ${id} has no matching CSV entry — including with data from folder name.`);
+    }
+  }
+
+  // ── Build projects array ───────────────────────────────────────────────────
+  const projects   = [];
+  let   totalCards = 0;
+  let   matched    = 0;
+
+  for (const [id, folder] of folderIdMap) {
+    const folderPath  = path.join(IMG_DIR, folder);
+    const imageFiles  = fs.readdirSync(folderPath)
       .filter(f => IMG_EXTS.test(f) && !f.startsWith('.'))
       .sort();
 
     if (imageFiles.length === 0) {
-      console.warn(`  ⚠ No images in ${folder} — skipping`);
+      console.warn(`  WARNING: No images in ${folder} — skipping.`);
+      warnings.push(`WARNING: No images in ${folder} — skipping.`);
       continue;
     }
 
-    const newCards = getSortedCards(folderPath, folder);
+    const cards    = getSortedCards(folderPath, folder);
+    const fileDate = extractFileDate(imageFiles[0]);
 
-    if (existingById[id]) {
-      // ── Existing project: only update cards ────────────────────────────────
-      const prev = existingById[id];
-      const merged = { ...prev, cards: newCards };
-      projects.push(merged);
+    let title, subtitle, category, organization, role, location, categoryKey;
 
-      if (!arraysEqual(prev.cards ?? [], newCards)) {
-        updated.push(id);
-        console.log(`  ↻ ${id}: cards updated (${(prev.cards ?? []).length} → ${newCards.length} images)`);
-      } else {
-        unchanged.push(id);
-      }
+    if (csvData.has(id)) {
+      // Use CSV metadata
+      const csv  = csvData.get(id);
+      title        = csv.title;
+      subtitle     = csv.subtitle;
+      category     = csv.category;
+      categoryKey  = csv.categoryKey;
+      organization = csv.organization;
+      role         = csv.role;
+      location     = csv.location;
+      matched++;
     } else {
-      // ── New project: full entry with defaults ─────────────────────────────
-      const { date, organization } = parseFileName(imageFiles[0]);
-      const csv = csvData[id] ?? { subtitle: '', role: '', location: '' };
-      const entry = {
-        id,
-        title,
-        subtitle:     csv.subtitle,
-        category,
-        organization,
-        role:         csv.role,
-        location:     csv.location,
-        date,
-        cards:        newCards,
-        categoryScores: buildCategoryScores(categoryRaw),
-        priority:     0,
-        presets:      null,
-      };
-      projects.push(entry);
-      added.push(id);
-      console.log(`  + ${id}: new entry "${title}"`);
+      // Fall back to folder name parsing
+      const parsed = parseFolderName(folder);
+      title        = parsed.title;
+      subtitle     = '';
+      category     = parsed.categoryDisplay;
+      categoryKey  = parsed.categoryKey;
+      organization = '';
+      role         = '';
+      location     = '';
     }
+
+    projects.push({
+      id,
+      title,
+      subtitle,
+      category,
+      organization,
+      role,
+      location,
+      fileDate,
+      cards,
+      categoryScores: buildCategoryScores(categoryKey),
+      priority:       0,
+      presets:        null,
+    });
+
+    totalCards += cards.length;
   }
 
-  // ── Warn about projects in JSON whose folder was removed ──────────────────
-  const removedIds = Object.keys(existingById).filter(id => !diskIds.has(id));
-  for (const id of removedIds) {
-    console.warn(`  ⚠ WARNING: ${id} exists in JSON but folder not found on disk. Keeping entry.`);
-    projects.push(existingById[id]);
-  }
-
-  // ── Sort by numeric ID ────────────────────────────────────────────────────
+  // ── Sort by numeric ID (EV-03, EV-06, EV-09 ...) ──────────────────────────
   projects.sort((a, b) => {
     const numA = parseInt(a.id.replace(/\D/g, ''), 10);
     const numB = parseInt(b.id.replace(/\D/g, ''), 10);
     return numA - numB;
   });
 
-  const output = { projects };
-  if (otherEntry) output.other = [otherEntry];
+  // ── Others folder ──────────────────────────────────────────────────────────
+  let otherSection = null;
+  if (othersEntry) {
+    const othersPath = path.join(IMG_DIR, OTHERS_FOLDER);
+    const otherCards = getSortedCards(othersPath, OTHERS_FOLDER);
+    otherSection     = [{ id: OTHERS_FOLDER, cards: otherCards }];
+    totalCards      += otherCards.length;
+    console.log(`  Others: ${otherCards.length} card(s).`);
+  }
 
-  // ── Summary ───────────────────────────────────────────────────────────────
+  // ── Build output ───────────────────────────────────────────────────────────
+  const output = { projects };
+  if (otherSection) output.other = otherSection;
+
+  // ── Summary ────────────────────────────────────────────────────────────────
   console.log('');
-  console.log(`  Added:     ${added.length}    ${added.join(', ')}`);
-  console.log(`  Updated:   ${updated.length}    ${updated.join(', ')}`);
-  console.log(`  Unchanged: ${unchanged.length}`);
-  console.log(`  Removed:   ${removedIds.length}    ${removedIds.join(', ')}`);
+  console.log(`  Total projects written : ${projects.length}`);
+  console.log(`  CSV-matched projects   : ${matched}`);
+  console.log(`  Folder-only projects   : ${projects.length - matched}`);
+  console.log(`  Total card images      : ${totalCards}`);
+  if (warnings.length > 0) {
+    console.log('');
+    console.log(`  Warnings (${warnings.length}):`);
+    warnings.forEach(w => console.log(`    - ${w}`));
+  }
   console.log('');
 
   if (DRY_RUN) {
-    console.log('🔍 Dry-run complete — no files written.');
+    console.log('Dry-run complete — no files written.');
     return;
   }
 
   fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(output, null, 2) + '\n');
-  console.log(`✓ Wrote ${projects.length} projects → ${OUTPUT_FILE}`);
-  if (otherEntry) console.log(`✓ "Other" → ${otherEntry.cards.length} cards`);
+  console.log(`Wrote ${projects.length} projects → ${OUTPUT_FILE}`);
+  if (otherSection) console.log(`"Others" → ${otherSection[0].cards.length} card(s)`);
 }
 
 main();

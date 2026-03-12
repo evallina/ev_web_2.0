@@ -497,8 +497,11 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
   // On deactivation: retract only.
   useEffect(() => {
     if (isMobile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setArrowTranslateX(0);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConnectorClip(100);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConnectorTransDur(0);
       return;
     }

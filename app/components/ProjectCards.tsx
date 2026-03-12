@@ -221,11 +221,25 @@ export default function ProjectCards({
         .map(id => projects.find(p => p.id === id))
         .filter((p): p is ProjectEntry => p !== undefined);
 
-  // Build card items + record each project's first card index in one pass
+  // Build card items + record each project's first card index in one pass.
+  // Deduplication: if consecutive projects share the same first card path,
+  // the card is shown once and the second project's strip icon points to the
+  // same card index as the first (no duplicate card in the carousel).
   const projectFirstCardIdx: number[] = [];
   const items: CardItem[] = [];
 
   for (let pi = 0; pi < selected.length; pi++) {
+    const sharedWithPrev =
+      pi > 0 &&
+      selected[pi].cards.length > 0 &&
+      selected[pi].cards[0] === selected[pi - 1].cards[0];
+
+    if (sharedWithPrev) {
+      // Point this project's strip icon to the same card as the previous project
+      projectFirstCardIdx.push(projectFirstCardIdx[pi - 1]);
+      continue; // skip adding duplicate cards
+    }
+
     projectFirstCardIdx.push(items.length);
     for (let ci = 0; ci < selected[pi].cards.length; ci++) {
       items.push({
@@ -527,9 +541,9 @@ export default function ProjectCards({
               scrollbarWidth: 'none',
             }}
           >
-            {items.map((item) => (
+            {items.map((item, idx) => (
               <div
-                key={item.src}
+                key={idx}
                 onContextMenu={(e) => e.preventDefault()}
                 style={{
                   width:          '100%',
@@ -867,7 +881,7 @@ export default function ProjectCards({
                   {p.category && <div style={{ color: '#4b5563', fontSize: 9.5 }}>Category: {p.category}</div>}
                   {(justification || isPresetBoosted) && (
                     <div style={{ color: '#9ca3af', fontSize: 9.5, marginTop: 1 }}>
-                      →{isPresetBoosted && <span style={{ color: '#fb923c', marginRight: 4 }}> PRESET SELECT</span>}{justification && ` ${justification}`}
+                      →{isPresetBoosted && <span style={{ color: '#fb923c', marginRight: 4 }}> PRESET {activePresetName}</span>}{justification && ` ${justification}`}
                     </div>
                   )}
                 </div>

@@ -10,7 +10,8 @@
     "generate-projects": "node scripts/generate-projects.js",
     "generate-philosophy": "node scripts/generate-philosophy.js",
     "migrate-category": "node scripts/migrate-category.js",
-    "optimize-images": "node scripts/optimize-images.js"
+    "optimize-images": "node scripts/optimize-images.js",
+    "update-scores": "python3 scripts/update_scores.py"
   },
   "dependencies": {
     "@types/three": "^0.183.1",
