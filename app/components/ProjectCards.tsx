@@ -13,9 +13,16 @@ const cardGapBottom = 20;  // px — dark space below card image
 const zoomZoneWidth = 20;  // % — center zoom zone (remaining space split for prev / next)
 
 // ── Back-to-chart button (sits left of the icon strip)
-const backArrowSize  = 22;                        // px — SVG icon size
-const backArrowColor = 'rgba(255,255,255,0.50)';  // resting color
-const backArrowHover = 'rgba(255,255,255,0.90)';  // hover color
+const backArrowSize             = 22;                           // px — SVG icon size
+const backArrowColor            = 'rgba(255,255,255,0.50)';    // resting color
+const backArrowHover            = 'rgba(255,255,255,0.90)';    // hover color
+const backCircleSize            = 36;                           // px — diameter of the circle behind the ↑ icon
+const backCircleFillColor       = 'transparent';               // fill of the back-button circle
+const backCircleStrokeColor     = 'rgba(255,255,255,0.8)';    // stroke color of the back-button circle
+const backCircleStrokeWidth     = 1;                           // px — stroke width of the back-button circle
+
+// ── Icon strip Y offset ──────────────────────────────────────────────────────────
+const iconStripOffsetY = 14;  // px — additional downward shift of the icon strip + back button
 
 // ── Side navigation arrows (◀ / ▶) ─────────────────────────────────────────────
 // Arrow fill (the glyph color)
@@ -39,6 +46,13 @@ const navArrowGlyphSize = 17;   // px — font size of the ◀ / ▶ glyphs
 const breakdownValuesColor  = 'rgba(255,255,255,0.80)';
 const breakdownAbbrColor    = 'rgba(255,255,255,0.40)';
 const breakdownSepColor     = 'rgba(255,255,255,0.40)';
+
+// ── Mobile detail zoom / pan (< ZOOM_MOBILE_BREAKPOINT) ──────────────────────────
+const ZOOM_MOBILE_BREAKPOINT = 600;   // px — below this, detail opens as pan/zoom
+const ZOOM_INITIAL_SCALE     = 1.5;   // multiplier on top of fit-to-screen when zoom opens
+const ZOOM_MIN_SCALE         = 0.2;   // lower zoom bound
+const ZOOM_MAX_SCALE         = 10;    // upper zoom bound
+const ZOOM_SPEED             = 1.15;  // multiplier per wheel tick
 // └─────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -287,14 +301,19 @@ export default function ProjectCards({
   const containerRef    = useRef<HTMLDivElement>(null);
   const currentIdxRef   = useRef(0);
   const itemsLengthRef  = useRef(items.length);
-  const detailScrollRef = useRef<HTMLDivElement>(null);
-  const closeTimerRef   = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const detailScrollRef    = useRef<HTMLDivElement>(null);
+  const closeTimerRef      = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Mobile pan/zoom refs
+  const detailContainerRef = useRef<HTMLDivElement>(null);
+  const detailImgWrapRef   = useRef<HTMLDivElement>(null);
+  const detailScaleRef     = useRef(1);
+  const detailOffsetRef    = useRef({ x: 0, y: 0 });
 
   useEffect(() => { itemsLengthRef.current = items.length; });
 
-  // isMobile — used only for detail popout padding
+  // isMobile — gates pan/zoom detail view and detail popout padding
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    const check = () => setIsMobile(window.innerWidth < ZOOM_MOBILE_BREAKPOINT);
     check();
     window.addEventListener('resize', check, { passive: true });
     return () => window.removeEventListener('resize', check);
@@ -358,11 +377,37 @@ export default function ProjectCards({
     if (el) window.scrollTo({ top: el.offsetTop, behavior: 'smooth' });
   };
 
+  // ── Mobile pan/zoom helpers ───────────────────────────────────────────────────
+  const applyDetailTransform = useCallback(() => {
+    if (!detailImgWrapRef.current) return;
+    detailImgWrapRef.current.style.transform =
+      `translate(${detailOffsetRef.current.x}px, ${detailOffsetRef.current.y}px) scale(${detailScaleRef.current})`;
+  }, []);
+
+  const initDetailTransform = useCallback(() => {
+    const img = detailImgWrapRef.current?.querySelector('img') as HTMLImageElement | null;
+    if (!img) return;
+    const nw  = img.naturalWidth  || 800;
+    const nh  = img.naturalHeight || 600;
+    const vw  = window.innerWidth;
+    const vh  = window.innerHeight;
+    const fit  = Math.min(vw / nw, vh / nh) * 0.95;
+    const open = Math.min(fit * ZOOM_INITIAL_SCALE, ZOOM_MAX_SCALE);
+    detailScaleRef.current  = open;
+    detailOffsetRef.current = { x: (vw - nw * open) / 2, y: (vh - nh * open) / 2 };
+    applyDetailTransform();
+  }, [applyDetailTransform]);
+
   // ── Detail / zoom popout ──────────────────────────────────────────────────────
   const openDetail = () => {
     clearTimeout(closeTimerRef.current);
+    detailScaleRef.current  = 1;
+    detailOffsetRef.current = { x: 0, y: 0 };
     setDetailOpen(true);
-    requestAnimationFrame(() => requestAnimationFrame(() => setDetailVisible(true)));
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      setDetailVisible(true);
+      initDetailTransform(); // no-op on desktop (ref not mounted); handles cached images on mobile
+    }));
   };
 
   const closeDetail = useCallback(() => {
@@ -402,6 +447,107 @@ export default function ProjectCards({
     return () => window.removeEventListener('keydown', onKey);
   }, [detailOpen, closeDetail, detailNavTo]);
 
+  // ── Mobile detail: wheel zoom ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!detailOpen || !isMobile) return;
+    const el = detailContainerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect     = el.getBoundingClientRect();
+      const cx       = e.clientX - rect.left;
+      const cy       = e.clientY - rect.top;
+      const factor   = e.deltaY < 0 ? ZOOM_SPEED : 1 / ZOOM_SPEED;
+      const newScale = Math.max(ZOOM_MIN_SCALE, Math.min(ZOOM_MAX_SCALE, detailScaleRef.current * factor));
+      const ptX      = (cx - detailOffsetRef.current.x) / detailScaleRef.current;
+      const ptY      = (cy - detailOffsetRef.current.y) / detailScaleRef.current;
+      detailOffsetRef.current = { x: cx - ptX * newScale, y: cy - ptY * newScale };
+      detailScaleRef.current  = newScale;
+      applyDetailTransform();
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [detailOpen, isMobile, applyDetailTransform]);
+
+  // ── Mobile detail: mouse drag (pan) ──────────────────────────────────────────
+  useEffect(() => {
+    if (!detailOpen || !isMobile) return;
+    const el = detailContainerRef.current;
+    if (!el) return;
+    let active = false;
+    let sx = 0, sy = 0, sox = 0, soy = 0;
+    const onDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      active = true;
+      sx = e.clientX; sy = e.clientY;
+      sox = detailOffsetRef.current.x; soy = detailOffsetRef.current.y;
+      el.style.cursor = 'grabbing';
+    };
+    const onMove = (e: MouseEvent) => {
+      if (!active) return;
+      detailOffsetRef.current = { x: sox + e.clientX - sx, y: soy + e.clientY - sy };
+      applyDetailTransform();
+    };
+    const onUp = () => { active = false; el.style.cursor = 'grab'; };
+    el.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup',   onUp);
+    return () => {
+      el.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup',   onUp);
+    };
+  }, [detailOpen, isMobile, applyDetailTransform]);
+
+  // ── Mobile detail: touch pan + pinch zoom ────────────────────────────────────
+  useEffect(() => {
+    if (!detailOpen || !isMobile) return;
+    const el = detailContainerRef.current;
+    if (!el) return;
+    type Pt = { x: number; y: number };
+    const snap = (tl: TouchList): Pt[] => Array.from(tl).map(t => ({ x: t.clientX, y: t.clientY }));
+    const dist = (a: Pt, b: Pt) => Math.hypot(a.x - b.x, a.y - b.y);
+    const midPt = (a: Pt, b: Pt) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+    let prev: Pt[] = [];
+    const onStart = (e: TouchEvent) => { e.preventDefault(); prev = snap(e.touches); };
+    const onMove  = (e: TouchEvent) => {
+      e.preventDefault();
+      const cur  = snap(e.touches);
+      const rect = el.getBoundingClientRect();
+      if (cur.length === 1 && prev.length >= 1) {
+        detailOffsetRef.current = {
+          x: detailOffsetRef.current.x + cur[0].x - prev[0].x,
+          y: detailOffsetRef.current.y + cur[0].y - prev[0].y,
+        };
+        applyDetailTransform();
+      } else if (cur.length === 2 && prev.length === 2) {
+        const prevDist   = dist(prev[0], prev[1]);
+        const curDist    = dist(cur[0],  cur[1]);
+        const factor     = prevDist > 0 ? curDist / prevDist : 1;
+        const center     = midPt(cur[0],  cur[1]);
+        const prevCenter = midPt(prev[0], prev[1]);
+        const cx         = center.x - rect.left;
+        const cy         = center.y - rect.top;
+        const newScale   = Math.max(ZOOM_MIN_SCALE, Math.min(ZOOM_MAX_SCALE, detailScaleRef.current * factor));
+        const ptX        = (cx - detailOffsetRef.current.x - (center.x - prevCenter.x)) / detailScaleRef.current;
+        const ptY        = (cy - detailOffsetRef.current.y - (center.y - prevCenter.y)) / detailScaleRef.current;
+        detailOffsetRef.current = { x: cx - ptX * newScale, y: cy - ptY * newScale };
+        detailScaleRef.current  = newScale;
+        applyDetailTransform();
+      }
+      prev = cur;
+    };
+    const onEnd = (e: TouchEvent) => { prev = snap(e.touches); };
+    el.addEventListener('touchstart', onStart, { passive: false });
+    el.addEventListener('touchmove',  onMove,  { passive: false });
+    el.addEventListener('touchend',   onEnd,   { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove',  onMove);
+      el.removeEventListener('touchend',   onEnd);
+    };
+  }, [detailOpen, isMobile, applyDetailTransform]);
+
   // Active strip icon — stays on current project while scrolling through its pages
   let currentProjectIdx = 0;
   for (let i = stripItems.length - 1; i >= 0; i--) {
@@ -438,7 +584,7 @@ export default function ProjectCards({
             aria-label="Project navigation"
             style={{
               position:      'absolute',
-              top:           HEADER_H,
+              top:           HEADER_H + iconStripOffsetY,
               left:          0,
               right:         0,
               height:        ICON_STRIP_H,
@@ -462,20 +608,40 @@ export default function ProjectCards({
                   background: 'none',
                   border:     'none',
                   cursor:     'pointer',
-                  padding:    '4px 6px',
+                  padding:    0,
                   color:      backArrowColor,
                   transition: 'color 200ms ease',
                   display:    'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
+                  width:      backCircleSize,
+                  height:     backCircleSize,
+                  position:   'relative',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.color = backArrowHover)}
                 onMouseLeave={e => (e.currentTarget.style.color = backArrowColor)}
               >
+                {/* Circle background */}
+                <svg
+                  width={backCircleSize} height={backCircleSize}
+                  viewBox="0 0 36 36" fill="none"
+                  style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="18" cy="18" r={18 - backCircleStrokeWidth / 2}
+                    fill={backCircleFillColor}
+                    stroke={backCircleStrokeColor}
+                    strokeWidth={backCircleStrokeWidth}
+                  />
+                </svg>
+                {/* Arrow icon */}
                 <svg
                   width={backArrowSize} height={backArrowSize}
                   viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="2"
                   strokeLinecap="round" strokeLinejoin="round"
+                  style={{ position: 'relative' }}
                   aria-hidden="true"
                 >
                   <path d="M12 19V5M5 12l7-7 7 7" />
@@ -740,20 +906,74 @@ export default function ProjectCards({
       )}
 
       {/* ── Detail / zoom popout ─────────────────────────────────────────── */}
-      {detailOpen && items[currentIdx] && (
+      {detailOpen && items[currentIdx] && (isMobile ? (
+
+        /* ── Mobile: pan / zoom view (< ZOOM_MOBILE_BREAKPOINT) ─────────── */
+        <div style={{
+          position:   'fixed', inset: 0, zIndex: 500,
+          background: 'rgba(10,10,11,0.97)',
+          opacity:    detailVisible ? 1 : 0,
+          transition: 'opacity 200ms ease',
+        }}>
+          {/* Hit area — captures all pointer + touch events */}
+          <div
+            ref={detailContainerRef}
+            style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'grab', touchAction: 'none' }}
+          >
+            {/* Transformed layer */}
+            <div
+              ref={detailImgWrapRef}
+              style={{ position: 'absolute', top: 0, left: 0, transformOrigin: '0 0', willChange: 'transform' }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={items[currentIdx].src} alt={items[currentIdx].alt}
+                className="img-protected"
+                style={{ display: 'block', maxWidth: 'none' }}
+                onLoad={initDetailTransform}
+                onContextMenu={(e) => e.preventDefault()}
+                draggable={false}
+              />
+            </div>
+          </div>
+          {/* × Close button */}
+          <button
+            onClick={closeDetail}
+            aria-label="Close zoom view"
+            style={{
+              position: 'fixed', top: 14, right: 14, zIndex: 501,
+              width: 36, height: 36,
+              background: 'rgba(0,0,0,0.55)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: 'white',
+            }}
+          >
+            <svg width={13} height={13} viewBox="0 0 13 13"
+              fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <line x1={1} y1={1} x2={12} y2={12} />
+              <line x1={12} y1={1} x2={1}  y2={12} />
+            </svg>
+          </button>
+        </div>
+
+      ) : (
+
+        /* ── Desktop: scrollable zoom view ───────────────────────────────── */
         <div
           ref={detailScrollRef}
           onClick={closeDetail}
           style={{
-            position:   'fixed',
-            inset:      0,
-            zIndex:     500,
+            position:   'fixed', inset: 0, zIndex: 500,
             background: 'rgba(0,0,0,0.85)',
             cursor:     'zoom-out',
             opacity:    detailVisible ? 1 : 0,
             transition: detailVisible ? 'opacity 200ms ease' : 'opacity 150ms ease',
             overflowY:  'auto',
-            padding:    isMobile ? '60px 8px 8px' : '60px 20px 20px',
+            padding:    '60px 20px 20px',
             boxSizing:  'border-box',
           }}
         >
@@ -780,7 +1000,8 @@ export default function ProjectCards({
             )}
           </div>
         </div>
-      )}
+
+      ))}
 
       {/* ── Debug overlay ─────────────────────────────────────────────────── */}
       {showDebug && (

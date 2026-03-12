@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useGentleSnap } from "./hooks/useGentleSnap";
 import Header from "./components/Header";
 import ContactTop, { type ContactConfig } from "./components/ContactTop";
 import Trajectory from "./components/Trajectory";
@@ -13,6 +14,9 @@ import type { DebugMeta } from "@/src/types";
 import { CAT_KEYS } from "@/src/config/categories";
 import ContactBottom from "./components/ContactBottom";
 import projectsData from "@/src/data/projects.json";
+
+// ── Gentle snap — sections the hook will nudge toward after scroll settles ────
+const SNAP_SECTION_IDS = ['hero', 'design-philosophy', 'project-selection', 'project-cards', 'contact-bottom'];
 
 // ── Shared design variables ───────────────────────────────────────────────────
 const grainOpacity      = 0.20; // grain intensity for dark sections (background + header)
@@ -55,6 +59,9 @@ export default function Home() {
     const hero = document.getElementById("hero");
     if (hero) window.scrollTo({ top: hero.offsetTop, behavior: "instant" });
   }, []);
+
+  // Gentle JS-based snap — nudges toward nearest section after scroll settles
+  useGentleSnap(SNAP_SECTION_IDS);
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [menuOpen,              setMenuOpen]              = useState(false);

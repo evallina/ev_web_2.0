@@ -31,11 +31,11 @@ const circleDnAdjY = 1.7;                  // extra cy offset for the − circle
 const infoIconCharWidth = 0.65;         // estimated char width multiplier for Roboto Bold (× catFontSize)
 const infoIconGap       =  8;          // gap between text right edge and icon left edge (viewBox units)
 const infoIconYOffset   =  0;          // vertical fine-tune (viewBox units, + = down)
-const popoutFadeDuration = 1100;         // ms for popout fade in / out
+const popoutFadeDuration = 200;         // ms for popout fade in / out
 const popoutBorderRadius = 0;            // px corner radius of the popout card
 const popoutOpenScale    = 1.4;          // label scale factor while its popout is open
 const labelHoverScale    = 1.2;          // label scale factor on mouse hover
-const labelScaleDuration = 400;          // ms for label scale transition
+const labelScaleDuration = 100;          // ms for label scale transition
 
 // ── Preset button styles ───────────────────────────────────────────────────────
 // px to trim from the SVG's rendered bottom, compensating for the empty viewBox
