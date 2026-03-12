@@ -107,3 +107,17 @@ body {
   70%  { transform: translateX(-2px); }
   100% { transform: translateX(0);   }
 }
+
+/* ── Works section: allow mobile to grow taller than 100vh ────────────────
+   The flex-1 chain (section → wrapper → RadarChart container) normally
+   keeps everything locked to 100vh.  On narrow screens we break that chain
+   so the section can expand to fit all content (reel + 5 preset buttons).   */
+@media (max-width: 750px) {
+  #project-selection {
+    height: auto !important;
+    min-height: 100dvh;
+  }
+  .works-chart-wrapper {
+    flex: none !important;
+  }
+}

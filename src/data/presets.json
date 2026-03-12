@@ -1,6 +1,6 @@
 [
   {
-    "name": "Default",
+    "name": "Overview",
     "isDefault": true,
     "values": { "computationalDesign": 70, "artifactsInterfaces": 70, "publicRealm": 70, "architecture": 70, "futures": 70 }
   },

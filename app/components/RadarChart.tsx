@@ -17,7 +17,7 @@ const arrowFontSize      = 25;           // font size of the + / − buttons in 
 // Circles behind + / − symbols (outline only — no fill)
 const arrowCircleRadius  = 13;           // viewBox units
 const arrowCircleColor   = 'white';
-const arrowCircleOpacity = 0.15;         // resting opacity; full white on hover
+const arrowCircleOpacity = 0.3;         // resting opacity; full white on hover
 const arrowCircleStroke  = 1;            // strokeWidth in viewBox units
 // + / − symbol vertical positions — separate values for 1-line vs 2-line labels
 const arrowUpOffsetY1      = -39;        // 1-line labels: negative = above label anchor (viewBox units)
@@ -43,24 +43,61 @@ const labelScaleDuration = 400;          // ms for label scale transition
 // Increase this value to close the gap between the chart and the icon reel;
 // pair with reelMarginTop in IconCardReel.tsx for fine control.
 const svgBottomClip          = 30;                         // px
-
-const downArrowMarginTop     = 15;                        // px gap above the down-arrow button
-const presetTextSize         = 'text-xs';                 // Tailwind font-size class
-const presetBorderColor      = 'rgb(255,255,255,0.5)';  // static border when inactive
+const downArrowMarginTop     = 20;                         // px — height of the connector shape (space between button row and arrow)
+const downArrowFollowDuration = 300;                      // ms for down-arrow to slide under active preset
+const presetTextSize         = 'text-[11px]';                 // Tailwind font-size class Default: 'text-xs'
+// ── Preset button outline ─────────────────────────────────────────────────────
+const presetBorderColorDefault = 'rgba(255,255,255,0.3)';  // border at rest
+const presetBorderColorHover   = 'rgba(255,255,255,0.5)';  // border on hover
+const presetBorderColorActive  = '#FFFFFF';                 // border when active
 // IMPORTANT: fill colors must be opaque — the border trick works by placing a spinning
 // gradient behind the button; the button's solid fill hides the gradient in the center,
 // leaving it visible only through the border-width gap at the edges.
 // For a "transparent" look on the dark background, use the page bg color: #1c1c1d.
 const presetFillColor        = 'transparent';                 // fill when inactive (match page bg) '#1c1c1d'
-const presetTextColor        = 'rgba(255,255,255,0.6)';   // text when inactive
+const presetTextColor        = 'rgba(255,255,255,0.9)';   // text when inactive
 const presetFillColorHover   = 'transparent';                 // fill on hover (slightly lighter)#2b2b2c
 const presetTextColorHover   = '#FFFFFF';                 // text on hover
 const presetFillColorPressed = '#FFFFFF';                 // fill when active (solid white)
 const presetTextColorPressed = '#282829';                 // text when active
 const presetBorderRadius     = 30;                         // px corner radius for buttons
 const presetBorderWidth      = 1;                          // px border thickness
-const presetButtonHeight     = 45;                         // px fixed height for all buttons
+const presetButtonHeight     = 40;                         // px fixed height for all buttons
+const presetButtonWidth      = 200;                        // px — fixed width for ALL desktop preset buttons (wide enough for longest label)
+const presetButtonGap        = 10;                         // px gap between preset buttons
 const presetContainerPadding = 24;                         // px minimum horizontal gap between buttons and parent edges
+// ── Connector shape (desktop) — bridges active button to down arrow ────────────
+const connectorFillColor     = 'rgba(255, 255, 255, 1)';
+const connectorFillOpacity   = .1;
+const connectorOutline       = false;
+const connectorOutlineColor  = 'rgba(255, 255, 255, 0.3)';
+const connectorOutlineWidth  = 1;                          // px
+const connectorOutlineOpacity = 1;
+const connectorTopWidth      = presetButtonWidth * 0.5;    // px — connector top width (centered over button); default: half button width
+const connectorChamferRadius = 20;                         // px — controls bezier handle length for side curves (higher = more S-curve curvature)
+const connectorTopOverlap    = 0;                         // px — connector extends UP behind the button bottom edge
+const connectorNeckExtension = 0;                         // px — static neck extension (kept at 0; dynamic extension handled by bounceExtension filler on hover)
+const connectorBottomOverlap = 24 + connectorNeckExtension; // px — total overlap behind circle (arrowR); arrow stays at same absolute position
+const bounceExtension        = 0;                          // px — matches radar-btn-bounce translateY peak; filler fades in on hover to track the bounce
+// ── Down-arrow button (circle + icon) ─────────────────────────────────────────
+const downArrowFillColor        = 'white';   // circle background color at rest
+const downArrowHoverColor       = 'rgba(100,100,100,1)';   // circle background color on hover
+const downArrowFillOpacity      = 0.20;      // circle background opacity at rest
+const downArrowFillHoverOpacity = 1;         // circle background opacity on hover
+const downArrowBorderColor      = 'white';   // circle border color
+const downArrowBorderOpacity    = 1;         // circle border opacity (0–1)
+const downArrowBorderWidth      = 3;         // px — circle border thickness
+const downArrowIconColor        = 'white';   // color of the ↓ icon inside the circle
+const downArrowIconStroke       = 1.6;       // strokeWidth of the ↓ icon (SVG units)
+const mobilePresetsBreakpoint = 750;                       // px — below this: mobile preset layout (vertical buttons + inline arrow)
+const presetsBottomPadding   = 0;                         // px minimum space between arrow/presets and section bottom edge
+const presetButtonHeightMobile = 45;                       // px button height in mobile layout (shorter than desktop's presetButtonHeight)
+const mobileArrowSize        = presetButtonHeightMobile;   // px — diameter equals mobile button height (keep button + arrow the same height)
+const mobileArrowGap         = 8;                          // px gap between button and inline arrow circle in mobile
+const mobilePresetTransition = 200;                        // ms transition for button shrink / arrow slot appear (mobile)
+const mobileButtonScale      = 0.85;                       // scale factor applied to the entire mobile button group container
+const mobileReelScale        = 0.8;                        // scale factor applied to the icon card reel on mobile
+const yourSelectionTransition = 300;                       // ms for "YOUR SELECTION" button grow/shrink on desktop
 
 // ── Chart geometry ─────────────────────────────────────────────────────────────
 const CX      = 400;   // SVG viewBox center x  (viewBox: 0 0 800 760)
@@ -92,6 +129,9 @@ const PRESETS = (presetsData as Array<{ name: string; isDefault?: boolean; value
 }));
 // Presets shown as buttons and used in auto-play (excludes the invisible Default reset target)
 const NON_DEFAULT_PRESETS = PRESETS.filter(p => !p.isDefault);
+const DEFAULT_PRESET      = PRESETS.find(p => p.isDefault)!;
+// Autoplay order: non-default presets reversed (Systems Thinking → Spatial Experiences → Research), then Overview
+const AUTOPLAY_SEQUENCE   = [...NON_DEFAULT_PRESETS.slice().reverse(), DEFAULT_PRESET];
 
 const PRESET_ANIM_DURATION  = 650;  // ms for preset morph animation (initial auto-play + manual clicks)
 const autoPlayPauseDuration = 150;  // ms to hold each preset during initial auto-play
@@ -100,7 +140,7 @@ const autoPlayPauseDuration = 150;  // ms to hold each preset during initial aut
 const resetAutoPlayPauseDuration = 100; // ms to hold each preset during reset auto-play
 const resetPresetAnimDuration    = 400;  // ms for each chart morph during reset auto-play
 // Total ms the reset sequence takes (initial delay + N steps + final morph):
-const RESET_TOTAL_DURATION = 200 + (resetPresetAnimDuration + resetAutoPlayPauseDuration) * NON_DEFAULT_PRESETS.length + resetPresetAnimDuration;
+const RESET_TOTAL_DURATION = 200 + (resetPresetAnimDuration + resetAutoPlayPauseDuration) * (AUTOPLAY_SEQUENCE.length - 1) + resetPresetAnimDuration;
 const resetIconRotations   = 3; // how many full rotations the reset icon makes during the sequence
 
 // Ghost stroke opacities indexed oldest → newest (5 slots)
@@ -157,6 +197,60 @@ function getLabelLines(label: string): [string] | [string, string] {
   return [label.toUpperCase()];
 }
 
+// ── Connector SVG path ─────────────────────────────────────────────────────────
+// Keyhole / mushroom-stem shape (upper body only — arc is a separate bouncing element).
+//
+// svgW      = SVG element width (presetButtonWidth)
+// topW      = connector top width (connectorTopWidth)
+// H         = total SVG height (= topOverlap + downArrowMarginTop + connectorBottomOverlap)
+// arrowR    = circle radius (24) — neck half-width = arrowR
+// r         = max cubic bezier handle length for shoulder corners
+// topOverlap = connectorTopOverlap — how far shape extends up behind the button
+//
+// Vertex layout (10 vertices):
+//
+//   v1 ─────────────────────── v2        ← flat top (hidden behind button)
+//   │                           │
+//   v10 ─ v9             v4 ─ v3         ← shoulders (at button bottom edge, y = topOverlap)
+//            \             /
+//             \           /
+//              v8       v5               ← end of concave bezier curves / neck top
+//               │       │
+//               └───────┘               ← flat bottom (hidden behind circle, y = H)
+//
+// The arc (v6→v7) lives in a separate SVG inside the bouncing arrow div so it
+// moves with the circle during the bounce animation.
+//
+function connectorPath(
+  svgW: number, topW: number, H: number,
+  arrowR: number, r: number, topOverlap: number,
+): string {
+  const cx      = svgW / 2;
+  const halfTop = topW / 2;
+  const nH      = arrowR;                          // neck half-width = circle radius
+  const step    = halfTop - nH;                    // horizontal inward step per side
+
+  // Shoulders at button bottom edge (y = topOverlap in SVG = button bottom in absolute)
+  const dropH   = topOverlap;                      // v3, v4, v9, v10 all at this Y
+  const availH  = H - dropH;
+  const cs      = Math.max(1, Math.min(r, step * 0.35, availH * 2 / 7)); // concave corner size
+
+  const f = (n: number) => n.toFixed(2);
+  return [
+    `M ${f(cx - halfTop)},0`,                                                               // v1: top-left
+    `L ${f(cx + halfTop)},0`,                                                               // v2: top-right
+    `L ${f(cx + halfTop)},${f(dropH)}`,                                                     // v3: right shoulder outer (drop down from top)
+    `L ${f(cx + nH + cs)},${f(dropH)}`,                                                     // v4: right shoulder inner (horizontal step inward)
+    `C ${f(cx+nH+cs*0.5)},${f(dropH)} ${f(cx+nH)},${f(dropH+cs*0.5)} ${f(cx+nH)},${f(dropH+cs)}`, // v5: right neck top (end of concave curve)
+    `L ${f(cx + nH)},${f(H)}`,                                                              // right neck bottom (flat bottom, hidden behind circle)
+    `L ${f(cx - nH)},${f(H)}`,                                                              // flat bottom
+    `L ${f(cx - nH)},${f(dropH + cs)}`,                                                    // v8: left neck top (start of concave curve)
+    `C ${f(cx-nH)},${f(dropH+cs*0.5)} ${f(cx-nH-cs*0.5)},${f(dropH)} ${f(cx-nH-cs)},${f(dropH)}`, // v9: left shoulder inner (horizontal step inward)
+    `L ${f(cx - halfTop)},${f(dropH)}`,                                                    // v10: left shoulder outer (rise up to top)
+    'Z',                                                                                    // v10 → v1: left outer side (closes back to top-left)
+  ].join(' ');
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 interface RadarChartProps {
   onPlay?:             (values: Record<string, number>, presetName: string | null) => void;
@@ -194,12 +288,20 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
   const [popoutVisible,    setPopoutVisible]    = useState(false);
   const [hoveredDownArrow, setHoveredDownArrow] = useState(false);
   const [hoveredArrow,     setHoveredArrow]     = useState<{ cat: number; dir: 'up' | 'dn' } | null>(null);
+  const [arrowTranslateX,    setArrowTranslateX]    = useState(0);
+  const [isMobile,           setIsMobile]           = useState(false);
+  const [showYourSelection,  setShowYourSelection]  = useState(false);
 
   const svgRef             = useRef<SVGSVGElement>(null);
   const containerRef       = useRef<HTMLDivElement>(null);
+  const presetRowRef       = useRef<HTMLDivElement>(null);
+  const presetButtonRefs   = useRef<(HTMLButtonElement | null)[]>([]);
   const closeTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animFrameRef       = useRef<number | null>(null);
-  const downArrowBtnRef    = useRef<HTMLButtonElement>(null);
+  const downArrowBtnRef      = useRef<HTMLButtonElement>(null);
+  const bounceDivRef         = useRef<HTMLDivElement>(null);
+  const yourSelectionBtnRef      = useRef<HTMLButtonElement | null>(null);
+  const prevShowYourSelectionRef = useRef(false);
   const autoTimersRef      = useRef<ReturnType<typeof setTimeout>[]>([]);
   const hasAutoPlayedRef   = useRef(false);
   const spinTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -231,12 +333,11 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
       const id = setTimeout(fn, delay);
       autoTimersRef.current.push(id);
     };
-    NON_DEFAULT_PRESETS.forEach((preset, i) => {
+    AUTOPLAY_SEQUENCE.forEach((preset, i) => {
       schedule(500 + STEP * i, () => animateToPresetRef.current(preset.values, preset.name));
     });
-    schedule(500 + STEP * NON_DEFAULT_PRESETS.length, () => animateToPresetRef.current([...DEFAULT_VALUES], null));
     // Signal the reel after the last morph completes + a brief pause (200ms).
-    const completionDelay = 500 + STEP * NON_DEFAULT_PRESETS.length + PRESET_ANIM_DURATION + 200;
+    const completionDelay = 500 + STEP * (AUTOPLAY_SEQUENCE.length - 1) + PRESET_ANIM_DURATION + 200;
     schedule(completionDelay, () => {
       setChartIntroComplete(true);
       onAutoPlayComplete?.();
@@ -260,12 +361,11 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
       const id = setTimeout(fn, delay);
       autoTimersRef.current.push(id);
     };
-    NON_DEFAULT_PRESETS.forEach((preset, i) => {
+    AUTOPLAY_SEQUENCE.forEach((preset, i) => {
       schedule(500 + STEP * i, () => animateToPresetRef.current(preset.values, preset.name, resetPresetAnimDuration));
     });
-    schedule(500 + STEP * NON_DEFAULT_PRESETS.length, () => animateToPresetRef.current([...DEFAULT_VALUES], null, resetPresetAnimDuration));
     // Signal the reel to reappear after the last morph ends + brief pause.
-    const completionDelay = 500 + STEP * NON_DEFAULT_PRESETS.length + resetPresetAnimDuration + 200;
+    const completionDelay = 500 + STEP * (AUTOPLAY_SEQUENCE.length - 1) + resetPresetAnimDuration + 200;
     schedule(completionDelay, () => setChartIntroComplete(true));
   }, [cancelAutoPlay, stopResetSpin]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -277,6 +377,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
     if (animFrameRef.current) { cancelAnimationFrame(animFrameRef.current); animFrameRef.current = null; }
     setIsAnimating(false);
     setActivePreset(null);
+    setShowYourSelection(true);   // show "YOUR SELECTION" slot in mobile
 
     setValues(prev => {
       const next = [...prev];
@@ -355,12 +456,61 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
   // re-renders (which happen every RAF frame during preset animation) never
   // interrupt it.  Only re-runs when the two meaningful state values change.
   useEffect(() => {
-    const btn = downArrowBtnRef.current;
-    if (!btn) return;
-    btn.style.animation = hasPlayed
+    if (isMobile) return; // no bounce animation in mobile (arrow is inline, not standalone)
+    const div = bounceDivRef.current;
+    if (!div) return;
+    // Bounce the whole wrapper div (arc SVG + circle) so the arc follows the circle
+    div.style.animation = (hasPlayed || !hoveredDownArrow)
       ? 'none'
-      : `radar-btn-bounce ${hoveredDownArrow ? '0.45s' : '1.5s'} ease-in-out infinite`;
-  }, [hasPlayed, hoveredDownArrow]);
+      : 'radar-btn-bounce 0.45s ease-in-out infinite';
+  }, [hasPlayed, hoveredDownArrow, isMobile]);
+
+  // Desktop only: align the standalone down-arrow with the active preset button (horizontal track).
+  // Also tracks to "YOUR SELECTION" when it's showing — delays measurement until it finishes expanding.
+  // In mobile the arrow is inline next to each button — no tracking needed.
+  useEffect(() => {
+    if (isMobile) { setArrowTranslateX(0); return; }
+    const row = presetRowRef.current;
+    if (!row) return;
+
+    const measure = () => {
+      const r = presetRowRef.current;
+      if (!r) return;
+      let btn: HTMLButtonElement | null = null;
+      if (showYourSelection) {
+        btn = yourSelectionBtnRef.current;
+      } else if (activePreset !== null) {
+        const idx = PRESETS.findIndex(p => p.name === activePreset);
+        btn = presetButtonRefs.current[idx];
+      }
+      if (!btn) { setArrowTranslateX(0); return; }
+      const rowRect = r.getBoundingClientRect();
+      const btnRect = btn.getBoundingClientRect();
+      setArrowTranslateX((btnRect.left + btnRect.width / 2) - (rowRect.left + rowRect.width / 2));
+    };
+
+    const prevShowYourSelection = prevShowYourSelectionRef.current;
+    prevShowYourSelectionRef.current = showYourSelection;
+
+    if (showYourSelection || prevShowYourSelection) {
+      // Delay in both directions:
+      // - expanding:  YOUR SELECTION appearing → wait for grow transition before measuring
+      // - collapsing: preset clicked while YOUR SELECTION visible → preset buttons are
+      //               still displaced by the shrinking animation, so delay until it settles
+      const t = setTimeout(measure, yourSelectionTransition);
+      return () => clearTimeout(t);
+    } else {
+      measure();
+    }
+  }, [activePreset, showYourSelection, isMobile]);
+
+  // Switch to mobile layout below mobilePresetsBreakpoint
+  useEffect(() => {
+    const calc = () => setIsMobile(window.innerWidth < mobilePresetsBreakpoint);
+    calc();
+    window.addEventListener('resize', calc, { passive: true });
+    return () => window.removeEventListener('resize', calc);
+  }, []);
 
   const handlePlay = () => {
     setHasPlayed(true);
@@ -375,6 +525,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
 
   const handleReset = () => {
     setHasPlayed(false);
+    setShowYourSelection(false);
     runResetAutoPlaySequence(); // also sets chartIntroComplete=false → hides reel
   };
 
@@ -422,11 +573,71 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
     });
   };
 
-  const activePts  = values.map((v, i) => spokePoint(i, v));
-  const activePath = smoothClosedPath(activePts);
+  const activePts    = values.map((v, i) => spokePoint(i, v));
+  const activePath   = smoothClosedPath(activePts);
+  // Show connector on desktop when something is active (preset or custom selection)
+  const showConnector = !isMobile && (activePreset !== null || showYourSelection);
+  // Total connector SVG height: gap + topOverlap + arrowR (arc at resting circle) + neckExtension
+  const connectorH = downArrowMarginTop + connectorTopOverlap + connectorBottomOverlap;
+
+  // Shared inner content for the down-arrow / reset slot (desktop + mobile inline)
+  const arrowInner = (
+    <>
+      {/* Reset button — fades IN when hasPlayed */}
+      <button
+        onClick={handleReset}
+        aria-label="Restart auto-play sequence"
+        style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%',
+          borderRadius: '50%', background: 'rgba(255,255,255,0.10)',
+          border: '1px solid rgba(255,255,255,0.20)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', opacity: hasPlayed ? 1 : 0,
+          transition: 'opacity 200ms ease', pointerEvents: hasPlayed ? 'auto' : 'none',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden="true"
+          style={{ animation: resetSpinning ? `icon-spin-once ${RESET_TOTAL_DURATION / resetIconRotations}ms linear ${resetIconRotations}` : 'none' }}
+        >
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M8 16H3v5"/>
+        </svg>
+      </button>
+      {/* Down-arrow button — fades OUT when hasPlayed.
+          Animation driven via downArrowBtnRef / useEffect (bypasses React renders). */}
+      <button
+        ref={downArrowBtnRef}
+        onClick={handlePlay}
+        onMouseEnter={() => setHoveredDownArrow(true)}
+        onMouseLeave={() => setHoveredDownArrow(false)}
+        aria-label="Save selection and load projects"
+        style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%',
+          borderRadius: '50%',
+          background: hoveredDownArrow
+            ? `color-mix(in srgb, ${downArrowHoverColor} ${downArrowFillHoverOpacity * 100}%, transparent)`
+            : `color-mix(in srgb, ${downArrowFillColor} ${downArrowFillOpacity * 100}%, transparent)`,
+          border: `${downArrowBorderWidth}px solid rgba(255,255,255,${downArrowBorderOpacity})`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', opacity: hasPlayed ? 0 : 1,
+          transition: 'opacity 200ms ease, background 200ms ease',
+          pointerEvents: hasPlayed ? 'none' : 'auto',
+        }}
+      >
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+          <line x1="6.5" y1="1" x2="6.5" y2="9.5" stroke={downArrowIconColor} strokeWidth={downArrowIconStroke} strokeLinecap="round"/>
+          <polyline points="2,7 6.5,12 11,7" fill="none" stroke={downArrowIconColor} strokeWidth={downArrowIconStroke} strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+    </>
+  );
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center w-full">
+    <div ref={containerRef} className="flex flex-col items-center w-full" style={isMobile ? {} : { flex: 1, minHeight: 0 }}>
 
       {/* ── Radar SVG ─────────────────────────────────────────────────────── */}
       <svg
@@ -434,7 +645,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
         viewBox="0 0 800 760"
         style={{
           width:        '100%',
-          maxHeight:    '60vh',
+          maxHeight:    isMobile ? '45vh' : '60vh',
           fontFamily:   'var(--font-roboto, Roboto, sans-serif)',
           marginBottom: -svgBottomClip,
         }}
@@ -664,122 +875,255 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
 
       </svg>
 
-      {/* ── Icon card reel ────────────────────────────────────────────────── */}
-      <IconCardReel
-        radarValues={radarValuesObj}
-        presetName={activePreset}
-        confirmed={hasPlayed}
-        chartReady={chartIntroComplete}
-      />
+      {isMobile ? (
+        // ── MOBILE: natural document flow, no flex spacers ──────────────────
+        // Elements stack top-to-bottom without any flex stretching.
+        // The section grows to fit via globals.css media query.
+        <>
+          {/* ── Icon card reel (scaled down to save vertical space) ───── */}
+          <div style={{
+            width: '100%',
+            padding: '8px 0',         // extra padding so outline/label aren't flush with edges
+            transform: `scale(${mobileReelScale})`,
+            transformOrigin: 'top center',
+          }}>
+            <IconCardReel
+              radarValues={radarValuesObj}
+              presetName={activePreset}
+              confirmed={hasPlayed}
+              chartReady={chartIntroComplete}
+            />
+          </div>
 
-      {/* ── Preset buttons ────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 500, marginBottom: 8, paddingLeft: presetContainerPadding, paddingRight: presetContainerPadding, boxSizing: 'border-box' }}>
-        {NON_DEFAULT_PRESETS.map((preset) => {
-          const isActive  = activePreset === preset.name;
-          const isHovered = hoveredPreset === preset.name;
-          const bg    = isActive ? presetFillColorPressed : (isHovered ? presetFillColorHover : presetFillColor);
-          const color = isActive ? presetTextColorPressed : (isHovered ? presetTextColorHover : presetTextColor);
-          // Default border: low opacity (~30%); hover: presetBorderColor (~50-60%); active: solid white
-          const borderColor = isActive ? presetFillColorPressed : (isHovered ? presetBorderColor : 'rgba(255,255,255,0.3)');
-          return (
-            <button
-              key={preset.name}
-              onClick={() => { setHasPlayed(false); cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); }}
-              onMouseEnter={() => setHoveredPreset(preset.name)}
-              onMouseLeave={() => setHoveredPreset(null)}
-              className={`font-sans cursor-pointer ${presetTextSize}`}
-              style={{
-                flex: 1,
-                height: presetButtonHeight,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: bg,
-                color,
-                border: `${presetBorderWidth}px solid ${borderColor}`,
-                borderRadius: presetBorderRadius,
-                padding: '0 10px',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                fontWeight: isActive ? 600 : 400,
-                transition: 'background 200ms, color 200ms, border-color 200ms',
-              }}
-            >
-              {preset.name}
-            </button>
-          );
-        })}
-      </div>
+          {/* ── Preset buttons column (scaled as a unit) ──────────────── */}
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: presetButtonGap,
+            width: '100%',
+            paddingLeft: presetContainerPadding, paddingRight: presetContainerPadding,
+            paddingTop: 16, paddingBottom: presetsBottomPadding,
+            boxSizing: 'border-box',
+            transform: `scale(${mobileButtonScale})`,
+            transformOrigin: 'top center',
+          }}>
 
-      {/* ── Down-arrow / Reset crossfade ──────────────────────────────────── */}
-      {/* Both buttons occupy the same 48×48 slot. Down arrow is active when
-          !hasPlayed; reset takes over when hasPlayed. 200ms crossfade. */}
-      <div style={{ position: 'relative', width: 48, height: 48, marginTop: downArrowMarginTop }}>
+            {/* 4 preset buttons with inline arrow slot */}
+            {PRESETS.map((preset, i) => {
+              const isActive      = activePreset === preset.name && !showYourSelection;
+              const showArrowSlot = isActive; // slot stays open even after hasPlayed (reset button shows)
+              const isHovered     = hoveredPreset === preset.name;
+              const bg          = isActive ? presetFillColorPressed : (isHovered ? presetFillColorHover : presetFillColor);
+              const color       = isActive ? presetTextColorPressed : (isHovered ? presetTextColorHover : presetTextColor);
+              const borderColor = isActive ? presetBorderColorActive : (isHovered ? presetBorderColorHover : presetBorderColorDefault);
+              return (
+                <div key={preset.name} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: mobileArrowGap }}>
+                  <button
+                    ref={el => { presetButtonRefs.current[i] = el; }}
+                    onClick={() => { setHasPlayed(false); setShowYourSelection(false); cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); }}
+                    onMouseEnter={() => setHoveredPreset(preset.name)}
+                    onMouseLeave={() => setHoveredPreset(null)}
+                    className={`font-sans cursor-pointer ${presetTextSize}`}
+                    style={{
+                      flex: 1, height: presetButtonHeightMobile,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: bg, color,
+                      border: `${presetBorderWidth}px solid ${borderColor}`,
+                      borderRadius: presetBorderRadius, padding: '0 10px',
+                      letterSpacing: '0.15em', textTransform: 'uppercase',
+                      fontWeight: isActive ? 600 : 400,
+                      transition: `background ${mobilePresetTransition}ms, color ${mobilePresetTransition}ms, border-color ${mobilePresetTransition}ms`,
+                    }}
+                  >{preset.name}</button>
+                  {/* Arrow slot — width transitions 0 ↔ mobileArrowSize */}
+                  <div style={{
+                    width:      showArrowSlot ? mobileArrowSize : 0,
+                    opacity:    showArrowSlot ? 1 : 0,
+                    overflow:   'hidden',
+                    flexShrink: 0,
+                    transition: `width ${mobilePresetTransition}ms ease, opacity ${mobilePresetTransition}ms ease`,
+                  }}>
+                    <div style={{ position: 'relative', width: mobileArrowSize, height: mobileArrowSize }}>
+                      {arrowInner}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
 
-        {/* Reset button — fades IN when hasPlayed */}
-        <button
-          onClick={handleReset}
-          aria-label="Restart auto-play sequence"
-          style={{
-            position: 'absolute', inset: 0,
-            width: '100%', height: '100%',
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.10)',
-            border: '1px solid rgba(255,255,255,0.20)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-            opacity: hasPlayed ? 1 : 0,
-            transition: 'opacity 200ms ease',
-            pointerEvents: hasPlayed ? 'auto' : 'none',
-          }}
-        >
-          <svg
-            width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            aria-hidden="true"
-            style={{
-              animation: resetSpinning
-                ? `icon-spin-once ${RESET_TOTAL_DURATION / resetIconRotations}ms linear ${resetIconRotations}`
-                : 'none',
-            }}
-          >
-            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-            <path d="M21 3v5h-5"/>
-            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-            <path d="M8 16H3v5"/>
-          </svg>
-        </button>
+            {/* 5th slot: YOUR SELECTION — always in the layout (reserves space), fades in/out */}
+            <div style={{
+              display: 'flex', flexDirection: 'row', alignItems: 'center', gap: mobileArrowGap,
+              opacity:       showYourSelection ? 1 : 0,
+              pointerEvents: showYourSelection ? 'auto' : 'none',
+              transition:    `opacity ${mobilePresetTransition}ms ease`,
+            }}>
+              <button
+                className={`font-sans cursor-pointer ${presetTextSize}`}
+                style={{
+                  flex: 1, height: presetButtonHeightMobile,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: presetFillColorPressed, color: presetTextColorPressed,
+                  border: `${presetBorderWidth}px solid ${presetBorderColorActive}`,
+                  borderRadius: presetBorderRadius, padding: '0 10px',
+                  letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600,
+                }}
+              >Your Selection</button>
+              <div style={{ position: 'relative', width: mobileArrowSize, height: mobileArrowSize, flexShrink: 0 }}>
+                {arrowInner}
+              </div>
+            </div>
 
-        {/* Down-arrow button — fades OUT when hasPlayed.
-            Animation driven via downArrowBtnRef / useEffect (bypasses React renders). */}
-        <button
-          ref={downArrowBtnRef}
-          onClick={handlePlay}
-          onMouseEnter={() => setHoveredDownArrow(true)}
-          onMouseLeave={() => setHoveredDownArrow(false)}
-          aria-label="Save selection and load projects"
-          style={{
-            position: 'absolute', inset: 0,
-            width: '100%', height: '100%',
-            borderRadius: '50%',
-            background: hoveredDownArrow ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.10)',
-            border: `${activeStrokeWidth}px solid white`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-            opacity: hasPlayed ? 0 : 1,
-            transition: 'opacity 200ms ease, background 200ms ease',
-            pointerEvents: hasPlayed ? 'none' : 'auto',
-          }}
-        >
-          <svg
-            width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"
-          >
-            <line x1="6.5" y1="1" x2="6.5" y2="9.5" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
-            <polyline points="2,7 6.5,12 11,7" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+          </div>
+        </>
+      ) : (
+        // ── DESKTOP: flex spacers + centered layout ──────────────────────────
+        <>
+          {/* Spacer: chart → reel (distributes space above the reel) */}
+          <div style={{ flex: 1, minHeight: 0 }} />
 
-      </div>
+          {/* ── Icon card reel ─────────────────────────────────────────── */}
+          <IconCardReel
+            radarValues={radarValuesObj}
+            presetName={activePreset}
+            confirmed={hasPlayed}
+            chartReady={chartIntroComplete}
+          />
+
+          {/* Centering wrapper: fills space below reel, vertically + horizontally centers content */}
+          {/* isolation:isolate creates a local stacking context — preset row (z-index:1) paints
+              above the translateX div (z-index:auto/0 due to CSS transform), so the connector
+              that extends upward behind the button is correctly hidden behind it */}
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', isolation: 'isolate' }}>
+            {/* position:relative + zIndex:1 ensures this row paints above the connector SVG
+                which lives inside the translateX stacking context (z-index:auto = 0) below */}
+            <div ref={presetRowRef} style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'center', gap: presetButtonGap, width: '100%', paddingLeft: presetContainerPadding, paddingRight: presetContainerPadding, boxSizing: 'border-box' }}>
+              {PRESETS.map((preset, i) => {
+                const isActive    = activePreset === preset.name;
+                const isHovered   = hoveredPreset === preset.name;
+                const bg          = isActive ? presetFillColorPressed : (isHovered ? presetFillColorHover : presetFillColor);
+                const color       = isActive ? presetTextColorPressed : (isHovered ? presetTextColorHover : presetTextColor);
+                const borderColor = isActive ? presetBorderColorActive : (isHovered ? presetBorderColorHover : presetBorderColorDefault);
+                return (
+                  <React.Fragment key={preset.name}>
+                    <button
+                      ref={el => { presetButtonRefs.current[i] = el; }}
+                      onClick={() => { setHasPlayed(false); setShowYourSelection(false); cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); }}
+                      onMouseEnter={() => setHoveredPreset(preset.name)}
+                      onMouseLeave={() => setHoveredPreset(null)}
+                      className={`font-sans cursor-pointer ${presetTextSize}`}
+                      style={{
+                        width: presetButtonWidth, height: presetButtonHeight, whiteSpace: 'nowrap',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: bg, color,
+                        border: `${presetBorderWidth}px solid ${borderColor}`,
+                        borderRadius: presetBorderRadius, padding: '0 10px',
+                        letterSpacing: '0.15em', textTransform: 'uppercase',
+                        fontWeight: isActive ? 600 : 400,
+                        transition: 'background 200ms, color 200ms, border-color 200ms',
+                      }}
+                    >{preset.name}</button>
+
+                    {/* YOUR SELECTION grows between Research (i=1) and Spatial Experiences */}
+                    {i === 1 && (
+                      <div style={{
+                        overflow: 'hidden', flexShrink: 0,
+                        width:      showYourSelection ? presetButtonWidth : 0,
+                        marginLeft: showYourSelection ? 0 : -presetButtonGap,
+                        opacity:    showYourSelection ? 1 : 0,
+                        transition: `width ${yourSelectionTransition}ms ease-out, margin-left ${yourSelectionTransition}ms ease-out, opacity ${yourSelectionTransition}ms ease-out`,
+                        display: 'flex', alignItems: 'center',
+                      }}>
+                        <button
+                          ref={yourSelectionBtnRef}
+                          className={`font-sans ${presetTextSize}`}
+                          style={{
+                            width: presetButtonWidth, height: presetButtonHeight,
+                            flexShrink: 0, whiteSpace: 'nowrap',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: presetFillColorPressed, color: presetTextColorPressed,
+                            border: `${presetBorderWidth}px solid ${presetBorderColorActive}`,
+                            borderRadius: presetBorderRadius, padding: '0 10px',
+                            letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600,
+                            cursor: 'default',
+                          }}
+                        >Your Selection</button>
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+            {/* Connector + arrow — translate together as one unit.
+                The CSS transform on this div creates a stacking context at z-index:auto (= 0),
+                so the preset row above (z-index:1) correctly paints over the connector top. */}
+            <div style={{ transform: `translateX(${arrowTranslateX}px)`, transition: `transform ${downArrowFollowDuration}ms ease-out`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              {/* Connector funnel — extends connectorTopOverlap px UP (hidden behind button)
+                  and connectorBottomOverlap px DOWN (hidden behind circle).
+                  Comes first in DOM so the arrow div (next) paints on top of it.
+                  Bottom edge is an arc matching the circle's curvature exactly. */}
+              <svg
+                width={presetButtonWidth}
+                height={connectorH}
+                style={{
+                  display: 'block', overflow: 'visible',
+                  marginTop: -connectorTopOverlap,
+                  opacity: showConnector ? 1 : 0,
+                  transition: 'opacity 200ms ease',
+                  pointerEvents: 'none',
+                }}
+                aria-hidden="true"
+              >
+                <path
+                  d={connectorPath(presetButtonWidth, connectorTopWidth, connectorH, 24, connectorChamferRadius, connectorTopOverlap)}
+                  fill={connectorFillColor}
+                  fillOpacity={connectorFillOpacity}
+                  stroke={connectorOutline ? connectorOutlineColor : 'none'}
+                  strokeWidth={connectorOutline ? connectorOutlineWidth : 0}
+                  strokeOpacity={connectorOutline ? connectorOutlineOpacity : 0}
+                />
+              </svg>
+              {/* Neck extension filler — 7px strip between connector flat bottom and bounce wrapper.
+                  Invisible at rest; fades in on hover so the gap fills during the bounce.
+                  The bounce wrapper's marginTop accounts for this height so arrow never shifts. */}
+              <div style={{
+                width: 48, height: bounceExtension, flexShrink: 0,
+                background: connectorFillColor,
+                opacity: (showConnector && hoveredDownArrow && !hasPlayed) ? connectorFillOpacity : 0,
+                transition: 'opacity 200ms ease',
+                pointerEvents: 'none',
+              }} />
+              {/* Bounce wrapper — arc SVG + circle div bounce together as one unit.
+                  marginTop pulls the wrapper up over the filler AND the connectorBottomOverlap. */}
+              <div ref={bounceDivRef} style={{ position: 'relative', width: 48, height: 48, marginTop: -(connectorBottomOverlap + bounceExtension) }}>
+                {/* Arc SVG — v6, arc, v7: positioned at wrapper top (= circle top edge).
+                    Chord at y=24 (= circle center), arc curves upward to y=0 (= circle top).
+                    Bounces with the wrapper so it always traces the circle's upper surface. */}
+                <svg
+                  width={48} height={24}
+                  style={{
+                    position: 'absolute', top: 0, left: 0,
+                    display: 'block', overflow: 'visible', pointerEvents: 'none',
+                    opacity: showConnector ? 1 : 0, transition: 'opacity 200ms ease',
+                  }}
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M 0,24 A 24 24 0 0 0 48,24 Z"
+                    fill={connectorFillColor}
+                    fillOpacity={connectorFillOpacity}
+                    stroke={connectorOutline ? connectorOutlineColor : 'none'}
+                    strokeWidth={connectorOutline ? connectorOutlineWidth : 0}
+                    strokeOpacity={connectorOutline ? connectorOutlineOpacity : 0}
+                  />
+                </svg>
+                {arrowInner}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom clearance */}
+          <div style={{ height: presetsBottomPadding, flexShrink: 0 }} />
+        </>
+      )}
 
       {/* ── Category popout ───────────────────────────────────────────────── */}
       {openCat !== null && popoutPos && (() => {
