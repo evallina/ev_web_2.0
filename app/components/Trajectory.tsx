@@ -195,7 +195,7 @@ export default function Trajectory() {
     <>
       <section
         id="trajectory"
-        className="min-h-screen flex flex-col items-center justify-center py-20"
+        className="min-h-screen flex flex-col items-center justify-center py-20 overflow-hidden"
       >
         <h2 className="font-serif font-bold text-white text-4xl mb-12">{/* Trajectory */}</h2>
 
@@ -206,6 +206,7 @@ export default function Trajectory() {
         >
           {/* Wrap image in a div so click works even though img has pointer-events:none */}
           <div
+            data-parallax
             onClick={isMobile ? openPopout : undefined}
             style={isMobile ? { cursor: 'zoom-in' } : undefined}
           >

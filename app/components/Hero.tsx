@@ -229,7 +229,7 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) 
         }}
       >
         {/* Text column */}
-        <div style={{ width: heroIsVertical ? '100%' : '50%', position: 'relative', paddingLeft: `calc(var(--page-margin) + ${heroTextExtraPadding})`, paddingRight: `calc(var(--page-margin) + ${heroTextExtraPadding})` }}>
+        <div data-parallax style={{ width: heroIsVertical ? '100%' : '50%', position: 'relative', paddingLeft: `calc(var(--page-margin) + ${heroTextExtraPadding})`, paddingRight: `calc(var(--page-margin) + ${heroTextExtraPadding})` }}>
           {/* Ghost — full final text, invisible, locks the container height so
               flexbox centres based on the complete block from the very first frame. */}
           <h1

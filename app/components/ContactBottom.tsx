@@ -34,6 +34,7 @@ export default function ContactBottom({ config, onScrollToHero, onResetHero }: P
       >
         {/* White container — clip-path carves the notch at bottom-center */}
         <div
+          data-parallax
           className="relative bg-white"
           style={{
             clipPath: `polygon(0 0, 100% 0, 100% 100%, ${notchRight}% 100%, ${notchRight}% calc(100% - ${notchHeight}px), ${notchLeft}% calc(100% - ${notchHeight}px), ${notchLeft}% 100%, 0 100%)`,

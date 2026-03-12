@@ -175,7 +175,7 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
     >
 
       {/* ── Photo background layer — clipped to page margins ─────────────── */}
-      <div style={{
+      <div data-parallax style={{
         position: 'absolute',
         top:      imageTopMargin,
         bottom:   'var(--page-margin)',
