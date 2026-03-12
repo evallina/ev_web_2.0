@@ -1,13 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Layer_2" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24">
   <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
   <defs>
     <style>
-      .st0 {
+      .st0, .st1 {
+        fill: #d7d7d7;
+      }
+
+      .st2 {
         fill: #fff;
+      }
+
+      .st3 {
+        fill: #3a6540;
+      }
+
+      .st1, .st4 {
+        display: none;
+      }
+
+      .st5 {
+        fill: none;
+        stroke: #dcdcdc;
+        stroke-miterlimit: 10;
+        stroke-width: .75px;
       }
     </style>
   </defs>
-  <rect class="st0" x="5.3" y="5.3" width="13.4" height="13.4"/>
-  <path class="st0" d="M17.7,6.3v11.4H6.3V6.3h11.4M19.7,4.3H4.3v15.4h15.4V4.3h0Z"/>
+  <g id="background" class="st4">
+    <rect class="st3" width="24" height="24"/>
+  </g>
+  <g id="v0" class="st4">
+    <rect class="st0" x="3.14" y="3.14" width="17.71" height="17.71"/>
+  </g>
+  <g id="v2" class="st4">
+    <path class="st2" d="M3.14,3.14v17.71h17.71V3.14H3.14ZM17.07,17.07H6.93v-1.88h10.15v1.88ZM17.07,12.94H6.93v-1.88h10.15v1.88ZM17.07,8.8H6.93v-1.88h10.15v1.88Z"/>
+    <rect class="st1" x="6.93" y="6.93" width="10.15" height="1.88"/>
+    <rect class="st1" x="6.93" y="11.06" width="10.15" height="1.88"/>
+    <rect class="st1" x="6.93" y="15.2" width="10.15" height="1.88"/>
+  </g>
+  <g id="v3">
+    <rect class="st2" x="3.14" y="3.14" width="17.71" height="17.71"/>
+    <g>
+      <line class="st5" x1="7.41" y1="7.83" x2="16.59" y2="7.83"/>
+      <line class="st5" x1="7.41" y1="16.17" x2="16.59" y2="16.17"/>
+      <line class="st5" x1="7.41" y1="12" x2="16.59" y2="12"/>
+    </g>
+  </g>
 </svg>

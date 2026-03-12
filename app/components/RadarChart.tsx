@@ -36,6 +36,7 @@ const popoutBorderRadius = 0;            // px corner radius of the popout card
 const popoutOpenScale    = 1.4;          // label scale factor while its popout is open
 const labelHoverScale    = 1.2;          // label scale factor on mouse hover
 const labelScaleDuration = 100;          // ms for label scale transition
+const mobileLabelScale   = 1.25;         // extra scale applied to each label+arrow group on mobile
 
 // ── Preset button styles ───────────────────────────────────────────────────────
 // px to trim from the SVG's rendered bottom, compensating for the empty viewBox
@@ -106,6 +107,7 @@ const mobileArrowGap         = 8;                          // px gap between but
 const mobilePresetTransition = 200;                        // ms transition for button shrink / arrow slot appear (mobile)
 const mobileButtonScale      = 0.85;                       // scale factor applied to the entire mobile button group container
 const mobileReelScale        = 0.8;                        // scale factor applied to the icon card reel on mobile
+const mobileReelOffsetY      = 20;                         // px — extra downward offset for the reel on mobile
 const yourSelectionTransition = 300;                       // ms for "YOUR SELECTION" button grow/shrink on desktop
 
 // ── Chart geometry ─────────────────────────────────────────────────────────────
@@ -794,7 +796,14 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
           const dnHovered = hoveredArrow?.cat === i && hoveredArrow.dir === 'dn';
 
           return (
-            <g key={`label-${i}`}>
+            <g
+              key={`label-${i}`}
+              style={isMobile ? {
+                transform: `scale(${mobileLabelScale})`,
+                transformBox: 'view-box',
+                transformOrigin: `${x}px ${y}px`,
+              } : undefined}
+            >
 
               {/* ▲ Increase — hidden while its popout covers it */}
               {!hideUp && (
@@ -950,6 +959,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
             padding: '8px 0',         // extra padding so outline/label aren't flush with edges
             transform: `scale(${mobileReelScale})`,
             transformOrigin: 'top center',
+            marginTop: mobileReelOffsetY,
           }}>
             <IconCardReel
               radarValues={radarValuesObj}

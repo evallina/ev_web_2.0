@@ -13,6 +13,7 @@ export default function ContactBottom({ config, onScrollToHero, onResetHero }: P
   const {
     notchHeight, notchLeft, notchRight, headingPadding,
     containerRadius, homeButtonEdgePadding, sectionEdge, whiteGrainOpacity,
+    homeIconColor, homeIconOpacity, homeIconHoverOpacity, homeIconSize,
   } = config;
 
   return (
@@ -65,10 +66,16 @@ export default function ContactBottom({ config, onScrollToHero, onResetHero }: P
       >
         <button
           onClick={() => { onScrollToHero(); onResetHero(); }}
-          className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer pointer-events-auto"
+          className="flex flex-col items-center gap-1 cursor-pointer pointer-events-auto transition-opacity"
+          style={{ background: 'none', border: 'none', padding: 0, color: homeIconColor, opacity: homeIconOpacity }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = String(homeIconHoverOpacity))}
+          onMouseLeave={e => (e.currentTarget.style.opacity = String(homeIconOpacity))}
         >
-          <span>▲</span>
-          <span>Home</span>
+          {/* House icon */}
+          <svg width={homeIconSize} height={homeIconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>
+            <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
         </button>
       </div>
     </section>

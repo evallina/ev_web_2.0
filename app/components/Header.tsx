@@ -5,10 +5,8 @@ import { useState, useEffect } from 'react';
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │  DESIGN VARIABLES — edit these to tune the header appearance               │
 // ├─────────────────────────────────────────────────────────────────────────────┤
-const menuSquareSize         = 20;                 // px   — width & height of the white square / X icon
-const menuSquareRadius       = 0;                  // px   — corner radius of the white square (0 = sharp)
-const headerNamePaddingLeft  = 37;                 // px   — gap from left edge to "ENOL VALLINA"
-const headerMenuPaddingRight = 37;                 // px   — gap from right edge to the menu button
+const menuSquareSize         = 30;                 // px   — width & height of the EV square icon
+const menuCloseSize          = 18;                 // px   — span length of each X line in the close icon
 const headerNameSize         = '1.0rem';           // size — font-size for "ENOL VALLINA"
 const headerNameFont         = 'var(--font-sans)'; // font — font family for "ENOL VALLINA"
 const headerNameBold         = true;               // bool — true = bold, false = normal weight
@@ -53,23 +51,23 @@ export default function Header({ menuOpen, setMenuOpen, scrolled, grainOpacity, 
       <header
         className="fixed top-0 left-0 right-0 z-50 h-12 flex items-center transition-all duration-200"
         style={{
-          paddingLeft:  headerNamePaddingLeft,
-          paddingRight: headerMenuPaddingRight,
+          paddingLeft:     'var(--page-margin)',
+          paddingRight:    'var(--page-margin)',
           background:      (scrolled || menuOpen) ? 'rgba(15, 15, 16, 0.90)' : 'transparent',
           backdropFilter:  (scrolled || menuOpen) ? 'blur(8px)' : 'none',
           borderBottom:    (scrolled || menuOpen) ? '1px solid rgba(255,255,255,0.08)' : 'none',
         }}
       >
-        {/* Name — also a HOME button */}
+        {/* Name — HOME button, left edge aligned to page margin */}
         <button
           onClick={() => { onNavigate('hero'); onResetHero(); }}
           className="shrink-0 hover:text-white/70 transition-colors cursor-pointer"
           style={{
             background: 'none', border: 'none', padding: 0,
             color: 'white',
-            fontSize:     headerNameSize,
-            fontFamily:   headerNameFont,
-            fontWeight:   headerNameBold ? 'bold' : 'normal',
+            fontSize:      headerNameSize,
+            fontFamily:    headerNameFont,
+            fontWeight:    headerNameBold ? 'bold' : 'normal',
             letterSpacing: '0.05em',
           }}
         >
@@ -120,25 +118,31 @@ export default function Header({ menuOpen, setMenuOpen, scrolled, grainOpacity, 
           </div>
         )}
 
-        {/* Spacer on mobile so hamburger stays right-aligned */}
+        {/* Spacer on mobile */}
         {isMobile && <div className="flex-1" />}
 
-        {/* Hamburger / X toggle button */}
+        {/* Hamburger / X toggle button — right edge aligned to page margin */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-          className="shrink-0 ml-4 relative transition-transform duration-200 hover:scale-[1.15] cursor-pointer"
-          style={{ background: 'none', border: 'none', padding: 4, width: 26, height: 26 }}
+          className="shrink-0 relative transition-transform duration-200 hover:scale-[1.15] cursor-pointer"
+          style={{ background: 'none', border: 'none', padding: 0, width: menuSquareSize, height: menuSquareSize }}
         >
-          {/* White square (closed state) */}
-          <span style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: `translate(-50%, -50%) scale(${menuOpen ? 0.4 : 1})`,
-            width: menuSquareSize, height: menuSquareSize, background: 'white', borderRadius: menuSquareRadius,
-            opacity:    menuOpen ? 0 : 1,
-            transition: 'opacity 200ms ease, transform 200ms ease',
-            display:    'block',
-          }} />
+          {/* EV square icon (closed state) — loaded from public/images/ui/icons/ev_square.svg */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/ui/icons/ev_square.svg"
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'absolute', top: '50%', left: '50%',
+              transform: `translate(-50%, -50%) scale(${menuOpen ? 0.4 : 1})`,
+              width: menuSquareSize, height: menuSquareSize,
+              opacity:    menuOpen ? 0 : 1,
+              transition: 'opacity 200ms ease, transform 200ms ease',
+              display:    'block',
+            }}
+          />
           {/* X icon (open state) */}
           <span style={{
             position: 'absolute', top: '50%', left: '50%',
@@ -148,8 +152,8 @@ export default function Header({ menuOpen, setMenuOpen, scrolled, grainOpacity, 
             transition: 'opacity 200ms ease, transform 200ms ease',
             display:    'block',
           }}>
-            <span style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1.5, marginTop: '-0.75px', background: 'white', transform: 'rotate(45deg)',  display: 'block', borderRadius: 1 }} />
-            <span style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1.5, marginTop: '-0.75px', background: 'white', transform: 'rotate(-45deg)', display: 'block', borderRadius: 1 }} />
+            <span style={{ position: 'absolute', top: '50%', left: '50%', width: menuCloseSize, height: 1.5, marginTop: '-0.75px', marginLeft: -menuCloseSize / 2, background: 'white', transform: 'rotate(45deg)',  display: 'block', borderRadius: 1 }} />
+            <span style={{ position: 'absolute', top: '50%', left: '50%', width: menuCloseSize, height: 1.5, marginTop: '-0.75px', marginLeft: -menuCloseSize / 2, background: 'white', transform: 'rotate(-45deg)', display: 'block', borderRadius: 1 }} />
           </span>
         </button>
 

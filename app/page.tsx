@@ -35,21 +35,29 @@ const contactHeadingPadding             = 500; // px — white space between hea
 const contactContainerRadius            = 25;  // px — outer corner radius of the white container
 const contactHomeButtonEdgePadding      = 80;  // px — gap: outer page edge → HOME button
 const contactHomeButtonContainerPadding = 50;  // px — gap: HOME button → white container edge
+const contactHomeIconColor              = 'black'; // color of the house icon and arrow
+const contactHomeIconOpacity            = 0.5; // opacity at rest (0–1)
+const contactHomeIconHoverOpacity       = 0.95; // opacity on hover (0–1)
+const contactHomeIconSize               = 22;   // px — width & height of the house icon
 // Derived values
 const contactSectionEdge = contactHomeButtonEdgePadding + 30 + contactHomeButtonContainerPadding;
 const contactNotchLeft   = (100 - contactNotchWidth) / 2;
 const contactNotchRight  = 100 - contactNotchLeft;
 
 const contactConfig: ContactConfig = {
-  notchHeight:           contactNotchHeight,
-  notchWidth:            contactNotchWidth,
-  headingPadding:        contactHeadingPadding,
-  containerRadius:       contactContainerRadius,
-  homeButtonEdgePadding: contactHomeButtonEdgePadding,
-  sectionEdge:           contactSectionEdge,
-  notchLeft:             contactNotchLeft,
-  notchRight:            contactNotchRight,
+  notchHeight:              contactNotchHeight,
+  notchWidth:               contactNotchWidth,
+  headingPadding:           contactHeadingPadding,
+  containerRadius:          contactContainerRadius,
+  homeButtonEdgePadding:    contactHomeButtonEdgePadding,
+  sectionEdge:              contactSectionEdge,
+  notchLeft:                contactNotchLeft,
+  notchRight:               contactNotchRight,
   whiteGrainOpacity,
+  homeIconColor:            contactHomeIconColor,
+  homeIconOpacity:          contactHomeIconOpacity,
+  homeIconHoverOpacity:     contactHomeIconHoverOpacity,
+  homeIconSize:             contactHomeIconSize,
 };
 
 // ── Page orchestrator ─────────────────────────────────────────────────────────
@@ -115,6 +123,52 @@ export default function Home() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => { window.removeEventListener('keydown', onKeyDown); clearTimeout(timerId); };
+  }, []);
+
+  // ── Keyboard up/down arrow → jump to prev/next section ────────────────────
+  // Sections in order. 'trajectory' is included so pressing ↑ from hero lands
+  // at the bottom of trajectory. Sections not in the DOM are skipped at runtime.
+  const KB_NAV_IDS = ['trajectory', 'hero', 'design-philosophy', 'project-selection', 'project-cards', 'contact-bottom'];
+  // Sections that should be scrolled to their BOTTOM edge instead of their top
+  const KB_SCROLL_TO_BOTTOM = new Set(['trajectory']);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+      e.preventDefault();
+
+      // Find the section with the most viewport coverage
+      const vh = window.innerHeight;
+      let bestId: string | null = null;
+      let bestFraction = 0;
+      for (const id of KB_NAV_IDS) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const rect     = el.getBoundingClientRect();
+        const visibleH = Math.max(0, Math.min(vh, rect.bottom) - Math.max(0, rect.top));
+        const fraction = visibleH / Math.min(el.offsetHeight, vh);
+        if (fraction > bestFraction) { bestFraction = fraction; bestId = id; }
+      }
+
+      if (!bestId) return;
+      const ids  = KB_NAV_IDS.filter(id => !!document.getElementById(id));
+      const idx  = ids.indexOf(bestId);
+      const next = e.key === 'ArrowDown' ? idx + 1 : idx - 1;
+      if (next < 0 || next >= ids.length) return;
+
+      const targetId = ids[next];
+      const target   = document.getElementById(targetId);
+      if (!target) return;
+      const scrollTop = KB_SCROLL_TO_BOTTOM.has(targetId)
+        ? target.offsetTop + target.offsetHeight - window.innerHeight
+        : target.offsetTop;
+      window.scrollTo({ top: scrollTop, behavior: 'smooth' });
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   // ── Navigation helpers ─────────────────────────────────────────────────────

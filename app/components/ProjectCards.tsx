@@ -567,10 +567,8 @@ export default function ProjectCards({
     >
       {isEmpty ? (
 
-        <p className="font-sans text-white/30 text-xs uppercase tracking-[0.2em] text-center leading-loose">
-          Configure the chart above and press play
-          <br />
-          to discover projects
+        <p className="font-sans text-white/70 text-sm uppercase tracking-[0.2em] text-center leading-loose">
+          configure chart or press a preset button to discover projects
         </p>
 
       ) : (

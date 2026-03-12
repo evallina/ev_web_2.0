@@ -5,23 +5,32 @@ import principlesData from '@/src/data/designPrinciples.json';
 import philosophyImages from '@/src/data/philosophyImages.json';
 
 // ── Design variables ────────────────────────────────────────────────────────
-const typingSpeed       = 60;                        // ms per character while typing
-const erasingSpeed      = 20;                        // ms per character while erasing
-const pauseDuration     = 3200;                      // ms to hold the fully-typed phrase
-const photoDropInterval    = 4000;  // ms between each new photo appearing
-const photoFadeInDuration  = 1400;  // ms — incoming image fades in
-const photoFadeOutDuration = 1000;  // ms — outgoing image fades out
-const photoFadeOutDelay    = 300;   // ms after new image starts before old begins to fade out (0 = fully simultaneous)
-const photoOpacity         = 0.9;  // peak opacity of background photos (0–1)
-const grainOpacity        = 0.60;                      // opacity of grain overlay (0–1)
-const headingSize         = 'clamp(3rem, 5vw, 5rem)'; // font-size of the heading
-const headingColor        = '#1C1C1C';                 // color of "Design" and the typed phrase, '#282829' is the Default. '#ffffff'(White)
-const typedLineWidth      = '60vw';                    // max-width of the typed continuation line
-const textShadowOpacity   = 0.2;                      // opacity of the drop shadow behind the heading text (0–1)
+const typingSpeed          = 60;                        // ms per character while typing
+const erasingSpeed         = 20;                        // ms per character while erasing
+const pauseDuration        = 3200;                      // ms to hold the fully-typed phrase
+const photoDropInterval    = 4000;                      // ms between each new photo appearing
+const photoFadeInDuration  = 1400;                      // ms — incoming image fades in
+const photoFadeOutDuration = 1000;                      // ms — outgoing image fades out
+const photoFadeOutDelay    = 300;                       // ms after new image starts before old begins to fade out
+const photoOpacity         = 0.9;                       // peak opacity of background photos (0–1)
+const grainOpacity         = 0.60;                      // opacity of grain overlay (0–1)
+const headingSize          = 'clamp(3rem, 5vw, 5rem)'; // font-size of the heading
+const headingColor         = '#1C1C1C';                 // color of "Design" and the typed phrase
+const typedLineWidth       = '60vw';                    // max-width of the typed continuation line
+const textShadowOpacity    = 0.2;                       // opacity of the drop shadow behind the heading text
 
-// Max random offset from the section center for each image (px)
-const maxOffsetX = 0; // horizontal scatter range: ±maxOffsetX , before was 80
-const maxOffsetY = 0; // vertical scatter range:   ±maxOffsetY, before was 30
+const zoomScale       = 1.15;             // max scale for the zoom effect (1.0 = no zoom)
+const zoomDuration    = photoDropInterval; // ms — matches the photo display duration
+const imageTopMargin  = '5rem';           // top inset of the image clip area (sides/bottom use --page-margin)
+
+const labelColor     = '#282829';      // color of the "My Design Philosophy" label
+const labelOpacity   = 0.9;           // opacity of the label (0–1)
+const labelTopOffset = '7rem';        // distance from the top of the section
+
+const worksColor        = 'black';   // color of the Works ▼ button
+const worksOpacity      = 0.85;        // opacity at rest (0–1)
+const worksHoverOpacity = 0.65;        // opacity on hover (0–1)
+const worksBottomOffset = '3.5rem';    // distance from the bottom of the section
 
 // ── Internal constants ──────────────────────────────────────────────────────
 // Keep at most 2 items alive at once (the incoming + the outgoing during crossfade)
@@ -41,16 +50,13 @@ const PLACEHOLDER_COLORS = [
 // ── Types ───────────────────────────────────────────────────────────────────
 interface StackItem {
   photoIdx:  number;
-  x:         number;    // center x position in px
-  y:         number;    // center y position in px
+  zoomsIn:   boolean;  // true = scale(1.0→zoomScale), false = scale(zoomScale→1.0)
   key:       number;
-  visible:   boolean;   // false → true triggers fade-in CSS transition
-  fadingOut: boolean;   // false → true triggers fade-out CSS transition
+  visible:   boolean;  // false → true triggers fade-in CSS transition
+  fadingOut: boolean;  // false → true triggers fade-out CSS transition
 }
 
 // ── Typewriter hook ─────────────────────────────────────────────────────────
-// Phase 'pausing' removed — the pause is handled via setTimeout so no
-// setState call happens synchronously inside the effect body.
 function useTypewriter(phrases: string[]) {
   const [display, setDisplay]     = useState('');
   const [phraseIdx, setPhraseIdx] = useState(0);
@@ -69,7 +75,6 @@ function useTypewriter(phrases: string[]) {
         }, typingSpeed);
         return () => clearTimeout(t);
       } else {
-        // Done typing — wait pauseDuration then start erasing
         const t = setTimeout(() => setPhase('erasing'), pauseDuration);
         return () => clearTimeout(t);
       }
@@ -83,7 +88,6 @@ function useTypewriter(phrases: string[]) {
         }, erasingSpeed);
         return () => clearTimeout(t);
       } else {
-        // Done erasing — advance to next phrase
         const t = setTimeout(() => {
           setPhraseIdx(i => i + 1);
           setPhase('typing');
@@ -108,16 +112,15 @@ function usePhotoStack(photoCount: number) {
     if (photoCount === 0) return;
 
     const addPhoto = () => {
-      const x        = window.innerWidth  / 2 + (Math.random() * 2 - 1) * maxOffsetX;
-      const y        = window.innerHeight / 2 + (Math.random() * 2 - 1) * maxOffsetY;
       const photoIdx = photoIdxRef.current % photoCount;
+      const zoomsIn  = photoIdxRef.current % 2 === 0; // 1st, 3rd, 5th… zoom in; 2nd, 4th… zoom out
       photoIdxRef.current += 1;
       keyRef.current      += 1;
       const key = keyRef.current;
 
       // Add new photo (invisible) alongside existing ones, capped at MAX_STACK_VISIBLE
       setStack(prev =>
-        [...prev, { photoIdx, x, y, key, visible: false, fadingOut: false }]
+        [...prev, { photoIdx, zoomsIn, key, visible: false, fadingOut: false }]
           .slice(-MAX_STACK_VISIBLE)
       );
 
@@ -171,68 +174,87 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
       className="relative bg-white h-screen overflow-hidden"
     >
 
-      {/* ── Photo background layer ───────────────────────────────────────── */}
-      {stack.map((item) => {
-        const bg = hasPhotos
-          ? undefined
-          : PLACEHOLDER_COLORS[item.photoIdx % PLACEHOLDER_COLORS.length];
+      {/* ── Photo background layer — clipped to page margins ─────────────── */}
+      <div style={{
+        position: 'absolute',
+        top:      imageTopMargin,
+        bottom:   'var(--page-margin)',
+        left:     'var(--page-margin)',
+        right:    'var(--page-margin)',
+        overflow: 'hidden',
+        zIndex:   1,
+      }}>
+        {stack.map((item) => {
+          const startScale = item.zoomsIn ? 1.0       : zoomScale;
+          const endScale   = item.zoomsIn ? zoomScale : 1.0;
+          const scale      = item.visible ? endScale : startScale;
+          const bg         = hasPhotos
+            ? undefined
+            : PLACEHOLDER_COLORS[item.photoIdx % PLACEHOLDER_COLORS.length];
 
-        return (
-          // Wrapper: positions the image's CENTER at the random (x, y) point
-          <div
-            key={item.key}
-            onContextMenu={(e) => e.preventDefault()}
-            style={{
-              position: 'absolute',
-              left: item.x,
-              top: item.y,
-              transform: 'translate(-50%, -50%)',
-              opacity:    item.fadingOut ? 0 : (item.visible ? photoOpacity : 0),
-              transition: item.fadingOut
-                ? `opacity ${photoFadeOutDuration}ms ease-in`
-                : `opacity ${photoFadeInDuration}ms ease-out`,
-            }}
-          >
-            {hasPhotos ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={photos[item.photoIdx]}
-                alt=""
-                aria-hidden="true"
-                className="img-protected"
-                style={{
-                  maxWidth: '65vw',
-                  maxHeight: '65vh',
-                  width: 'auto',
-                  height: 'auto',
-                  display: 'block',
-                  boxShadow: '0 8px 28px rgba(0,0,0,0.12)',
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: '65vw',
-                  height: '45vw',
-                  background: bg,
-                  boxShadow: '0 8px 28px rgba(0,0,0,0.12)',
-                }}
-              />
-            )}
-          </div>
-        );
-      })}
+          return (
+            <div
+              key={item.key}
+              onContextMenu={(e) => e.preventDefault()}
+              style={{
+                position:   'absolute',
+                inset:      0,
+                opacity:    item.fadingOut ? 0 : (item.visible ? photoOpacity : 0),
+                transition: item.fadingOut
+                  ? `opacity ${photoFadeOutDuration}ms ease-in`
+                  : `opacity ${photoFadeInDuration}ms ease-out`,
+              }}
+            >
+              {hasPhotos ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photos[item.photoIdx]}
+                  alt=""
+                  aria-hidden="true"
+                  className="img-protected"
+                  style={{
+                    position:        'absolute',
+                    inset:           0,
+                    width:           '100%',
+                    height:          '100%',
+                    objectFit:       'cover',
+                    display:         'block',
+                    transform:       `scale(${scale})`,
+                    transformOrigin: 'center center',
+                    transition:      item.fadingOut
+                      ? 'none'
+                      : `transform ${zoomDuration}ms linear`,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    position:        'absolute',
+                    inset:           0,
+                    background:      bg,
+                    transform:       `scale(${scale})`,
+                    transformOrigin: 'center center',
+                    transition:      item.fadingOut
+                      ? 'none'
+                      : `transform ${zoomDuration}ms linear`,
+                  }}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {/* ── Grain overlay ────────────────────────────────────────────────── */}
       <svg
         aria-hidden="true"
         style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 2,
-          opacity: grainOpacity,
+          position:      'absolute',
+          inset:         0,
+          width:         '100%',
+          height:        '100%',
+          zIndex:        2,
+          opacity:       grainOpacity,
           pointerEvents: 'none',
         }}
       >
@@ -245,8 +267,8 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
 
       {/* ── Label — pinned top center ─────────────────────────────────────── */}
       <p
-        className="font-sans text-[#282829]/40 text-xs uppercase tracking-[0.25em]"
-        style={{ position: 'absolute', top: '5.5rem', left: 0, right: 0, textAlign: 'center', zIndex: 10 }}
+        className="font-sans text-xs uppercase tracking-[0.25em]"
+        style={{ position: 'absolute', top: labelTopOffset, left: 0, right: 0, textAlign: 'center', zIndex: 10, color: labelColor, opacity: labelOpacity }}
       >
         My Design Philosophy
       </p>
@@ -255,34 +277,31 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
       <div
         className="font-serif font-bold"
         style={{
-          color: headingColor,
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          color:          headingColor,
+          position:       'absolute',
+          inset:          0,
+          display:        'flex',
+          flexDirection:  'column',
+          alignItems:     'center',
           justifyContent: 'flex-start',
-          paddingTop: 'calc(35vh - 3rem)', // anchors "Design" near vertical center
-          zIndex: 10,
-          pointerEvents: 'none',
+          paddingTop:     'calc(35vh - 3rem)',
+          zIndex:         10,
+          pointerEvents:  'none',
         }}
       >
-        {/* "Design" — fixed first line */}
         <div style={{ fontSize: headingSize, lineHeight: 1.15, textShadow: `0 2px 24px rgba(0,0,0,${textShadowOpacity})` }}>Design</div>
-
-        {/* Typed continuation — second line */}
         <div style={{ fontSize: headingSize, lineHeight: 1.15, fontWeight: 400, maxWidth: typedLineWidth, textAlign: 'center', textShadow: `0 2px 24px rgba(0,0,0,${textShadowOpacity})` }}>
           {displayText}
           <span
             aria-hidden="true"
             style={{
-              display: 'inline-block',
-              width: 3,
-              height: '0.75em',
-              background: headingColor,
-              marginLeft: 3,
+              display:       'inline-block',
+              width:         3,
+              height:        '0.75em',
+              background:    headingColor,
+              marginLeft:    3,
               verticalAlign: 'middle',
-              animation: 'philosophy-cursor-blink 800ms step-end infinite',
+              animation:     'philosophy-cursor-blink 800ms step-end infinite',
             }}
           />
         </div>
@@ -292,8 +311,18 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
       {onScrollDown && (
         <button
           onClick={onScrollDown}
-          className="font-sans text-[#282829]/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-[#282829]/65 transition-colors cursor-pointer"
-          style={{ position: 'absolute', bottom: '2.5rem', left: 0, right: 0, margin: '0 auto', width: 'fit-content', zIndex: 10 }}
+          className="font-sans text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 transition-opacity cursor-pointer"
+          style={{
+            position: 'absolute',
+            bottom:   worksBottomOffset,
+            left: 0, right: 0, margin: '0 auto',
+            width:   'fit-content',
+            zIndex:  10,
+            color:   worksColor,
+            opacity: worksOpacity,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = String(worksHoverOpacity))}
+          onMouseLeave={e => (e.currentTarget.style.opacity = String(worksOpacity))}
         >
           <span>Works</span>
           <span>▼</span>
