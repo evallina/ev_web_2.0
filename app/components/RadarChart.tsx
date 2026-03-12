@@ -74,21 +74,30 @@ const connectorOutlineColor  = 'rgba(255, 255, 255, 0.3)';
 const connectorOutlineWidth  = 1;                          // px
 const connectorOutlineOpacity = 1;
 const connectorTopWidth      = presetButtonWidth * 0.5;    // px — connector top width (centered over button); default: half button width
-const connectorChamferRadius = 20;                         // px — controls bezier handle length for side curves (higher = more S-curve curvature)
+// Controls the radius of the concave curves between the shoulders (v3→v4, v9→v10)
+// and the neck (v5→v6, v7→v8). Higher = smoother, rounder transition.
+// Effective range depends on shoulder width and connector height.
+const connectorChamferRadius = 15;
 const connectorTopOverlap    = 0;                         // px — connector extends UP behind the button bottom edge
 const connectorNeckExtension = 0;                         // px — static neck extension (kept at 0; dynamic extension handled by bounceExtension filler on hover)
 const connectorBottomOverlap = 24 + connectorNeckExtension; // px — total overlap behind circle (arrowR); arrow stays at same absolute position
 const bounceExtension        = 0;                          // px — matches radar-btn-bounce translateY peak; filler fades in on hover to track the bounce
+// ── Connector reveal / retract animation ──────────────────────────────────────
+const connectorRevealDuration  = 100;  // ms — top-to-bottom reveal animation (clip 100%→0%)
+const connectorRetractDuration = 100;  // ms — bottom-to-top retract animation (clip 0%→100%)
+const connectorRevealDelay     = 50;  // ms delay after arrow starts moving before connector reveals
 // ── Down-arrow button (circle + icon) ─────────────────────────────────────────
-const downArrowFillColor        = 'white';   // circle background color at rest
-const downArrowHoverColor       = 'rgba(100,100,100,1)';   // circle background color on hover
-const downArrowFillOpacity      = 0.20;      // circle background opacity at rest
+const downArrowFillColor        = 'rgba(100,100,100,1)';   // circle background color at rest
+const downArrowHoverColor       = 'rgba(80,80,80,1)';   // circle background color on hover
+const downArrowFillOpacity      = 1;      // circle background opacity at rest
 const downArrowFillHoverOpacity = 1;         // circle background opacity on hover
 const downArrowBorderColor      = 'white';   // circle border color
 const downArrowBorderOpacity    = 1;         // circle border opacity (0–1)
 const downArrowBorderWidth      = 3;         // px — circle border thickness
 const downArrowIconColor        = 'white';   // color of the ↓ icon inside the circle
 const downArrowIconStroke       = 1.6;       // strokeWidth of the ↓ icon (SVG units)
+const resetFillColor            = 'rgba(40,40,40,1)';   // reset button circle background color
+const resetFillOpacity          = 1;      // reset button circle background opacity
 const mobilePresetsBreakpoint = 750;                       // px — below this: mobile preset layout (vertical buttons + inline arrow)
 const presetsBottomPadding   = 0;                         // px minimum space between arrow/presets and section bottom edge
 const presetButtonHeightMobile = 45;                       // px button height in mobile layout (shorter than desktop's presetButtonHeight)
@@ -233,7 +242,7 @@ function connectorPath(
   // Shoulders at button bottom edge (y = topOverlap in SVG = button bottom in absolute)
   const dropH   = topOverlap;                      // v3, v4, v9, v10 all at this Y
   const availH  = H - dropH;
-  const cs      = Math.max(1, Math.min(r, step * 0.35, availH * 2 / 7)); // concave corner size
+  const cs      = Math.max(1, Math.min(r, step * 0.95, availH * 0.8)); // concave corner size
 
   const f = (n: number) => n.toFixed(2);
   return [
@@ -291,6 +300,10 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
   const [arrowTranslateX,    setArrowTranslateX]    = useState(0);
   const [isMobile,           setIsMobile]           = useState(false);
   const [showYourSelection,  setShowYourSelection]  = useState(false);
+  // Connector clip-path animation: 100 = fully hidden (inset from bottom), 0 = fully revealed
+  const [connectorClip,     setConnectorClip]     = useState(100);
+  const [connectorTransDur, setConnectorTransDur] = useState(0);
+  const [connectorEasing,   setConnectorEasing]   = useState<'ease-in' | 'ease-out'>('ease-out');
 
   const svgRef             = useRef<SVGSVGElement>(null);
   const containerRef       = useRef<HTMLDivElement>(null);
@@ -302,6 +315,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
   const bounceDivRef         = useRef<HTMLDivElement>(null);
   const yourSelectionBtnRef      = useRef<HTMLButtonElement | null>(null);
   const prevShowYourSelectionRef = useRef(false);
+  const prevConnectorVisibleRef  = useRef(false);
   const autoTimersRef      = useRef<ReturnType<typeof setTimeout>[]>([]);
   const hasAutoPlayedRef   = useRef(false);
   const spinTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -465,45 +479,6 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
       : 'radar-btn-bounce 0.45s ease-in-out infinite';
   }, [hasPlayed, hoveredDownArrow, isMobile]);
 
-  // Desktop only: align the standalone down-arrow with the active preset button (horizontal track).
-  // Also tracks to "YOUR SELECTION" when it's showing — delays measurement until it finishes expanding.
-  // In mobile the arrow is inline next to each button — no tracking needed.
-  useEffect(() => {
-    if (isMobile) { setArrowTranslateX(0); return; }
-    const row = presetRowRef.current;
-    if (!row) return;
-
-    const measure = () => {
-      const r = presetRowRef.current;
-      if (!r) return;
-      let btn: HTMLButtonElement | null = null;
-      if (showYourSelection) {
-        btn = yourSelectionBtnRef.current;
-      } else if (activePreset !== null) {
-        const idx = PRESETS.findIndex(p => p.name === activePreset);
-        btn = presetButtonRefs.current[idx];
-      }
-      if (!btn) { setArrowTranslateX(0); return; }
-      const rowRect = r.getBoundingClientRect();
-      const btnRect = btn.getBoundingClientRect();
-      setArrowTranslateX((btnRect.left + btnRect.width / 2) - (rowRect.left + rowRect.width / 2));
-    };
-
-    const prevShowYourSelection = prevShowYourSelectionRef.current;
-    prevShowYourSelectionRef.current = showYourSelection;
-
-    if (showYourSelection || prevShowYourSelection) {
-      // Delay in both directions:
-      // - expanding:  YOUR SELECTION appearing → wait for grow transition before measuring
-      // - collapsing: preset clicked while YOUR SELECTION visible → preset buttons are
-      //               still displaced by the shrinking animation, so delay until it settles
-      const t = setTimeout(measure, yourSelectionTransition);
-      return () => clearTimeout(t);
-    } else {
-      measure();
-    }
-  }, [activePreset, showYourSelection, isMobile]);
-
   // Switch to mobile layout below mobilePresetsBreakpoint
   useEffect(() => {
     const calc = () => setIsMobile(window.innerWidth < mobilePresetsBreakpoint);
@@ -511,6 +486,92 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
     window.addEventListener('resize', calc, { passive: true });
     return () => window.removeEventListener('resize', calc);
   }, []);
+
+  // ── Unified arrow + connector sequencing (desktop only) ────────────────────
+  // Correct sequence when switching positions:
+  //   1. Retract connector upward (connectorRetractDuration ms)
+  //   2. Arrow slides to new button (downArrowFollowDuration ms)
+  //   3. Connector reveals downward (connectorRevealDuration ms, after connectorRevealDelay)
+  //
+  // On first activation (no previous connector): skip retract, just move + reveal.
+  // On deactivation: retract only.
+  useEffect(() => {
+    if (isMobile) {
+      setArrowTranslateX(0);
+      setConnectorClip(100);
+      setConnectorTransDur(0);
+      return;
+    }
+
+    const nowVisible = activePreset !== null || showYourSelection;
+    const wasVisible = prevConnectorVisibleRef.current;
+    const prevShowYS = prevShowYourSelectionRef.current;
+    prevConnectorVisibleRef.current  = nowVisible;
+    prevShowYourSelectionRef.current = showYourSelection;
+
+    // Whether YOUR SELECTION button is in mid-transition (growing or shrinking)
+    const yourSelectionChanging  = showYourSelection !== prevShowYS;
+    const yourSelectionAppearing = showYourSelection && !prevShowYS;
+
+    // Measure the center-X offset of the target button relative to the preset row center.
+    const measureTarget = (): number => {
+      const r = presetRowRef.current;
+      if (!r) return 0;
+      let btn: HTMLButtonElement | null = null;
+      if (showYourSelection) {
+        btn = yourSelectionBtnRef.current;
+      } else if (activePreset !== null) {
+        const idx = PRESETS.findIndex(p => p.name === activePreset);
+        btn = presetButtonRefs.current[idx];
+      }
+      if (!btn) return 0;
+      const rowRect = r.getBoundingClientRect();
+      const btnRect = btn.getBoundingClientRect();
+      return (btnRect.left + btnRect.width / 2) - (rowRect.left + rowRect.width / 2);
+    };
+
+    if (!nowVisible && !wasVisible) return;
+
+    if (!nowVisible) {
+      // Deactivation — retract connector, leave arrow where it is
+      setConnectorClip(100);
+      setConnectorTransDur(connectorRetractDuration);
+      setConnectorEasing('ease-in');
+      return;
+    }
+
+    if (!wasVisible) {
+      // First activation — no retract; move arrow, then reveal connector
+      setConnectorClip(100);
+      setConnectorTransDur(0);
+      // If YOUR SELECTION is growing, wait for it before measuring its position
+      const measureDelay = yourSelectionAppearing ? yourSelectionTransition : 0;
+      const t1 = setTimeout(() => setArrowTranslateX(measureTarget()), measureDelay);
+      const t2 = setTimeout(() => {
+        setConnectorClip(0);
+        setConnectorTransDur(connectorRevealDuration);
+        setConnectorEasing('ease-out');
+      }, measureDelay + downArrowFollowDuration + connectorRevealDelay);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+
+    // Position change — retract → move arrow → reveal
+    setConnectorClip(100);
+    setConnectorTransDur(connectorRetractDuration);
+    setConnectorEasing('ease-in');
+    // If YOUR SELECTION is transitioning (growing or shrinking), delay measurement until
+    // both the retract AND the button transition have finished.
+    const moveDelay = yourSelectionChanging
+      ? Math.max(connectorRetractDuration, yourSelectionTransition)
+      : connectorRetractDuration;
+    const t1 = setTimeout(() => setArrowTranslateX(measureTarget()), moveDelay);
+    const t2 = setTimeout(() => {
+      setConnectorClip(0);
+      setConnectorTransDur(connectorRevealDuration);
+      setConnectorEasing('ease-out');
+    }, moveDelay + downArrowFollowDuration + connectorRevealDelay);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [activePreset, showYourSelection, isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePlay = () => {
     setHasPlayed(true);
@@ -589,7 +650,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
         aria-label="Restart auto-play sequence"
         style={{
           position: 'absolute', inset: 0, width: '100%', height: '100%',
-          borderRadius: '50%', background: 'rgba(255,255,255,0.10)',
+          borderRadius: '50%', background: `color-mix(in srgb, ${resetFillColor} ${resetFillOpacity * 100}%, transparent)`,
           border: '1px solid rgba(255,255,255,0.20)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', opacity: hasPlayed ? 1 : 0,
@@ -1066,8 +1127,8 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
                 style={{
                   display: 'block', overflow: 'visible',
                   marginTop: -connectorTopOverlap,
-                  opacity: showConnector ? 1 : 0,
-                  transition: 'opacity 200ms ease',
+                  clipPath: `inset(0 0 ${connectorClip}% 0)`,
+                  transition: `clip-path ${connectorTransDur}ms ${connectorEasing}`,
                   pointerEvents: 'none',
                 }}
                 aria-hidden="true"
@@ -1102,7 +1163,8 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
                   style={{
                     position: 'absolute', top: 0, left: 0,
                     display: 'block', overflow: 'visible', pointerEvents: 'none',
-                    opacity: showConnector ? 1 : 0, transition: 'opacity 200ms ease',
+                    clipPath: `inset(0 0 ${connectorClip}% 0)`,
+                    transition: `clip-path ${connectorTransDur}ms ${connectorEasing}`,
                   }}
                   aria-hidden="true"
                 >
