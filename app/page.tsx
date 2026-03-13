@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import ContactTop, { type ContactConfig } from "./components/ContactTop";
 import Trajectory from "./components/Trajectory";
 import Hero from "./components/Hero";
+import ErrorBoundary from "./components/ErrorBoundary";
 import DesignPhilosophy from "./components/DesignPhilosophy";
 import RadarChart from "./components/RadarChart";
 import ProjectCards from "./components/ProjectCards";
@@ -262,11 +263,13 @@ export default function Home() {
 
       <Trajectory />
 
-      <Hero
-        resetKey={heroResetKey}
-        onNavigateUp={() => scrollToSectionBottom('trajectory')}
-        onNavigateDown={() => scrollToSection('design-philosophy')}
-      />
+      <ErrorBoundary>
+        <Hero
+          resetKey={heroResetKey}
+          onNavigateUp={() => scrollToSectionBottom('trajectory')}
+          onNavigateDown={() => scrollToSection('design-philosophy')}
+        />
+      </ErrorBoundary>
 
       <DesignPhilosophy onScrollDown={() => scrollToSection('project-selection')} />
 

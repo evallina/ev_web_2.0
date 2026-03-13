@@ -144,11 +144,12 @@ export default function MorphingImages({
     const wrap = images.length > 0 ? wrapRef.current : null;
     if (!wrap) return;
 
-    // ── WebGL availability check ───────────────────────────────────────────────
-    const probe  = document.createElement('canvas');
-    const hasWebGL = !!(probe.getContext('webgl') || probe.getContext('experimental-webgl'));
+    // ── WebGL availability check + mobile skip ────────────────────────────────
+    const probe     = document.createElement('canvas');
+    const hasWebGL  = !!(probe.getContext('webgl') || probe.getContext('experimental-webgl'));
+    const isMobile  = window.innerWidth < 768;
 
-    if (!hasWebGL) {
+    if (!hasWebGL || isMobile) {
       const img = document.createElement('img');
       img.src   = images[0];
       img.alt   = '';
@@ -158,7 +159,18 @@ export default function MorphingImages({
     }
 
     // ── Renderer ──────────────────────────────────────────────────────────────
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch {
+      // WebGL context creation failed (e.g. too many active contexts)
+      const img = document.createElement('img');
+      img.src   = images[0];
+      img.alt   = '';
+      img.style.cssText = 'display:block;width:100%;height:100%;object-fit:contain;';
+      wrap.appendChild(img);
+      return () => { if (wrap.contains(img)) wrap.removeChild(img); };
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
     renderer.setSize(wrap.clientWidth, wrap.clientHeight);
     const canvas = renderer.domElement;

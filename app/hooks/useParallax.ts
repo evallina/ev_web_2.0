@@ -23,6 +23,7 @@ const PARALLAX_CONFIG: Record<string, { speed: number; enabled: boolean }> = {
 export function useParallax() {
   useEffect(() => {
     if (!PARALLAX_ENABLED) return;
+    if (window.innerWidth < 768) return;  // skip on mobile — prevents RAF drain + GPU contention
 
     let rafId: number;
 

@@ -157,7 +157,7 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) 
   useEffect(() => {
     const check = () => setHeroIsVertical(window.innerWidth < heroVerticalBreakpoint);
     check();
-    window.addEventListener('resize', check);
+    window.addEventListener('resize', check, { passive: true });
     return () => window.removeEventListener('resize', check);
   // heroVerticalBreakpoint is a compile-time constant — safe to omit from deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
