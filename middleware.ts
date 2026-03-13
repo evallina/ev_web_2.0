@@ -1,6 +1,13 @@
 import { NextResponse, NextRequest } from 'next/server';
 
-// Domains allowed to hotlink images (your own site + dev environments)
+// ── Password Protection (Pre-Launch) ───────────────────────────────────────
+const PASSWORD_PROTECTION_ENABLED = true;     // Set false to disable — ONE TOGGLE
+const SITE_PASSWORD                = '2026';
+const PASSWORD_COOKIE_NAME         = 'site-access';
+// const PASSWORD_COOKIE_MAX_AGE   = 60 * 60 * 24 * 7; // 7 days (used in API route)
+
+// ── Hotlinking Protection ──────────────────────────────────────────────────
+// Domains allowed to embed images (your own site + dev environments)
 const ALLOWED_REFERRERS = [
   'enolvallina.com',
   'www.enolvallina.com',
@@ -8,14 +15,33 @@ const ALLOWED_REFERRERS = [
   'localhost',    // Local development
 ];
 
-// Allow requests with no referer header (direct browser visits, bookmarks,
+// Allow requests with no referer header (direct visits, bookmarks,
 // social card crawlers, and most search engine bots don't send one)
 const ALLOW_EMPTY_REFERER = true;
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // OG images must be fetchable by social platforms — always allow
+  // ── 1. Password gate ──────────────────────────────────────────────────────
+  if (PASSWORD_PROTECTION_ENABLED) {
+    const isPublicPath =
+      pathname === '/login' ||
+      pathname.startsWith('/api/auth') ||
+      pathname.startsWith('/_next/') ||
+      pathname.startsWith('/images/og/') ||   // OG image must be public for social previews
+      pathname.startsWith('/images/psw/') ||  // Login page bg — public but hotlink-protected below
+      /\.(ico|svg|png|jpg|jpeg|gif|webp|css|js|woff2?)$/.test(pathname);
+
+    if (!isPublicPath) {
+      const cookie = request.cookies.get(PASSWORD_COOKIE_NAME);
+      if (!cookie || cookie.value !== SITE_PASSWORD) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+    }
+  }
+
+  // ── 2. Hotlinking protection (project + philosophy images only) ───────────
+  // OG images are always allowed (social platforms need them)
   if (pathname.startsWith('/images/og/')) {
     return NextResponse.next();
   }
@@ -45,6 +71,12 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Only intercept project and philosophy images — leave categories, ui, og untouched
-  matcher: ['/images/projects/:path*', '/images/philosophy/:path*'],
+  matcher: [
+    // Page routes — for password protection
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Image routes — for hotlinking protection
+    '/images/projects/:path*',
+    '/images/philosophy/:path*',
+    '/images/psw/:path*',
+  ],
 };
