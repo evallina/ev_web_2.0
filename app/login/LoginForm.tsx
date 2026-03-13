@@ -47,6 +47,7 @@ const boxPaddingH       = 5;                              // px left/right
 const boxBorderRadius   = 6;                              // px
 const boxBorder         = '1px solid rgba(255,255,255,0.07)';
 const boxBg             = 'rgba(26, 26, 27, 0.0)';
+  
 
 // Input field
 const inputBg           = 'rgba(22,22,23,0.98)';
