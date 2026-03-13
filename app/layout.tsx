@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Roboto } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -14,11 +15,34 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Enol Vallina | Design",
-  description: "Portfolio of Enol Vallina",
+  title: 'Enol Vallina | Design',
+  description: 'Architect by training, researcher by habit. A cross-scale design practice spanning computational tools, built environments, and speculative visions.',
+  metadataBase: new URL('https://enolvallina.com'),
   robots: { index: true, follow: true, noimageindex: true },
   icons: {
     icon: [{ url: '/images/ui/icons/ev_square.svg', type: 'image/svg+xml' }],
+  },
+  openGraph: {
+    title: 'Enol Vallina | Design',
+    description: 'Architect by training, researcher by habit. A cross-scale design practice spanning computational tools, built environments, and speculative visions.',
+    url: 'https://enolvallina.com',
+    siteName: 'Enol Vallina',
+    images: [
+      {
+        url: '/images/og/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Enol Vallina | Design',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Enol Vallina | Design',
+    description: 'Architect by training, researcher by habit. A cross-scale design practice spanning computational tools, built environments, and speculative visions.',
+    images: ['/images/og/og-image.png'],
   },
 };
 
@@ -31,6 +55,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${playfair.variable} ${roboto.variable} font-sans antialiased`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
