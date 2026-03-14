@@ -19,13 +19,12 @@ const heroImages = [
   '/images/categories/6_User-Oriented_01.png',
 ];
 
+interface ProjectEntry { presets?: string[]; cards?: string[] }
+
 const presetCardImages: string[] = [];
-for (const p of (projectsData.projects as any[])) {
+for (const p of projectsData.projects as ProjectEntry[]) {
   const presets = p.presets ?? [];
-  const hasPreset = presets.some((tag: any) =>
-    typeof tag === 'string' ? tag.length > 0 :
-    Array.isArray(tag) ? tag.length > 0 : false
-  );
+  const hasPreset = presets.some(tag => typeof tag === 'string' && tag.length > 0);
   if (hasPreset && p.cards) {
     for (const card of p.cards) {
       presetCardImages.push(card);

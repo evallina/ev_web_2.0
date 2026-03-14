@@ -19,8 +19,10 @@ export const metadata: Metadata = {
   description: 'Architect by training, researcher by habit. A cross-scale design practice spanning computational tools, built environments, and speculative visions.',
   metadataBase: new URL('https://enolvallina.com'),
   robots: { index: true, follow: true, noimageindex: true },
+  manifest: '/manifest.json',
   icons: {
     icon: [{ url: '/images/ui/icons/ev_square.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/images/ui/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   openGraph: {
     title: 'Enol Vallina | Design',

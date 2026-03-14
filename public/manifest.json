@@ -1,0 +1,15 @@
+{
+  "name": "Enol Vallina | Design",
+  "short_name": "EV Design",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#262627",
+  "theme_color": "#262627",
+  "icons": [
+    {
+      "src": "/images/ui/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
