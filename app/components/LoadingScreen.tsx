@@ -6,7 +6,7 @@ import projectsData from '@/src/data/projects.json';
 // ── Design variables ───────────────────────────────────────────────────────────
 const MIN_DISPLAY_TIME  = 8500;  // ms — minimum display; actual may be longer while images load
 const FADE_OUT_DURATION = 800;   // ms — fade-out animation duration
-const DOT_INTERVAL      = 400;   // ms — time between each animated dot appearing
+// const DOT_INTERVAL   = 400;   // ms — time between each animated dot appearing (disabled)
 const MOBILE_BREAKPOINT = 600;   // px
 
 // ── Image preload list ─────────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ interface Props {
 }
 
 export default function LoadingScreen({ onComplete }: Props) {
-  const [dots,     setDots]     = useState('');
+  // const [dots,  setDots]  = useState('');  // disabled — re-enable with dot animation below
   const [fading,   setFading]   = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -65,16 +65,16 @@ export default function LoadingScreen({ onComplete }: Props) {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Dot animation: '' → '.' → '..' → '...' → '' → …
-  useEffect(() => {
-    const stages = ['', '.', '..', '...'];
-    let i = 0;
-    const id = setInterval(() => {
-      i = (i + 1) % stages.length;
-      setDots(stages[i]);
-    }, DOT_INTERVAL);
-    return () => clearInterval(id);
-  }, []);
+  // Dot animation — disabled; re-enable by uncommenting dots state above and this effect
+  // useEffect(() => {
+  //   const stages = ['', '.', '..', '...'];
+  //   let i = 0;
+  //   const id = setInterval(() => {
+  //     i = (i + 1) % stages.length;
+  //     setDots(stages[i]);
+  //   }, DOT_INTERVAL);
+  //   return () => clearInterval(id);
+  // }, []);
 
   // Timing: wait for min display time + fonts.ready + window load + image preload, then fade out
   useEffect(() => {
@@ -144,19 +144,19 @@ export default function LoadingScreen({ onComplete }: Props) {
           }}
         />
 
-        {/* "Loading…" with animated dots */}
-        <div style={{
+        {/* "Loading…" with animated dots — disabled; re-enable with dots state + effect above */}
+        {/* <div style={{
           marginTop:  16,
           fontFamily: 'var(--font-playfair, serif)',
           fontSize:   '0.85rem',
           color:      '#1c1c1d',
           opacity:     0.5,
           userSelect: 'none',
-          minWidth:   '6ch',   // prevents layout shift as dots appear/disappear
+          minWidth:   '6ch',
           textAlign:  'center',
         }}>
           Loading{dots}
-        </div>
+        </div> */}
 
       </div>
 
