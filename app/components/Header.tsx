@@ -27,6 +27,17 @@ const NAV_ITEMS = [
   { label: 'CONTACT',    id: 'contact-bottom' },
 ] as const;
 
+// Mobile menu order — null = horizontal separator line
+const MOBILE_NAV_ITEMS: ({ label: string; id: string } | null)[] = [
+  { label: 'TRAJECTORY', id: 'trajectory' },
+  null,
+  { label: 'HOME',       id: 'hero' },
+  null,
+  { label: 'PHILOSOPHY', id: 'design-philosophy' },
+  { label: 'WORKS',      id: 'project-selection' },
+  { label: 'CONTACT',    id: 'contact-bottom' },
+];
+
 interface Props {
   menuOpen:     boolean;
   setMenuOpen:  (v: boolean) => void;
@@ -202,32 +213,55 @@ export default function Header({ menuOpen, setMenuOpen, scrolled, grainOpacity, 
               gap:            mobileItemGap,
             }}
           >
-            {NAV_ITEMS.map((item, i) => (
-              <button
-                key={item.label}
-                onClick={() => { onNavigate(item.id); setMenuOpen(false); if (item.id === 'hero') onResetHero(); }}
-                style={{
-                  background:    'none',
-                  border:        'none',
-                  padding:       0,
-                  cursor:        'pointer',
-                  color:         'white',
-                  fontFamily:    'var(--font-sans)',
-                  fontSize:      mobileItemSize,
-                  fontWeight:    'normal',
-                  letterSpacing: mobileItemSpacing,
-                  textTransform: 'uppercase',
-                  transform:     menuOpen ? 'translateY(0)' : 'translateY(16px)',
-                  opacity:       menuOpen ? 1 : 0,
-                  transition:    'transform 350ms ease, opacity 350ms ease, color 150ms ease',
-                  transitionDelay: menuOpen ? `${i * mobileItemDelay}ms` : '0ms',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.50)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'white')}
-              >
-                {item.label}
-              </button>
-            ))}
+            {(() => {
+              let btnIdx = 0;
+              return MOBILE_NAV_ITEMS.map((item, i) => {
+                if (item === null) {
+                  return (
+                    <div
+                      key={`sep-${i}`}
+                      style={{
+                        width:      250,
+                        height:     1,
+                        background: 'rgba(255,255,255,0.20)',
+                        transform:  menuOpen ? 'translateY(0)' : 'translateY(16px)',
+                        opacity:    menuOpen ? 1 : 0,
+                        transition: 'transform 350ms ease, opacity 350ms ease',
+                        transitionDelay: menuOpen ? `${btnIdx * mobileItemDelay}ms` : '0ms',
+                      }}
+                    />
+                  );
+                }
+                const delay = menuOpen ? `${btnIdx * mobileItemDelay}ms` : '0ms';
+                btnIdx++;
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => { onNavigate(item.id); setMenuOpen(false); if (item.id === 'hero') onResetHero(); }}
+                    style={{
+                      background:      'none',
+                      border:          'none',
+                      padding:          0,
+                      cursor:          'pointer',
+                      color:           'white',
+                      fontFamily:      'var(--font-sans)',
+                      fontSize:         mobileItemSize,
+                      fontWeight:      'normal',
+                      letterSpacing:    mobileItemSpacing,
+                      textTransform:   'uppercase',
+                      transform:        menuOpen ? 'translateY(0)' : 'translateY(16px)',
+                      opacity:          menuOpen ? 1 : 0,
+                      transition:      'transform 350ms ease, opacity 350ms ease, color 150ms ease',
+                      transitionDelay:  delay,
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.50)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'white')}
+                  >
+                    {item.label}
+                  </button>
+                );
+              });
+            })()}
           </nav>
         </div>
       )}
