@@ -127,6 +127,7 @@ interface MorphingImagesProps {
   morphIntensity: number;
   className?: string;
   style?: React.CSSProperties;
+  siteReady?: boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -137,10 +138,12 @@ export default function MorphingImages({
   morphIntensity,
   className,
   style,
+  siteReady = false,
 }: MorphingImagesProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!siteReady) return;
     const wrap = images.length > 0 ? wrapRef.current : null;
     if (!wrap) return;
 
@@ -349,7 +352,7 @@ export default function MorphingImages({
 
   // Props are stable compile-time constants — safe to run once on mount.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [siteReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div ref={wrapRef} className={className} style={style} />;
 }

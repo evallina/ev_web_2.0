@@ -86,12 +86,14 @@ function useHeroTypewriter(
   typingSpeed: number,
   erasingSpeed: number,
   resetKey: number,
+  enabled: boolean,
 ) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const idxRef = useRef(0);
 
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     const fullText = segments.join('');
     // Cumulative boundary positions: boundaries[i] = index after segment i ends
@@ -144,20 +146,21 @@ function useHeroTypewriter(
     return () => { active = false; clearTimeout(timerId); };
   // Segments/pauses/speeds are compile-time constants — safe to omit from deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetKey]);
+  }, [resetKey, enabled]);
 
   return { displayed, done };
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
-  resetKey:      number;
-  onNavigateUp:  () => void;
+  resetKey:       number;
+  onNavigateUp:   () => void;
   onNavigateDown: () => void;
+  siteReady?:     boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) {
+export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady = false }: Props) {
   const [showUnderlines, setShowUnderlines] = useState([false, false, false, false]);
   const [heroIsVertical, setHeroIsVertical] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -180,6 +183,7 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) 
     heroTypingSpeed,
     heroErasingSpeed,
     resetKey,
+    siteReady,
   );
 
   // Underline reveal — staggered after typing completes
@@ -307,6 +311,7 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) 
               morphTransitionDuration={morphTransitionDuration}
               morphPauseDuration={morphPauseDuration}
               morphIntensity={morphIntensity}
+              siteReady={siteReady}
               style={{
                 width:  `min(75vw, ${mobileImageMaxSize})`,
                 height: `min(75vw, ${mobileImageMaxSize})`,

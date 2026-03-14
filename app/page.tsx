@@ -15,6 +15,7 @@ import { selectProjects } from "@/src/lib/selectProjects";
 import type { DebugMeta } from "@/src/types";
 import { CAT_KEYS } from "@/src/config/categories";
 import ContactBottom from "./components/ContactBottom";
+import LoadingScreen from "./components/LoadingScreen";
 import projectsData from "@/src/data/projects.json";
 
 // ── Gentle snap — sections the hook will nudge toward after scroll settles ────
@@ -89,6 +90,7 @@ export default function Home() {
   useParallax();
 
   // ── State ──────────────────────────────────────────────────────────────────
+  const [loading,       setLoading]       = useState(true);
   const [worksIsMobile, setWorksIsMobile] = useState(false);
   const [menuOpen,              setMenuOpen]              = useState(false);
   const [scrolled,              setScrolled]              = useState(false);
@@ -102,6 +104,13 @@ export default function Home() {
   const [debugFlash,            setDebugFlash]            = useState<string | null>(null);
 
   // ── Effects ────────────────────────────────────────────────────────────────
+
+  // Block scroll during loading; remove when done
+  useEffect(() => {
+    document.body.style.overflow = loading ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [loading]);
+
   useEffect(() => {
     const check = () => setWorksIsMobile(window.innerWidth < WORKS_MOBILE_BP);
     check();
@@ -262,6 +271,11 @@ export default function Home() {
         <rect width="100%" height="100%" filter="url(#page-noise)" />
       </svg>
 
+      {/* Loading screen — shown until fonts + images ready (min 1500ms) */}
+      {loading && (
+        <LoadingScreen visible={loading} onComplete={() => setLoading(false)} />
+      )}
+
       <Header
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
@@ -284,10 +298,11 @@ export default function Home() {
           resetKey={heroResetKey}
           onNavigateUp={() => scrollToSectionBottom('trajectory')}
           onNavigateDown={() => scrollToSection('design-philosophy')}
+          siteReady={!loading}
         />
       </ErrorBoundary>
 
-      <DesignPhilosophy onScrollDown={() => scrollToSection('project-selection')} />
+      <DesignPhilosophy onScrollDown={() => scrollToSection('project-selection')} siteReady={!loading} />
 
       {/* ── Section 5: Project Selection (Works) ── */}
       <section id="project-selection" className="relative min-h-screen flex flex-col items-center" style={{ paddingLeft: 'var(--page-margin)', paddingRight: 'var(--page-margin)', paddingTop: worksIsMobile ? mobileSectionPaddingTop : 80, paddingBottom: worksIsMobile ? mobileSectionPaddingBottom : darkShapeBottomPanelHeight }}>

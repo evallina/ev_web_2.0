@@ -64,14 +64,14 @@ interface StackItem {
 }
 
 // ── Typewriter hook ─────────────────────────────────────────────────────────
-function useTypewriter(phrases: string[]) {
+function useTypewriter(phrases: string[], enabled: boolean) {
   const [display, setDisplay]     = useState('');
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [phase, setPhase]         = useState<'typing' | 'erasing'>('typing');
   const charIdx = useRef(0);
 
   useEffect(() => {
-    if (phrases.length === 0) return;
+    if (!enabled || phrases.length === 0) return;
     const phrase = phrases[phraseIdx % phrases.length];
 
     if (phase === 'typing') {
@@ -102,13 +102,13 @@ function useTypewriter(phrases: string[]) {
         return () => clearTimeout(t);
       }
     }
-  }, [display, phase, phraseIdx, phrases]);
+  }, [display, phase, phraseIdx, phrases, enabled]);
 
   return display;
 }
 
 // ── Photo stack hook ────────────────────────────────────────────────────────
-function usePhotoStack(photoCount: number) {
+function usePhotoStack(photoCount: number, enabled: boolean) {
   const [stack, setStack]   = useState<StackItem[]>([]);
   const photoIdxRef         = useRef(0);
   const keyRef              = useRef(0);
@@ -116,7 +116,7 @@ function usePhotoStack(photoCount: number) {
   const removeTimerRef      = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    if (photoCount === 0) return;
+    if (!enabled || photoCount === 0) return;
 
     const addPhoto = () => {
       const photoIdx = photoIdxRef.current % photoCount;
@@ -156,7 +156,7 @@ function usePhotoStack(photoCount: number) {
       clearTimeout(fadeOutTimerRef.current);
       clearTimeout(removeTimerRef.current);
     };
-  }, [photoCount]);
+  }, [photoCount, enabled]);
 
   return stack;
 }
@@ -164,16 +164,17 @@ function usePhotoStack(photoCount: number) {
 // ── Component ───────────────────────────────────────────────────────────────
 interface DesignPhilosophyProps {
   onScrollDown?: () => void;
+  siteReady?:    boolean;
 }
 
-export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps) {
+export default function DesignPhilosophy({ onScrollDown, siteReady = false }: DesignPhilosophyProps) {
   const phrases     = principlesData.principles;
-  const displayText = useTypewriter(phrases);
+  const displayText = useTypewriter(phrases, siteReady);
 
   const photos     = philosophyImages as string[];
   const hasPhotos  = photos.length > 0;
   const photoCount = hasPhotos ? photos.length : PLACEHOLDER_COLORS.length;
-  const stack      = usePhotoStack(photoCount);
+  const stack      = usePhotoStack(photoCount, siteReady);
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {

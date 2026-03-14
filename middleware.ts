@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 
 // ── Password Protection (Pre-Launch) ───────────────────────────────────────
-const PASSWORD_PROTECTION_ENABLED = true;     // Set false to disable — ONE TOGGLE
+const PASSWORD_PROTECTION_ENABLED = false;     // Set false to disable — ONE TOGGLE
 const SITE_PASSWORD                = '2026';
 const PASSWORD_COOKIE_NAME         = 'site-access';
 // const PASSWORD_COOKIE_MAX_AGE   = 60 * 60 * 24 * 7; // 7 days (used in API route)
@@ -23,13 +23,19 @@ const ALLOW_EMPTY_REFERER = true;
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // ── 0. OG images — always allow, before any gate ──────────────────────────
+  // Social crawlers (OpenGraph, Twitter Card, iMessage, Slack…) need
+  // unrestricted access. This must be the very first check.
+  if (pathname.startsWith('/images/og/')) {
+    return NextResponse.next();
+  }
+
   // ── 1. Password gate ──────────────────────────────────────────────────────
   if (PASSWORD_PROTECTION_ENABLED) {
     const isPublicPath =
       pathname === '/login' ||
       pathname.startsWith('/api/auth') ||
       pathname.startsWith('/_next/') ||
-      pathname.startsWith('/images/og/') ||   // OG image must be public for social previews
       pathname.startsWith('/images/psw/') ||  // Login page bg — public but hotlink-protected below
       /\.(ico|svg|png|jpg|jpeg|gif|webp|css|js|woff2?)$/.test(pathname);
 
@@ -42,10 +48,6 @@ export function middleware(request: NextRequest) {
   }
 
   // ── 2. Hotlinking protection (project + philosophy images only) ───────────
-  // OG images are always allowed (social platforms need them)
-  if (pathname.startsWith('/images/og/')) {
-    return NextResponse.next();
-  }
 
   const referer = request.headers.get('referer');
 
@@ -74,7 +76,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Page routes — for password protection
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|images/og).*)',
     // Image routes — for hotlinking protection
     '/images/projects/:path*',
     '/images/philosophy/:path*',
