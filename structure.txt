@@ -1,4 +1,4 @@
-/Users/enol/Dropbox/ePro/2024 | New Trajectory/EV_WEBPAGE/ev_web_2.0
+.
 ├── app
 │   ├── api
 │   │   └── auth
@@ -8,9 +8,11 @@
 │   │   ├── ContactIcons.tsx
 │   │   ├── ContactTop.tsx
 │   │   ├── DesignPhilosophy.tsx
+│   │   ├── ErrorBoundary.tsx
 │   │   ├── Header.tsx
 │   │   ├── Hero.tsx
 │   │   ├── IconCardReel.tsx
+│   │   ├── LoadingScreen.tsx
 │   │   ├── MorphingImages.tsx
 │   │   ├── ProjectCards.tsx
 │   │   ├── RadarChart.tsx
@@ -24168,9 +24170,11 @@
 │   │   │       ├── Futures.jpg
 │   │   │       └── Public_Realm_01.jpg
 │   │   ├── hero
+│   │   ├── loading
+│   │   │   └── Places_loading.gif
 │   │   ├── og
-│   │   │   ├── Public_Realm_01.jpg
-│   │   │   └── Public_Realm_01.png
+│   │   │   ├── Public_Realm_01 OG2.jpg
+│   │   │   └── Public_Realm_01.jpg
 │   │   ├── philosophy
 │   │   │   ├── 1214_Leg_Iterations.jpg
 │   │   │   ├── 1483_Concurrence_Map.jpg
@@ -24313,6 +24317,8 @@
 │   │   │   └── 2026-01-20_Timeline.png
 │   │   └── ui
 │   │       └── icons
+│   │           ├── arrow-big-left.svg
+│   │           ├── arrow-big-right.svg
 │   │           ├── arrow-up-right.svg
 │   │           ├── ev_key.svg
 │   │           ├── ev_square.svg
@@ -24350,4 +24356,4 @@
 ├── tsconfig.tsbuildinfo
 └── vercel.json
 
-2253 directories, 22098 files
+2254 directories, 22103 files

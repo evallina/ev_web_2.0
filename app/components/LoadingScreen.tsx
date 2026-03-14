@@ -1,12 +1,52 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import projectsData from '@/src/data/projects.json';
 
 // ── Design variables ───────────────────────────────────────────────────────────
-const MIN_DISPLAY_TIME  = 8500;  // ms — minimum time the loading screen is shown
+const MIN_DISPLAY_TIME  = 8500;  // ms — minimum display; actual may be longer while images load
 const FADE_OUT_DURATION = 800;   // ms — fade-out animation duration
 const DOT_INTERVAL      = 400;   // ms — time between each animated dot appearing
 const MOBILE_BREAKPOINT = 600;   // px
+
+// ── Image preload list ─────────────────────────────────────────────────────────
+const heroImages = [
+  '/images/categories/1_Public-Realm_01.png',
+  '/images/categories/2_Place_01.png',
+  '/images/categories/3_Interactivity_01.png',
+  '/images/categories/4_Data-Driven_01.png',
+  '/images/categories/5_Strategy_01.png',
+  '/images/categories/6_User-Oriented_01.png',
+];
+
+const presetCardImages: string[] = [];
+for (const p of (projectsData.projects as any[])) {
+  const presets = p.presets ?? [];
+  const hasPreset = presets.some((tag: any) =>
+    typeof tag === 'string' ? tag.length > 0 :
+    Array.isArray(tag) ? tag.length > 0 : false
+  );
+  if (hasPreset && p.cards) {
+    for (const card of p.cards) {
+      presetCardImages.push(card);
+    }
+  }
+}
+
+const allPreloadImages = [...heroImages, ...presetCardImages];
+console.log(`[LoadingScreen] Preloading ${allPreloadImages.length} images (${heroImages.length} hero + ${presetCardImages.length} project cards)`);
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function preloadImages(urls: string[]): Promise<void[]> {
+  return Promise.all(
+    urls.map(url => new Promise<void>((resolve) => {
+      const img = new Image();
+      img.onload  = () => resolve();
+      img.onerror = () => resolve(); // don't block on failed loads
+      img.src = url;
+    }))
+  );
+}
 
 interface Props {
   visible:    boolean;
@@ -37,7 +77,7 @@ export default function LoadingScreen({ onComplete }: Props) {
     return () => clearInterval(id);
   }, []);
 
-  // Timing: wait for min display time + fonts.ready + window load, then fade out
+  // Timing: wait for min display time + fonts.ready + window load + image preload, then fade out
   useEffect(() => {
     const minTimer   = new Promise<void>(resolve => setTimeout(resolve, MIN_DISPLAY_TIME));
     const fontsReady = document.fonts.ready.then(() => undefined);
@@ -45,9 +85,10 @@ export default function LoadingScreen({ onComplete }: Props) {
       if (document.readyState === 'complete') resolve();
       else window.addEventListener('load', () => resolve(), { once: true });
     });
+    const imagesReady = preloadImages(allPreloadImages);
 
     let cancelled = false;
-    Promise.all([minTimer, fontsReady, windowLoad]).then(() => {
+    Promise.all([minTimer, fontsReady, windowLoad, imagesReady]).then(() => {
       if (cancelled) return;
       setFading(true);
       setTimeout(() => { if (!cancelled) onComplete(); }, FADE_OUT_DURATION);
