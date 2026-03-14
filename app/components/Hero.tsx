@@ -40,6 +40,13 @@ const heroImageWideOffsetY   = '0rem';   // positive = down,   negative = up
 const heroImageNarrowOffsetX = '0rem';   // positive = right,  negative = left
 const heroImageNarrowOffsetY = '2.5rem';   // positive = down,   negative = up
 const heroTextExtraPadding    = '5vw';  // extra horizontal padding added to both sides of the text column (on top of --page-margin)
+
+// ── Mobile overrides (< MOBILE_BP px) ─────────────────────────────────────────
+const MOBILE_BP           = 700;       // px — mobile breakpoint
+const mobileImageMaxSize  = '50dvh';   // max size (width & height) of image on mobile
+const mobileTopGap        = 35;        // px — gap between "My Trajectory" button and typewriter text
+const mobileTextImageGap  = '0.2rem';    // minimum gap between typewriter text and image (flex spacer min-height)
+const mobileBottomPadding = 70;        // px — bottom padding for "Approach & Work" button on mobile
 // └─────────────────────────────────────────────────────────────────────────────┘
 
 const CATEGORY_IMAGES = [
@@ -153,13 +160,17 @@ interface Props {
 export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) {
   const [showUnderlines, setShowUnderlines] = useState([false, false, false, false]);
   const [heroIsVertical, setHeroIsVertical] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setHeroIsVertical(window.innerWidth < heroVerticalBreakpoint);
+    const check = () => {
+      setHeroIsVertical(window.innerWidth < heroVerticalBreakpoint);
+      setIsMobile(window.innerWidth < MOBILE_BP);
+    };
     check();
     window.addEventListener('resize', check, { passive: true });
     return () => window.removeEventListener('resize', check);
-  // heroVerticalBreakpoint is a compile-time constant — safe to omit from deps
+  // heroVerticalBreakpoint / MOBILE_BP are compile-time constants — safe to omit from deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -205,10 +216,68 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) 
     />
   );
 
+  // Shared h1 content (ghost + live typewriter) — used in both mobile and desktop branches
+  const textH1s = (
+    <>
+      {/* Ghost — full final text, invisible, locks the container height */}
+      <h1
+        aria-hidden="true"
+        className="font-serif font-normal leading-[1.2] text-white"
+        style={{ visibility: 'hidden', pointerEvents: 'none', fontSize: 'clamp(1.8rem, 5.87vw, 2.75rem)' }}
+      >
+        <div>
+          {heroSeg1.slice(0, heroBoldStart)}
+          <span className="font-bold">{heroBoldName}</span>
+          {heroSeg1.slice(heroBoldEnd)}
+        </div>
+        <div>{heroSeg2}</div>
+        <div>{heroSeg3}</div>
+      </h1>
+
+      {/* Live typing — sits exactly on top of the ghost */}
+      <h1
+        className="font-serif font-normal leading-[1.2] text-white"
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, margin: 0, paddingLeft: `calc(var(--page-margin) + ${heroTextExtraPadding})`, paddingRight: `calc(var(--page-margin) + ${heroTextExtraPadding})`, fontSize: 'clamp(1.8rem, 5.87vw, 2.75rem)' }}
+      >
+        <div>
+          {heroLine1.slice(0, Math.min(heroLine1.length, heroBoldStart))}
+          {heroLine1.length > heroBoldStart && (
+            <span className="font-bold">
+              {heroLine1.slice(heroBoldStart, Math.min(heroLine1.length, heroBoldEnd))}
+            </span>
+          )}
+          {heroLine1.length > heroBoldEnd && heroLine1.slice(heroBoldEnd)}
+          {heroLine2 === null && heroCursor}
+        </div>
+        {heroLine2 !== null && (
+          <div>
+            {heroLine2}
+            {heroLine3 === null && heroCursor}
+          </div>
+        )}
+        {heroLine3 !== null && (
+          <div>
+            {heroDone ? (
+              <>
+                I use Design to{' '}
+                <UnderlineWord word="question"        show={showUnderlines[0]} duration={underlineDuration} />,{' '}
+                <UnderlineWord word="reveal"          show={showUnderlines[1]} duration={underlineDuration} />, and{' '}
+                <UnderlineWord word="reshape"         show={showUnderlines[2]} duration={underlineDuration} />{' '}
+                the systems behind the{' '}
+                <UnderlineWord word="places we share" show={showUnderlines[3]} duration={underlineDuration} />.
+              </>
+            ) : heroLine3}
+            {heroCursor}
+          </div>
+        )}
+      </h1>
+    </>
+  );
+
   return (
     <section id="hero" className="h-screen flex flex-col">
       {/* Top nav hint — scroll up to Trajectory */}
-      <div className="flex justify-center pt-16">
+      <div className="flex justify-center pt-16" style={{ marginBottom: isMobile ? mobileTopGap : 0 }}>
         <button
           onClick={onNavigateUp}
           className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer"
@@ -218,112 +287,100 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown }: Props) 
         </button>
       </div>
 
-      {/* Main content — side-by-side above heroVerticalBreakpoint, stacked below */}
-      <div
-        className="flex-1 flex"
-        style={{
-          flexDirection: heroIsVertical ? 'column' : 'row',
-          alignItems:    'center',
-          justifyContent: heroIsVertical ? 'center' : undefined,
-          gap:            heroIsVertical ? '2rem' : 0,
-        }}
-      >
-        {/* Text column */}
-        <div data-parallax style={{ width: heroIsVertical ? '100%' : '50%', position: 'relative', paddingLeft: `calc(var(--page-margin) + ${heroTextExtraPadding})`, paddingRight: `calc(var(--page-margin) + ${heroTextExtraPadding})` }}>
-          {/* Ghost — full final text, invisible, locks the container height so
-              flexbox centres based on the complete block from the very first frame. */}
-          <h1
-            aria-hidden="true"
-            className="font-serif font-normal leading-[1.2] text-white"
-            style={{ visibility: 'hidden', pointerEvents: 'none', fontSize: 'clamp(1.8rem, 5.87vw, 2.75rem)' }}
-          >
-            <div>
-              {heroSeg1.slice(0, heroBoldStart)}
-              <span className="font-bold">{heroBoldName}</span>
-              {heroSeg1.slice(heroBoldEnd)}
-            </div>
-            <div>{heroSeg2}</div>
-            <div>{heroSeg3}</div>
-          </h1>
+      {isMobile ? (
+        /* ── Mobile: text → equal spacer → image → equal spacer → bottom nav ──
+           Two flex:1 spacers split remaining height equally, centering the image
+           in the space between the typewriter text and the "Approach & Work" button. */
+        <>
+          {/* Text column */}
+          <div data-parallax style={{ width: '100%', position: 'relative', paddingLeft: `calc(var(--page-margin) + ${heroTextExtraPadding})`, paddingRight: `calc(var(--page-margin) + ${heroTextExtraPadding})` }}>
+            {textH1s}
+          </div>
 
-          {/* Live typing — sits exactly on top of the ghost.
-              Padding must match the parent div's padding since position:absolute
-              ignores the containing block's padding. */}
-          <h1
-            className="font-serif font-normal leading-[1.2] text-white"
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, margin: 0, paddingLeft: `calc(var(--page-margin) + ${heroTextExtraPadding})`, paddingRight: `calc(var(--page-margin) + ${heroTextExtraPadding})`, fontSize: 'clamp(1.8rem, 5.87vw, 2.75rem)' }}
-          >
-            {/* Line 1: greeting with bold name */}
-            <div>
-              {heroLine1.slice(0, Math.min(heroLine1.length, heroBoldStart))}
-              {heroLine1.length > heroBoldStart && (
-                <span className="font-bold">
-                  {heroLine1.slice(heroBoldStart, Math.min(heroLine1.length, heroBoldEnd))}
-                </span>
-              )}
-              {heroLine1.length > heroBoldEnd && heroLine1.slice(heroBoldEnd)}
-              {heroLine2 === null && heroCursor}
-            </div>
-            {/* Line 2: background */}
-            {heroLine2 !== null && (
-              <div>
-                {heroLine2}
-                {heroLine3 === null && heroCursor}
-              </div>
-            )}
-            {/* Line 3: philosophy — plain while typing, underlined after done */}
-            {heroLine3 !== null && (
-              <div>
-                {heroDone ? (
-                  <>
-                    I use Design to{' '}
-                    <UnderlineWord word="question"        show={showUnderlines[0]} duration={underlineDuration} />,{' '}
-                    <UnderlineWord word="reveal"          show={showUnderlines[1]} duration={underlineDuration} />, and{' '}
-                    <UnderlineWord word="reshape"         show={showUnderlines[2]} duration={underlineDuration} />{' '}
-                    the systems behind the{' '}
-                    <UnderlineWord word="places we share" show={showUnderlines[3]} duration={underlineDuration} />.
-                  </>
-                ) : heroLine3}
-                {heroCursor}
-              </div>
-            )}
-          </h1>
-        </div>
+          {/* Equal spacer — fills half the remaining vertical space, min mobileTextImageGap */}
+          <div style={{ flex: 1, minHeight: mobileTextImageGap }} />
 
-        {/* Image column */}
-        <div style={{
-          width:          heroIsVertical ? '100%' : '50%',
-          display:        'flex',
-          alignItems:     'center',
-          justifyContent: 'center',
-          transform:      heroIsVertical
-            ? `translate(${heroImageNarrowOffsetX}, ${heroImageNarrowOffsetY})`
-            : `translate(${heroImageWideOffsetX},   ${heroImageWideOffsetY})`,
-        }}>
-          <MorphingImages
-            images={CATEGORY_IMAGES}
-            morphTransitionDuration={morphTransitionDuration}
-            morphPauseDuration={morphPauseDuration}
-            morphIntensity={morphIntensity}
+          {/* Image — no offset on mobile; heroImageNarrowOffsetY would shift outside the flex layout */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MorphingImages
+              images={CATEGORY_IMAGES}
+              morphTransitionDuration={morphTransitionDuration}
+              morphPauseDuration={morphPauseDuration}
+              morphIntensity={morphIntensity}
+              style={{
+                width:  `min(75vw, ${mobileImageMaxSize})`,
+                height: `min(75vw, ${mobileImageMaxSize})`,
+              }}
+            />
+          </div>
+
+          {/* Equal spacer — fills other half of remaining vertical space */}
+          <div style={{ flex: 1, minHeight: 0 }} />
+
+          {/* Bottom nav hint */}
+          <div className="flex justify-center" style={{ paddingBottom: mobileBottomPadding }}>
+            <button
+              onClick={onNavigateDown}
+              className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer"
+            >
+              <span>Approach & Work</span>
+              <span>▼</span>
+            </button>
+          </div>
+        </>
+      ) : (
+        /* ── Desktop: main content flex row/col + bottom nav ── */
+        <>
+          <div
+            className="flex-1 flex"
             style={{
-              width:     heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
-              height:    heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
-              maxHeight: heroIsVertical ? 'none' : '65vh',
+              flexDirection: heroIsVertical ? 'column' : 'row',
+              alignItems:    'center',
+              justifyContent: heroIsVertical ? 'center' : undefined,
+              gap:            heroIsVertical ? '2rem' : 0,
             }}
-          />
-        </div>
-      </div>
+          >
+            {/* Text column */}
+            <div data-parallax style={{ width: heroIsVertical ? '100%' : '50%', position: 'relative', paddingLeft: `calc(var(--page-margin) + ${heroTextExtraPadding})`, paddingRight: `calc(var(--page-margin) + ${heroTextExtraPadding})` }}>
+              {textH1s}
+            </div>
 
-      {/* Bottom nav hint — scroll down to Philosophy */}
-      <div className="flex justify-center pb-8">
-        <button
-          onClick={onNavigateDown}
-          className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer"
-        >
-          <span>Approach & Work</span>
-          <span>▼</span>
-        </button>
-      </div>
+            {/* Image column */}
+            <div style={{
+              width:          heroIsVertical ? '100%' : '50%',
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'center',
+              transform:      heroIsVertical
+                ? `translate(${heroImageNarrowOffsetX}, ${heroImageNarrowOffsetY})`
+                : `translate(${heroImageWideOffsetX},   ${heroImageWideOffsetY})`,
+            }}>
+              <MorphingImages
+                images={CATEGORY_IMAGES}
+                morphTransitionDuration={morphTransitionDuration}
+                morphPauseDuration={morphPauseDuration}
+                morphIntensity={morphIntensity}
+                style={{
+                  width:     heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
+                  height:    heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
+                  maxHeight: heroIsVertical ? 'none' : '65vh',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Bottom nav hint */}
+          <div className="flex justify-center pb-8">
+            <button
+              onClick={onNavigateDown}
+              className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer"
+            >
+              <span>Approach & Work</span>
+              <span>▼</span>
+            </button>
+          </div>
+        </>
+      )}
     </section>
   );
 }

@@ -33,14 +33,14 @@ const arrowFillOpacity = 1;
 const arrowCircleStrokeColor   = 'rgba(255, 255, 255, 0.5)';
 const arrowCircleStrokeOpacity = 1;
 const arrowCircleStrokeWidth   = 1.0;       // px
-const arrowCircleFillColor     = 'rgba(0, 0, 0, 0.1)';
+const arrowCircleFillColor     = 'rgba(0, 0, 0, 0.2)';
 
 // Micro-adjustments to position the circle relative to the arrow icon
-const arrowCircleOffsetX = 2;   // px — positive moves circle right
+const arrowCircleOffsetX = 0;   // px — positive moves circle right
 const arrowCircleOffsetY = 0;   // px — positive moves circle down
 const arrowCircleSize    = 44;  // px — diameter of the circle
 
-const navArrowGlyphSize = 17;   // px — font size of the ◀ / ▶ glyphs
+const navArrowGlyphSize = 25;   // px — font size of the ◀ / ▶ glyphs
 
 // ── Breakdown strip colors (used in debug overlay)
 const breakdownValuesColor  = 'rgba(255,255,255,0.80)';
@@ -53,6 +53,12 @@ const ZOOM_INITIAL_SCALE     = 1.5;   // multiplier on top of fit-to-screen when
 const ZOOM_MIN_SCALE         = 0.2;   // lower zoom bound
 const ZOOM_MAX_SCALE         = 10;    // upper zoom bound
 const ZOOM_SPEED             = 1.15;  // multiplier per wheel tick
+
+// ── Mobile layout overrides (< CARDS_MOBILE_BP px) ───────────────────────────────
+const CARDS_MOBILE_BP      = 750;  // px — mobile layout breakpoint
+const mobileCardGapBottom  = 10;   // px — dark space below card image on mobile
+const mobileBottomPadding      = 80;   // px — extra space at the bottom of the section on mobile
+const mobileSectionExtraHeight = 60;    // px — extra height added to the section (pushes bottom edge down)
 // └─────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -293,6 +299,7 @@ export default function ProjectCards({
   const [detailOpen,     setDetailOpen]     = useState(false);
   const [detailVisible,  setDetailVisible]  = useState(false);
   const [isMobile,          setIsMobile]          = useState(false);
+  const [isMobileLayout,    setIsMobileLayout]    = useState(false);
   const [sectionInView,     setSectionInView]     = useState(false);
   const [leftArrowHovered,  setLeftArrowHovered]  = useState(false);
   const [rightArrowHovered, setRightArrowHovered] = useState(false);
@@ -314,6 +321,14 @@ export default function ProjectCards({
   // isMobile — gates pan/zoom detail view and detail popout padding
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < ZOOM_MOBILE_BREAKPOINT);
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // isMobileLayout — gates mobile layout overrides (bottom padding, etc.)
+  useEffect(() => {
+    const check = () => setIsMobileLayout(window.innerWidth < CARDS_MOBILE_BP);
     check();
     window.addEventListener('resize', check, { passive: true });
     return () => window.removeEventListener('resize', check);
@@ -562,7 +577,7 @@ export default function ProjectCards({
       id="project-cards"
       style={isEmpty
         ? { minHeight: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', paddingLeft: 'var(--page-margin)', paddingRight: 'var(--page-margin)' }
-        : { height: '100vh', position: 'relative', overflow: 'hidden' }
+        : { height: isMobileLayout ? `calc(100vh + ${mobileSectionExtraHeight}px)` : '100vh', position: 'relative', overflow: 'hidden' }
       }
     >
       {isEmpty ? (
@@ -697,7 +712,7 @@ export default function ProjectCards({
               top:            TOP_AREA_H,
               left:           0,
               right:          0,
-              bottom:         BOTTOM_BAR_H,
+              bottom:         isMobileLayout ? BOTTOM_BAR_H + mobileBottomPadding : BOTTOM_BAR_H,
               overflowX:      'scroll',
               overflowY:      'hidden',
               display:        'flex',
@@ -716,7 +731,7 @@ export default function ProjectCards({
                   display:        'flex',
                   alignItems:     'center',
                   justifyContent: 'center',
-                  padding:        `${cardGapTop}px var(--page-margin) ${cardGapBottom}px`,
+                  padding:        `${cardGapTop}px var(--page-margin) ${isMobileLayout ? mobileCardGapBottom : cardGapBottom}px`,
                   position:       'relative',
                   scrollSnapAlign:'center',
                 }}
@@ -801,19 +816,28 @@ export default function ProjectCards({
                     style={{ transition: 'stroke 150ms ease, stroke-opacity 150ms ease' }}
                   />
                 </svg>
-                <span
+                <svg
                   key={`left-${leftBounceKey}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={navArrowGlyphSize}
+                  height={navArrowGlyphSize}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={arrowFillColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
                   style={{
                     position:  'relative',
                     zIndex:    1,
-                    fontSize:  navArrowGlyphSize,
-                    color:     arrowFillColor,
                     opacity:   arrowFillOpacity,
-                    userSelect:'none',
-                    lineHeight: 1,
+                    display:   'block',
                     animation: leftBounceKey > 0 ? 'nav-bounce-left 300ms ease-out forwards' : 'none',
                   }}
-                >◀</span>
+                >
+                  <path d="M13 9a1 1 0 0 1-1-1V5.061a1 1 0 0 0-1.811-.75l-6.835 6.836a1.207 1.207 0 0 0 0 1.707l6.835 6.835a1 1 0 0 0 1.811-.75V16a1 1 0 0 1 1-1h6a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1z"/>
+                </svg>
               </button>
 
               {/* ▶ Next */}
@@ -859,19 +883,28 @@ export default function ProjectCards({
                     style={{ transition: 'stroke 150ms ease, stroke-opacity 150ms ease' }}
                   />
                 </svg>
-                <span
+                <svg
                   key={`right-${rightBounceKey}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={navArrowGlyphSize}
+                  height={navArrowGlyphSize}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={arrowFillColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
                   style={{
                     position:  'relative',
                     zIndex:    1,
-                    fontSize:  navArrowGlyphSize,
-                    color:     arrowFillColor,
                     opacity:   arrowFillOpacity,
-                    userSelect:'none',
-                    lineHeight: 1,
+                    display:   'block',
                     animation: rightBounceKey > 0 ? 'nav-bounce-right 300ms ease-out forwards' : 'none',
                   }}
-                >▶</span>
+                >
+                  <path d="M11 9a1 1 0 0 0 1-1V5.061a1 1 0 0 1 1.811-.75l6.836 6.836a1.207 1.207 0 0 1 0 1.707l-6.836 6.835a1 1 0 0 1-1.811-.75V16a1 1 0 0 0-1-1H5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1z"/>
+                </svg>
               </button>
             </>
           )}
@@ -880,7 +913,7 @@ export default function ProjectCards({
           <div
             style={{
               position:       'absolute',
-              bottom:         0,
+              bottom:         isMobileLayout ? mobileBottomPadding : 0,
               left:           0,
               right:          0,
               height:         BOTTOM_BAR_H,

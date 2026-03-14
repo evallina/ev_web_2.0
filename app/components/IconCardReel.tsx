@@ -50,6 +50,14 @@ const REEL_H          = LABEL_H + ICON_H + BOTTOM_H; // 72 px
 const reelMarginTop    = 8;   // px
 const reelMarginBottom = 10;  // px
 
+// ── Mobile compression ─────────────────────────────────────────────────────────
+const MOBILE_BREAKPOINT      = 750;  // px
+const mobileIconH            = 38;   // px — icon height on mobile (vs ICON_H = 44)
+const mobileLabelH           = 50;   // px — label area on mobile (vs LABEL_H = 20)
+const mobileBottomH          = 6;    // px — bottom spacing on mobile (vs BOTTOM_H = 10)
+const mobileReelMarginTop    = 0;    // px — gap above reel on mobile (vs reelMarginTop = 8)
+const mobileReelMarginBottom = 4;    // px — gap below reel on mobile (vs reelMarginBottom = 10)
+
 // Intro animation timing — fast reveal after chart autoplay completes
 const STAGGER_MS = 12;   // ms — delay between consecutive icon entrances
 const ENTER_MS   = 120;  // ms — duration of each icon's entrance animation
@@ -89,14 +97,14 @@ const INTRO_TOTAL_MS = (ORDERED_PROJECTS.length - 1) * STAGGER_MS + ENTER_MS + 2
 
 // ── File icon shape ────────────────────────────────────────────────────────────
 // confirmed=true + selected → inverted: dark background, white fold line
-function FileIcon({ selected, confirmed }: { selected: boolean; confirmed: boolean }) {
+function FileIcon({ selected, confirmed, iconH: h }: { selected: boolean; confirmed: boolean; iconH: number }) {
   const fw  = ICON_W - ICON_FOLD_W;
   const fh  = ICON_FOLD_H;
   const inv = selected && confirmed; // inverted (confirmed-selected) state
   return (
-    <svg width={ICON_W} height={ICON_H} viewBox={`0 0 ${ICON_W} ${ICON_H}`} style={{ display: 'block' }}>
+    <svg width={ICON_W} height={h} viewBox={`0 0 ${ICON_W} ${h}`} style={{ display: 'block' }}>
       <polygon
-        points={`0,0 ${fw},0 ${ICON_W},${fh} ${ICON_W},${ICON_H} 0,${ICON_H}`}
+        points={`0,0 ${fw},0 ${ICON_W},${fh} ${ICON_W},${h} 0,${h}`}
         fill={inv ? 'rgba(30,30,30,0.88)' : selected ? 'white' : 'rgba(180,180,180,0.85)'}
       />
       <polyline
@@ -139,10 +147,19 @@ export default function IconCardReel({
   const [phase,           setPhase]      = useState<'idle' | 'entering' | 'final'>('idle');
   const [hoveredId,       setHoveredId]  = useState<string | null>(null);
   const [tooltipPos,      setTooltipPos] = useState<{ x: number; y: number; flip: boolean } | null>(null);
+  const [isMobile,        setIsMobile]   = useState(false);
 
   const introTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevChartReadyRef = useRef(false);
   const hasEnteredViewRef = useRef(false);
+
+  // ── Mobile detection ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // ── Container width via ResizeObserver ────────────────────────────────────
   useEffect(() => {
@@ -287,6 +304,13 @@ export default function IconCardReel({
     setTooltipPos(null);
   }, []);
 
+  // ── Mobile-responsive effective values ───────────────────────────────────
+  const effIconH        = isMobile ? mobileIconH        : ICON_H;
+  const effLabelH       = isMobile ? mobileLabelH       : LABEL_H;
+  const effBottomH      = isMobile ? mobileBottomH      : BOTTOM_H;
+  const effMarginTop    = isMobile ? mobileReelMarginTop    : reelMarginTop;
+  const effMarginBottom = isMobile ? mobileReelMarginBottom : reelMarginBottom;
+
   // ── Render ────────────────────────────────────────────────────────────────
   const showOutline = phase === 'final' && selectedOrdered.length > 0;
 
@@ -296,10 +320,10 @@ export default function IconCardReel({
       style={{
         position:      'relative',
         width:         '100%',
-        height:        REEL_H,
+        height:        effLabelH + effIconH + effBottomH,
         flexShrink:    0,
-        marginTop:     reelMarginTop,
-        marginBottom:  reelMarginBottom,
+        marginTop:     effMarginTop,
+        marginBottom:  effMarginBottom,
         // When confirmed the reel is still visible but non-interactive.
         pointerEvents: confirmed ? 'none' : 'auto',
       }}
@@ -347,15 +371,15 @@ export default function IconCardReel({
               style={{
                 position: 'absolute',
                 left:     x,
-                top:      LABEL_H,
+                top:      effLabelH,
                 width:    ICON_W,
-                height:   ICON_H,
+                height:   effIconH,
                 ...iconStyle,
               }}
               onMouseEnter={e => handleIconEnter(p, e)}
               onMouseLeave={handleIconLeave}
             >
-              <FileIcon selected={isSelected} confirmed={confirmed} />
+              <FileIcon selected={isSelected} confirmed={confirmed} iconH={effIconH} />
 
               {/* Text overlay — bottom-left inside the icon */}
               <div
@@ -404,9 +428,9 @@ export default function IconCardReel({
         style={{
           position:      'absolute',
           left:          `calc(50% - ${dynamicOutlineW / 2}px)`,
-          top:           LABEL_H - SEL_PAD_Y,
+          top:           effLabelH - SEL_PAD_Y,
           width:         dynamicOutlineW,
-          height:        ICON_H + SEL_PAD_Y * 2,
+          height:        effIconH + SEL_PAD_Y * 2,
           border:        `${selectionOutlineWidth}px solid ${selectionOutlineColor}`,
           borderRadius:  selectionOutlineRadius,
           boxSizing:     'border-box',

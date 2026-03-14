@@ -12,8 +12,8 @@ const PARALLAX_ENABLED = true;   // set false to disable ALL parallax instantly
 //  -0.2 = moves slightly opposite to scroll (feels like depth / background)
 // enabled: per-section toggle
 const PARALLAX_CONFIG: Record<string, { speed: number; enabled: boolean }> = {
-  'trajectory':       { speed: -0.12, enabled: true  }, // image drifts slightly (depth)
-  'hero':             { speed: -0.6, enabled: true  }, // subtle depth on text
+  'trajectory':       { speed: -0.02, enabled: false  }, // image drifts slightly (depth)
+  'hero':             { speed: -0.12, enabled: true  }, // subtle depth on text
   'design-philosophy':{ speed: -0.18, enabled: true  }, // photo stack drifts
   'project-selection':{ speed:  -0.2,    enabled: false }, // disabled — radar chart interaction
   'project-cards':    { speed:  0,    enabled: false }, // disabled — horizontal scroll conflict

@@ -36,11 +36,19 @@ const darkShapeBottomCornerRadius = 20;    // px — inner top corner radius of 
 const darkShapeBottomCornerWidth  = '20%'; // width of each bottom white corner panel
 const darkShapeBottomPanelHeight  = 60;    // px — height of the bottom white panels
 
+// ── Works section mobile overrides (< WORKS_MOBILE_BP px) ───────────────────
+const WORKS_MOBILE_BP            = 750;  // px
+const mobileSectionPaddingTop    = 60;   // px — top white strip height and section top padding on mobile
+const mobileSectionPaddingBottom = 120;  // px — bottom white panel height + buffer (must be > darkShapeBottomPanelHeight)
+const mobileTitleToChartGap      = 0;    // px — gap between "Work Selection" title and chart on mobile
+const mobileBottomCornerWidth    = '12%'; // width of each bottom white corner panel on mobile (0% = no corners, full-width dark shape bottom)
+const mobileBottomPanelHeight    = 100;    // px — height of the bottom white corner panels on mobile (independent of section bottom padding)
+
 // ── Contact section design variables (shared by ContactTop + ContactBottom) ──
 const contactNotchHeight                = 200; // px — depth of the notch cut-out
 const contactNotchWidth                 = 30;  // %  — width of the notch (centered)
 const contactHeadingPadding             = 500; // px — white space between heading and notch edge
-const contactContainerRadius            = 25;  // px — outer corner radius of the white container
+const contactContainerRadius            = 30;  // px — outer corner radius of the white container
 const contactHomeButtonEdgePadding      = 80;  // px — gap: outer page edge → HOME button
 const contactHomeButtonContainerPadding = 50;  // px — gap: HOME button → white container edge
 const contactHomeIconColor              = 'black'; // color of the house icon and arrow
@@ -81,6 +89,7 @@ export default function Home() {
   useParallax();
 
   // ── State ──────────────────────────────────────────────────────────────────
+  const [worksIsMobile, setWorksIsMobile] = useState(false);
   const [menuOpen,              setMenuOpen]              = useState(false);
   const [scrolled,              setScrolled]              = useState(false);
   const [heroResetKey,          setHeroResetKey]          = useState(0);
@@ -93,6 +102,13 @@ export default function Home() {
   const [debugFlash,            setDebugFlash]            = useState<string | null>(null);
 
   // ── Effects ────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const check = () => setWorksIsMobile(window.innerWidth < WORKS_MOBILE_BP);
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -274,7 +290,7 @@ export default function Home() {
       <DesignPhilosophy onScrollDown={() => scrollToSection('project-selection')} />
 
       {/* ── Section 5: Project Selection (Works) ── */}
-      <section id="project-selection" className="relative min-h-screen flex flex-col items-center pt-20" style={{ paddingLeft: 'var(--page-margin)', paddingRight: 'var(--page-margin)', paddingBottom: darkShapeBottomPanelHeight }}>
+      <section id="project-selection" className="relative min-h-screen flex flex-col items-center" style={{ paddingLeft: 'var(--page-margin)', paddingRight: 'var(--page-margin)', paddingTop: worksIsMobile ? mobileSectionPaddingTop : 80, paddingBottom: worksIsMobile ? mobileSectionPaddingBottom : darkShapeBottomPanelHeight }}>
         {/* White side strips */}
         <div className="absolute inset-y-0 left-0 bg-white z-2 pointer-events-none" style={{ width: 'var(--page-margin)' }}>
           <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: whiteGrainOpacity, pointerEvents: 'none' }}>
@@ -287,29 +303,29 @@ export default function Home() {
           </svg>
         </div>
         {/* White top strip */}
-        <div className="absolute top-0 left-0 right-0 bg-white z-2 pointer-events-none" style={{ height: darkShapeTopPadding }}>
+        <div className="absolute top-0 left-0 right-0 bg-white z-2 pointer-events-none" style={{ height: worksIsMobile ? mobileSectionPaddingTop : darkShapeTopPadding }}>
           <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: whiteGrainOpacity, pointerEvents: 'none' }}>
             <rect width="100%" height="100%" filter="url(#white-grain)" />
           </svg>
         </div>
         {/* White bottom panels */}
-        <div className="absolute bottom-0 left-0 bg-white z-2 pointer-events-none" style={{ width: darkShapeBottomCornerWidth, height: darkShapeBottomPanelHeight, borderTopRightRadius: darkShapeBottomCornerRadius, overflow: 'hidden' }}>
+        <div className="absolute bottom-0 left-0 bg-white z-2 pointer-events-none" style={{ width: worksIsMobile ? mobileBottomCornerWidth : darkShapeBottomCornerWidth, height: worksIsMobile ? mobileBottomPanelHeight : darkShapeBottomPanelHeight, borderTopRightRadius: darkShapeBottomCornerRadius, overflow: 'hidden' }}>
           <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: whiteGrainOpacity, pointerEvents: 'none' }}>
             <rect width="100%" height="100%" filter="url(#white-grain)" />
           </svg>
         </div>
-        <div className="absolute bottom-0 right-0 bg-white z-2 pointer-events-none" style={{ width: darkShapeBottomCornerWidth, height: darkShapeBottomPanelHeight, borderTopLeftRadius: darkShapeBottomCornerRadius, overflow: 'hidden' }}>
+        <div className="absolute bottom-0 right-0 bg-white z-2 pointer-events-none" style={{ width: worksIsMobile ? mobileBottomCornerWidth : darkShapeBottomCornerWidth, height: worksIsMobile ? mobileBottomPanelHeight : darkShapeBottomPanelHeight, borderTopLeftRadius: darkShapeBottomCornerRadius, overflow: 'hidden' }}>
           <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: whiteGrainOpacity, pointerEvents: 'none' }}>
             <rect width="100%" height="100%" filter="url(#white-grain)" />
           </svg>
         </div>
         {/* Content */}
-        <div className="h-2" />
+        <div className="h-3" />
         <h2 className="relative z-10 font-serif font-bold text-white text-4xl text-center mb-3">Work Selection</h2>
         <p className="relative z-10 font-sans text-white/40 text-sm leading-relaxed text-center mx-auto" style={{ maxWidth: "65%" }}>
           {/*Select a preset or tune the chart. Use the arrow below to see the projects.*/}
         </p>
-        <div className="works-chart-wrapper relative z-10 flex-1 flex flex-col items-center justify-start w-full min-h-0 -mt-6">
+        <div className="works-chart-wrapper relative z-10 flex-1 flex flex-col items-center justify-start w-full min-h-0" style={{ marginTop: worksIsMobile ? mobileTitleToChartGap : -24 }}>
           <RadarChart onPlay={handleRadarPlay} onCategoryFilter={handleCategoryFilter} />
         </div>
       </section>

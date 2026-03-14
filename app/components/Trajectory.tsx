@@ -8,12 +8,15 @@ const INITIAL_ZOOM      = 2.0;   // multiplier on top of fit-to-screen when popo
 const MIN_SCALE         = 0.2;   // lower bound for zoom
 const MAX_SCALE         = 10;    // upper bound for zoom
 const ZOOM_SPEED        = 1.15;  // multiplier per wheel tick
+const KEY_SCROLL_STEP   = 160;   // px — distance scrolled per arrow key press while in section
 
 export default function Trajectory() {
   const [isMobile,      setIsMobile]      = useState(false);
   const [popoutOpen,    setPopoutOpen]    = useState(false);
   const [popoutVisible, setPopoutVisible] = useState(false);
+  const [inView,        setInView]        = useState(false);
 
+  const sectionRef   = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);  // the pan/zoom hit area
   const imgWrapRef   = useRef<HTMLDivElement>(null);  // the element we transform
   const scaleRef     = useRef(1);
@@ -48,6 +51,31 @@ export default function Trajectory() {
     window.addEventListener('resize', check, { passive: true });
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // Track section visibility
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Arrow key smooth scroll — capture phase fires before page.tsx bubble-phase handler
+  useEffect(() => {
+    if (!inView || popoutOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      e.preventDefault();
+      e.stopPropagation();
+      window.scrollBy({ top: e.key === 'ArrowDown' ? KEY_SCROLL_STEP : -KEY_SCROLL_STEP, behavior: 'smooth' });
+    };
+    window.addEventListener('keydown', onKey, { capture: true });
+    return () => window.removeEventListener('keydown', onKey, { capture: true });
+  }, [inView, popoutOpen]);
 
   // Open popout
   const openPopout = useCallback(() => {
@@ -194,6 +222,7 @@ export default function Trajectory() {
   return (
     <>
       <section
+        ref={sectionRef}
         id="trajectory"
         className="min-h-screen flex flex-col items-center justify-center py-20 overflow-hidden"
       >
@@ -212,7 +241,7 @@ export default function Trajectory() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/trajectory/2026-01-20_Timeline.jpg"
+              src="/images/trajectory/2026-01-20_Timeline.png"
               alt="My Trajectory — Timeline"
               className="w-full h-auto img-protected"
             />
@@ -271,7 +300,7 @@ export default function Trajectory() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/trajectory/2026-01-20_Timeline.jpg"
+                src="/images/trajectory/2026-01-20_Timeline.png"
                 alt="My Trajectory — Timeline (zoom view)"
                 className="img-protected"
                 style={{ display: 'block', maxWidth: 'none' }}

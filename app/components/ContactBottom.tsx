@@ -1,7 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import type { ContactConfig } from './ContactTop';
 import ContactIcons from './ContactIcons';
+
+// ── Mobile layout overrides (< CONTACT_MOBILE_BP px) ─────────────────────────
+const CONTACT_MOBILE_BP          = 750;  // px — mobile layout breakpoint
+const mobileBottomClearance = 160;  // px — extra space below icons/HOME on mobile (lifts content away from browser chrome)
 
 interface Props {
   config:         ContactConfig;
@@ -10,6 +15,14 @@ interface Props {
 }
 
 export default function ContactBottom({ config, onScrollToHero, onResetHero }: Props) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < CONTACT_MOBILE_BP);
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const {
     notchHeight, notchLeft, notchRight, headingPadding,
     containerRadius, homeButtonEdgePadding, sectionEdge, whiteGrainOpacity,
@@ -20,7 +33,7 @@ export default function ContactBottom({ config, onScrollToHero, onResetHero }: P
     <section
       id="contact-bottom"
       className="relative z-2"
-      style={{ paddingBottom: sectionEdge }}
+      style={{ paddingBottom: sectionEdge + (isMobile ? mobileBottomClearance : 0) }}
     >
       {/* Outer wrapper — border-radius on bottom corners; overflow:hidden clips the inner container. */}
       <div
@@ -46,7 +59,7 @@ export default function ContactBottom({ config, onScrollToHero, onResetHero }: P
           </svg>
 
           {/* "Contact" heading */}
-          <div className="relative flex justify-center" style={{ paddingTop: headingPadding, paddingBottom: 32, zIndex: 1 }}>
+          <div className="relative flex justify-center" style={{ paddingTop: headingPadding - (isMobile ? mobileBottomClearance : 0), paddingBottom: 32, zIndex: 1 }}>
             <h2 className="font-serif font-bold text-[#282829] text-4xl">Contact</h2>
           </div>
 
@@ -56,14 +69,14 @@ export default function ContactBottom({ config, onScrollToHero, onResetHero }: P
       </div>{/* end outer radius wrapper */}
 
       {/* Icons — absolutely positioned inside the dark bottom notch */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-5 py-5 w-[28vw]" style={{ bottom: sectionEdge }}>
+      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-5 py-5 w-[28vw]" style={{ bottom: sectionEdge + (isMobile ? mobileBottomClearance : 0) }}>
         <ContactIcons />
       </div>
 
       {/* HOME button — below the white container, anchored from the outer page edge */}
       <div
         className="absolute left-0 right-0 flex justify-center pointer-events-none"
-        style={{ bottom: homeButtonEdgePadding }}
+        style={{ bottom: homeButtonEdgePadding + (isMobile ? mobileBottomClearance : 0) }}
       >
         <button
           onClick={() => { onScrollToHero(); onResetHero(); }}

@@ -36,7 +36,7 @@ const popoutBorderRadius = 0;            // px corner radius of the popout card
 const popoutOpenScale    = 1.4;          // label scale factor while its popout is open
 const labelHoverScale    = 1.2;          // label scale factor on mouse hover
 const labelScaleDuration = 100;          // ms for label scale transition
-const mobileLabelScale   = 1.25;         // extra scale applied to each label+arrow group on mobile
+const mobileLabelScale   = 1.8;         // extra scale applied to each label+arrow group on mobile
 
 // ── Preset button styles ───────────────────────────────────────────────────────
 // px to trim from the SVG's rendered bottom, compensating for the empty viewBox
@@ -101,14 +101,16 @@ const resetFillColor            = 'rgba(40,40,40,1)';   // reset button circle b
 const resetFillOpacity          = 1;      // reset button circle background opacity
 const mobilePresetsBreakpoint = 750;                       // px — below this: mobile preset layout (vertical buttons + inline arrow)
 const presetsBottomPadding   = 0;                         // px minimum space between arrow/presets and section bottom edge
-const presetButtonHeightMobile = 45;                       // px button height in mobile layout (shorter than desktop's presetButtonHeight)
+const presetButtonHeightMobile = 36;                       // px button height in mobile layout
 const mobileArrowSize        = presetButtonHeightMobile;   // px — diameter equals mobile button height (keep button + arrow the same height)
 const mobileArrowGap         = 8;                          // px gap between button and inline arrow circle in mobile
 const mobilePresetTransition = 200;                        // ms transition for button shrink / arrow slot appear (mobile)
-const mobileButtonScale      = 0.85;                       // scale factor applied to the entire mobile button group container
-const mobileReelScale        = 0.8;                        // scale factor applied to the icon card reel on mobile
-const mobileReelOffsetY      = 20;                         // px — extra downward offset for the reel on mobile
 const yourSelectionTransition = 300;                       // ms for "YOUR SELECTION" button grow/shrink on desktop
+// ── Mobile compression ────────────────────────────────────────────────────────
+const mobileChartMaxHeight = '38dvh';  // max chart SVG height on mobile (dvh = visible viewport, accounting for browser chrome)
+const mobileTopPadding     = 8;        // px — padding above preset buttons on mobile (reduced from 16)
+const mobilePresetGap      = 6;        // px — gap between preset buttons on mobile (reduced from presetButtonGap)
+const mobileReelGap        = 10;       // px — equal gap above AND below the icon reel on mobile (centers reel between chart and presets)
 
 // ── Chart geometry ─────────────────────────────────────────────────────────────
 const CX      = 400;   // SVG viewBox center x  (viewBox: 0 0 800 760)
@@ -711,7 +713,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
         viewBox="0 0 800 760"
         style={{
           width:        '100%',
-          maxHeight:    isMobile ? '45vh' : '60vh',
+          maxHeight:    isMobile ? mobileChartMaxHeight : '60vh',
           fontFamily:   'var(--font-roboto, Roboto, sans-serif)',
           marginBottom: -svgBottomClip,
         }}
@@ -949,18 +951,15 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
       </svg>
 
       {isMobile ? (
-        // ── MOBILE: natural document flow, no flex spacers ──────────────────
-        // Elements stack top-to-bottom without any flex stretching.
-        // The section grows to fit via globals.css media query.
+        // ── MOBILE: natural document flow ────────────────────────────────────
+        // mobileReelGap creates equal spacing above and below the reel,
+        // distributing it visually between the chart and the preset buttons.
         <>
-          {/* ── Icon card reel (scaled down to save vertical space) ───── */}
-          <div style={{
-            width: '100%',
-            padding: '8px 0',         // extra padding so outline/label aren't flush with edges
-            transform: `scale(${mobileReelScale})`,
-            transformOrigin: 'top center',
-            marginTop: mobileReelOffsetY,
-          }}>
+          {/* Equal spacer above reel */}
+          <div style={{ height: mobileReelGap }} />
+
+          {/* ── Icon card reel (compact sizing handled inside IconCardReel) ── */}
+          <div style={{ width: '100%' }}>
             <IconCardReel
               radarValues={radarValuesObj}
               presetName={activePreset}
@@ -969,15 +968,16 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
             />
           </div>
 
-          {/* ── Preset buttons column (scaled as a unit) ──────────────── */}
+          {/* Equal spacer below reel (same value → reel centered between chart and presets) */}
+          <div style={{ height: mobileReelGap }} />
+
+          {/* ── Preset buttons column ─────────────────────────────────── */}
           <div style={{
-            display: 'flex', flexDirection: 'column', gap: presetButtonGap,
+            display: 'flex', flexDirection: 'column', gap: mobilePresetGap,
             width: '100%',
             paddingLeft: presetContainerPadding, paddingRight: presetContainerPadding,
-            paddingTop: 16, paddingBottom: presetsBottomPadding,
+            paddingTop: 0, paddingBottom: presetsBottomPadding,
             boxSizing: 'border-box',
-            transform: `scale(${mobileButtonScale})`,
-            transformOrigin: 'top center',
           }}>
 
             {/* 4 preset buttons with inline arrow slot */}
@@ -989,7 +989,9 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
               const color       = isActive ? presetTextColorPressed : (isHovered ? presetTextColorHover : presetTextColor);
               const borderColor = isActive ? presetBorderColorActive : (isHovered ? presetBorderColorHover : presetBorderColorDefault);
               return (
-                <div key={preset.name} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: mobileArrowGap }}>
+                // No gap on the row — gap is absorbed into the slot width so inactive
+                // buttons fill the full row width (total active = total inactive).
+                <div key={preset.name} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <button
                     ref={el => { presetButtonRefs.current[i] = el; }}
                     onClick={() => { setHasPlayed(false); setShowYourSelection(false); cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); }}
@@ -1007,15 +1009,17 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
                       transition: `background ${mobilePresetTransition}ms, color ${mobilePresetTransition}ms, border-color ${mobilePresetTransition}ms`,
                     }}
                   >{preset.name}</button>
-                  {/* Arrow slot — width transitions 0 ↔ mobileArrowSize */}
+                  {/* Arrow slot — includes gap so total row width stays constant.
+                      Circle is right-aligned; the gap forms on the left as slot grows. */}
                   <div style={{
-                    width:      showArrowSlot ? mobileArrowSize : 0,
-                    opacity:    showArrowSlot ? 1 : 0,
-                    overflow:   'hidden',
-                    flexShrink: 0,
-                    transition: `width ${mobilePresetTransition}ms ease, opacity ${mobilePresetTransition}ms ease`,
+                    width:          showArrowSlot ? mobileArrowSize + mobileArrowGap : 0,
+                    overflow:       'hidden',
+                    flexShrink:     0,
+                    display:        'flex',
+                    justifyContent: 'flex-end',
+                    transition:     `width ${mobilePresetTransition}ms ease`,
                   }}>
-                    <div style={{ position: 'relative', width: mobileArrowSize, height: mobileArrowSize }}>
+                    <div style={{ position: 'relative', width: mobileArrowSize, height: mobileArrowSize, flexShrink: 0 }}>
                       {arrowInner}
                     </div>
                   </div>
@@ -1025,7 +1029,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
 
             {/* 5th slot: YOUR SELECTION — always in the layout (reserves space), fades in/out */}
             <div style={{
-              display: 'flex', flexDirection: 'row', alignItems: 'center', gap: mobileArrowGap,
+              display: 'flex', flexDirection: 'row', alignItems: 'center',
               opacity:       showYourSelection ? 1 : 0,
               pointerEvents: showYourSelection ? 'auto' : 'none',
               transition:    `opacity ${mobilePresetTransition}ms ease`,
@@ -1041,8 +1045,11 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
                   letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600,
                 }}
               >Your Selection</button>
-              <div style={{ position: 'relative', width: mobileArrowSize, height: mobileArrowSize, flexShrink: 0 }}>
-                {arrowInner}
+              {/* Fixed-width slot matching active preset rows */}
+              <div style={{ width: mobileArrowSize + mobileArrowGap, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ position: 'relative', width: mobileArrowSize, height: mobileArrowSize }}>
+                  {arrowInner}
+                </div>
               </div>
             </div>
 
@@ -1251,8 +1258,9 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
               onClick={e => e.stopPropagation()}
               style={{
                 position: 'fixed',
-                left: popoutPos.left,
-                ...wrapperPos,
+                ...(isMobile
+                  ? { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }
+                  : { left: popoutPos.left, ...wrapperPos }),
                 width: POPOUT_W,
                 zIndex: 100,
                 display: 'flex',

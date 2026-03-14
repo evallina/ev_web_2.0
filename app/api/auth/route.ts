@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.redirect(new URL('/', request.url));
     response.cookies.set(PASSWORD_COOKIE_NAME, SITE_PASSWORD, {
       httpOnly: true,
-      secure:   process.env.NODE_ENV === 'production',
+      secure:   process.env.NODE_ENV === 'production' && !request.headers.get('host')?.startsWith('192.168.'),
       sameSite: 'lax',
       maxAge:   PASSWORD_COOKIE_MAX_AGE,
       path:     '/',

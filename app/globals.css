@@ -108,6 +108,14 @@ body {
   100% { transform: translateX(0);   }
 }
 
+/* ── Hero: use dynamic viewport height on mobile so browser chrome doesn't crop content ── */
+@media (max-width: 750px) {
+  #hero {
+    height: 100dvh !important;
+    min-height: 100dvh;
+  }
+}
+
 /* ── Works section: allow mobile to grow taller than 100vh ────────────────
    The flex-1 chain (section → wrapper → RadarChart container) normally
    keeps everything locked to 100vh.  On narrow screens we break that chain

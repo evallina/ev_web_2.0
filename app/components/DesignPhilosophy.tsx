@@ -32,6 +32,13 @@ const worksOpacity      = 0.85;        // opacity at rest (0–1)
 const worksHoverOpacity = 0.65;        // opacity on hover (0–1)
 const worksBottomOffset = '3.5rem';    // distance from the bottom of the section
 
+// ── Mobile overrides (< MOBILE_BP px) ───────────────────────────────────────
+const MOBILE_BP           = 750;       // px — mobile breakpoint
+const mobileImagePaddingTop = '3.5rem';    // top AND bottom inset of the photo background clip area
+const mobileImagePaddingBottom = '2.0rem';    // top AND bottom inset of the photo background clip area
+const mobileTextPaddingH  = '1rem';    // left/right padding of the "Design / typed phrase" heading
+const mobileHeadingSize   = 'clamp(2rem, 8vw, 2.8rem)'; // font-size of heading on mobile (overrides headingSize)
+
 // ── Internal constants ──────────────────────────────────────────────────────
 // Keep at most 2 items alive at once (the incoming + the outgoing during crossfade)
 const MAX_STACK_VISIBLE = 2;
@@ -168,6 +175,14 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
   const photoCount = hasPhotos ? photos.length : PLACEHOLDER_COLORS.length;
   const stack      = usePhotoStack(photoCount);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < MOBILE_BP);
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   return (
     <section
       id="design-philosophy"
@@ -177,8 +192,8 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
       {/* ── Photo background layer — clipped to page margins ─────────────── */}
       <div data-parallax style={{
         position: 'absolute',
-        top:      imageTopMargin,
-        bottom:   'var(--page-margin)',
+        top:      isMobile ? mobileImagePaddingTop : imageTopMargin,
+        bottom:   isMobile ? mobileImagePaddingBottom : 'var(--page-margin)',
         left:     'var(--page-margin)',
         right:    'var(--page-margin)',
         overflow: 'hidden',
@@ -285,12 +300,14 @@ export default function DesignPhilosophy({ onScrollDown }: DesignPhilosophyProps
           alignItems:     'center',
           justifyContent: 'flex-start',
           paddingTop:     'calc(35vh - 3rem)',
+          paddingLeft:    isMobile ? mobileTextPaddingH : 0,
+          paddingRight:   isMobile ? mobileTextPaddingH : 0,
           zIndex:         10,
           pointerEvents:  'none',
         }}
       >
-        <div style={{ fontSize: headingSize, lineHeight: 1.15, textShadow: `0 2px 24px rgba(0,0,0,${textShadowOpacity})` }}>Design</div>
-        <div style={{ fontSize: headingSize, lineHeight: 1.15, fontWeight: 400, maxWidth: typedLineWidth, textAlign: 'center', textShadow: `0 2px 24px rgba(0,0,0,${textShadowOpacity})` }}>
+        <div style={{ fontSize: isMobile ? mobileHeadingSize : headingSize, lineHeight: 1.15, textShadow: `0 2px 24px rgba(0,0,0,${textShadowOpacity})` }}>Design</div>
+        <div style={{ fontSize: isMobile ? mobileHeadingSize : headingSize, lineHeight: 1.15, fontWeight: 400, maxWidth: typedLineWidth, textAlign: 'center', textShadow: `0 2px 24px rgba(0,0,0,${textShadowOpacity})` }}>
           {displayText}
           <span
             aria-hidden="true"

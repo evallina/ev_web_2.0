@@ -13,6 +13,7 @@ const ALLOWED_REFERRERS = [
   'www.enolvallina.com',
   'vercel.app',   // Vercel preview deployments
   'localhost',    // Local development
+  '192.168.68.64',   // Local network — phone testing
 ];
 
 // Allow requests with no referer header (direct visits, bookmarks,
