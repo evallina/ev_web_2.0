@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     siteName: 'Enol Vallina',
     images: [
       {
-        url: '/images/og/Public_Realm_01.png',
+        url: '/images/og/Public_Realm_01.jpg',
         width: 1200,
         height: 630,
         alt: 'Enol Vallina | Design',
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Enol Vallina | Design',
     description: 'Architect by training, researcher by habit. A cross-scale design practice spanning computational tools, built environments, and speculative visions.',
-    images: ['/images/og/Public_Realm_01.png'],
+    images: ['/images/og/Public_Realm_01.jpg'],
   },
 };
 
