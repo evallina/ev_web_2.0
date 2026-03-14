@@ -365,6 +365,7 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
                 morphTransitionDuration={morphTransitionDuration}
                 morphPauseDuration={morphPauseDuration}
                 morphIntensity={morphIntensity}
+                siteReady={siteReady}
                 style={{
                   width:     heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
                   height:    heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
