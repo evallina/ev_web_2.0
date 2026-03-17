@@ -17,7 +17,6 @@
 │   │   ├── ProjectCards.tsx
 │   │   ├── RadarChart.tsx
 │   │   └── Trajectory.tsx
-│   ├── favicon.ico
 │   ├── globals.css
 │   ├── hooks
 │   │   ├── useGentleSnap.ts
@@ -24317,15 +24316,22 @@
 │   │   │   └── 2026-01-20_Timeline.png
 │   │   └── ui
 │   │       └── icons
+│   │           ├── apple-touch-icon_favicon.png
+│   │           ├── apple-touch-icon.png
 │   │           ├── arrow-big-left.svg
 │   │           ├── arrow-big-right.svg
 │   │           ├── arrow-up-right.svg
 │   │           ├── ev_key.svg
+│   │           ├── ev_square_icon_favicon.png
+│   │           ├── ev_square_icon.png
+│   │           ├── ev_square_icon.svg
 │   │           ├── ev_square.svg
+│   │           ├── f_favicon.svg
 │   │           ├── File Icon_01.svg
 │   │           ├── house.svg
 │   │           ├── info.svg
 │   │           └── refresh-cw.svg
+│   ├── manifest.json
 │   ├── robots.txt
 │   └── videos
 ├── README.md
@@ -24356,4 +24362,4 @@
 ├── tsconfig.tsbuildinfo
 └── vercel.json
 
-2254 directories, 22103 files
+2254 directories, 22109 files
