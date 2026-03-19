@@ -34,6 +34,7 @@ export function middleware(request: NextRequest) {
   if (PASSWORD_PROTECTION_ENABLED) {
     const isPublicPath =
       pathname === '/login' ||
+      pathname === '/profile' ||
       pathname.startsWith('/api/auth') ||
       pathname.startsWith('/_next/') ||
       pathname.startsWith('/images/psw/') ||  // Login page bg — public but hotlink-protected below

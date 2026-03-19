@@ -4,3 +4,5 @@ Allow: /
 User-agent: Googlebot-Image
 Allow: /images/og/
 Disallow: /
+
+Sitemap: https://enolvallina.com/sitemap.xml
