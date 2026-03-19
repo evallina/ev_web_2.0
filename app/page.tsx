@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGentleSnap } from "./hooks/useGentleSnap";
 import { useParallax } from "./hooks/useParallax";
 import Header from "./components/Header";
@@ -89,6 +89,9 @@ export default function Home() {
   useGentleSnap(SNAP_SECTION_IDS);
   useParallax();
 
+  // ── Refs ───────────────────────────────────────────────────────────────────
+  const currentSectionRef = useRef<string>('hero');
+
   // ── State ──────────────────────────────────────────────────────────────────
   const [loading,       setLoading]       = useState(true);
   const [worksIsMobile, setWorksIsMobile] = useState(false);
@@ -105,10 +108,31 @@ export default function Home() {
 
   // ── Effects ────────────────────────────────────────────────────────────────
 
-  // Block scroll during loading; remove when done
+  // Lock scroll completely during loading (belt-and-suspenders for iOS Safari)
   useEffect(() => {
-    document.body.style.overflow = loading ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (loading) {
+      const scrollY = window.scrollY;
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+
+      return () => {
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        // Restore scroll position to hero after unlocking
+        const hero = document.getElementById('hero');
+        if (hero) {
+          window.scrollTo({ top: hero.offsetTop, behavior: 'instant' });
+        }
+      };
+    }
   }, [loading]);
 
   useEffect(() => {
@@ -198,6 +222,64 @@ export default function Home() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
+
+  // Track which section is currently most visible (updated on every scroll)
+  useEffect(() => {
+    if (loading) return;
+
+    const updateCurrentSection = () => {
+      const vh = window.innerHeight;
+      let bestId: string | null = null;
+      let bestFraction = 0;
+
+      for (const id of KB_NAV_IDS) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        const visibleH = Math.max(0, Math.min(vh, rect.bottom) - Math.max(0, rect.top));
+        const fraction = visibleH / Math.min(el.offsetHeight, vh);
+        if (fraction > bestFraction) {
+          bestFraction = fraction;
+          bestId = id;
+        }
+      }
+
+      if (bestId) currentSectionRef.current = bestId;
+    };
+
+    updateCurrentSection();
+
+    window.addEventListener('scroll', updateCurrentSection, { passive: true });
+    return () => window.removeEventListener('scroll', updateCurrentSection);
+  }, [loading]);
+
+  // Re-align to tracked section on window resize (prevents misalignment after reflow)
+  useEffect(() => {
+    if (loading) return;
+
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const targetId = currentSectionRef.current;
+        const el = document.getElementById(targetId);
+        if (el) {
+          if (KB_SCROLL_TO_BOTTOM.has(targetId)) {
+            window.scrollTo({ top: el.offsetTop + el.offsetHeight - window.innerHeight, behavior: 'instant' });
+          } else {
+            window.scrollTo({ top: el.offsetTop, behavior: 'instant' });
+          }
+        }
+      }, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimer) clearTimeout(resizeTimer);
+    };
+  }, [loading]);
 
   // ── Navigation helpers ─────────────────────────────────────────────────────
   const scrollToSection = (id: string) => {

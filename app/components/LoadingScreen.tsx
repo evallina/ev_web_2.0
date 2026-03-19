@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import projectsData from '@/src/data/projects.json';
 
 // ── Design variables ───────────────────────────────────────────────────────────
-const MIN_DISPLAY_TIME  = 8500;  // ms — minimum display; actual may be longer while images load
+const MIN_DISPLAY_TIME  = 3500;  // ms — minimum display; actual may be longer while images load
 const FADE_OUT_DURATION = 800;   // ms — fade-out animation duration
 // const DOT_INTERVAL   = 400;   // ms — time between each animated dot appearing (disabled)
 const MOBILE_BREAKPOINT = 600;   // px
@@ -111,7 +111,9 @@ export default function LoadingScreen({ onComplete }: Props) {
         justifyContent: 'center',
         opacity:         fading ? 0 : 1,
         transition:     `opacity ${FADE_OUT_DURATION}ms ease`,
-        pointerEvents:   fading ? 'none' : 'auto',
+        pointerEvents:       fading ? 'none' : 'auto',
+        touchAction:        'none',
+        overscrollBehavior: 'none',
       }}
     >
       {/* Content — no position/z-index so mix-blend-mode on the GIF blends with the outer background */}
