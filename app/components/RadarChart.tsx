@@ -1313,7 +1313,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
                     fontFamily: 'var(--font-roboto, Roboto, sans-serif)',
                     fontWeight: 700,
                   }}>
-                    {data?.description}
+                    {data?.description.toUpperCase()}
                   </p>
                 </div>
 
