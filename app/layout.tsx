@@ -21,7 +21,10 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true, noimageindex: true },
   manifest: '/manifest.json',
   icons: {
-    icon: [{ url: '/images/ui/icons/ev_square.svg', type: 'image/svg+xml' }],
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 24x24 32x32 48x48', type: 'image/x-icon' },
+      { url: '/images/ui/icons/ev_square.svg', type: 'image/svg+xml' },
+    ],
     apple: [{ url: '/images/ui/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   openGraph: {
