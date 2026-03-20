@@ -160,7 +160,7 @@ export default function AlgorithmExplainer({
         <div style={titleStyle}>Categories</div>
         <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr', gap: '2px 8px', marginBottom: 6 }}>
           {CATEGORIES.map(c => (
-            <div key={c.key} style={{ contents: undefined, display: 'contents' }}>
+            <div key={c.key} style={{ display: 'contents' }}>
               <span style={{ ...monoStyle, color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>{c.abbr}</span>
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.50)' }}>{c.label}</span>
             </div>
