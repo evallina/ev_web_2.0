@@ -16,6 +16,7 @@ import type { DebugMeta } from "@/src/types";
 import { CAT_KEYS } from "@/src/config/categories";
 import ContactBottom from "./components/ContactBottom";
 import LoadingScreen from "./components/LoadingScreen";
+import AlgorithmExplainer from "./components/AlgorithmExplainer";
 import projectsData from "@/src/data/projects.json";
 
 // ── Gentle snap — sections the hook will nudge toward after scroll settles ────
@@ -105,6 +106,7 @@ export default function Home() {
   const [lastDebugMeta,         setLastDebugMeta]         = useState<DebugMeta | null>(null);
   const [showDebug,             setShowDebug]             = useState(false);
   const [debugFlash,            setDebugFlash]            = useState<string | null>(null);
+  const [lastMatchedCount,      setLastMatchedCount]      = useState(0);
 
   // ── Effects ────────────────────────────────────────────────────────────────
 
@@ -315,6 +317,7 @@ export default function Home() {
     setLastRadarValues(radarValues);
     setLastPresetName(null);
     setLastDebugMeta(result.debugMeta);
+    setLastMatchedCount(result._scoredRows.filter(r => r.finalScore >= 20).length);
     scrollToSection('project-cards');
   };
 
@@ -335,6 +338,7 @@ export default function Home() {
     setLastRadarValues(radarValues);
     setLastPresetName(presetName);
     setLastDebugMeta(result.debugMeta);
+    setLastMatchedCount(result._scoredRows.filter(r => r.finalScore >= 20).length);
     scrollToSection('project-cards');
   };
 
@@ -434,6 +438,16 @@ export default function Home() {
         activePresetName={lastPresetName}
         debugMeta={lastDebugMeta ?? undefined}
         showDebug={showDebug}
+      />
+
+      <AlgorithmExplainer
+        visible={showDebug}
+        radarValues={lastRadarValues}
+        presetName={lastPresetName}
+        debugMeta={lastDebugMeta}
+        selectedCount={selectedProjectIds.length}
+        totalProjects={44}
+        matchedCount={lastMatchedCount}
       />
 
       {/* Debug flash notification */}
