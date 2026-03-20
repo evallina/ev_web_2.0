@@ -111,7 +111,7 @@ export default function LoadingScreen({ onComplete }: Props) {
         justifyContent: 'center',
         opacity:         fading ? 0 : 1,
         transition:     `opacity ${FADE_OUT_DURATION}ms ease`,
-        pointerEvents:       fading ? 'none' : 'auto',
+        pointerEvents:       'auto',
         touchAction:        'none',
         overscrollBehavior: 'none',
       }}

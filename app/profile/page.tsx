@@ -80,8 +80,8 @@ export default function ProfilePage() {
 
       <section style={{ marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>Professional Registrations</h2>
-        <p>Architect License, Spain — COAA #1481</p>
-        <p>Architect License, UK — ARB #078907K</p>
+        <p>Architect License, Spain — COAAs</p>
+        <p>Architect License, UK — ARB</p>
       </section>
 
       <section>
