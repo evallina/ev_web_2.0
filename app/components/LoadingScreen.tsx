@@ -4,19 +4,23 @@ import { useEffect, useState } from 'react';
 import projectsData from '@/src/data/projects.json';
 
 // ── Design variables ───────────────────────────────────────────────────────────
-const MIN_DISPLAY_TIME  = 3500;  // ms — minimum display; actual may be longer while images load
-const FADE_OUT_DURATION = 800;   // ms — fade-out animation duration
-// const DOT_INTERVAL   = 400;   // ms — time between each animated dot appearing (disabled)
-const MOBILE_BREAKPOINT = 600;   // px
+const MIN_DISPLAY_TIME          = 8500;   // ms — minimum display (design pause)
+const MAX_DISPLAY_TIME          = 20000;  // ms — absolute max, fade out regardless
+const FADE_OUT_DURATION         = 800;    // ms — fade-out animation duration
+// const DOT_INTERVAL           = 400;    // ms — dot animation speed (disabled)
+const MOBILE_BREAKPOINT         = 600;    // px
+const PROGRESS_BAR_HEIGHT       = 2;      // px
+const PROGRESS_BAR_WIDTH        = 240;    // px (desktop)
+const PROGRESS_BAR_WIDTH_MOBILE = 200;    // px
 
 // ── Image preload list ─────────────────────────────────────────────────────────
 const heroImages = [
-  '/images/categories/1_Public-Realm_01.png',
-  '/images/categories/2_Place_01.png',
-  '/images/categories/3_Interactivity_01.png',
-  '/images/categories/4_Data-Driven_01.png',
-  '/images/categories/5_Strategy_01.png',
-  '/images/categories/6_User-Oriented_01.png',
+  '/images/categories/1_Public-Realm_01.webp',
+  '/images/categories/2_Place_01.webp',
+  '/images/categories/3_Interactivity_01.webp',
+  '/images/categories/4_Data-Driven_01.webp',
+  '/images/categories/5_Strategy_01.webp',
+  '/images/categories/6_User-Oriented_01.webp',
 ];
 
 interface ProjectEntry { presets?: string[]; cards?: string[] }
@@ -36,15 +40,25 @@ const allPreloadImages = [...heroImages, ...presetCardImages];
 console.log(`[LoadingScreen] Preloading ${allPreloadImages.length} images (${heroImages.length} hero + ${presetCardImages.length} project cards)`);
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-function preloadImages(urls: string[]): Promise<void[]> {
-  return Promise.all(
-    urls.map(url => new Promise<void>((resolve) => {
+function preloadImagesWithProgress(
+  urls: string[],
+  onProgress: (fraction: number) => void,
+): Promise<void> {
+  if (urls.length === 0) { onProgress(1); return Promise.resolve(); }
+  let loaded = 0;
+  return new Promise<void>((resolve) => {
+    urls.forEach(url => {
       const img = new Image();
-      img.onload  = () => resolve();
-      img.onerror = () => resolve(); // don't block on failed loads
+      const done = () => {
+        loaded++;
+        onProgress(loaded / urls.length);
+        if (loaded >= urls.length) resolve();
+      };
+      img.onload = done;
+      img.onerror = done;  // don't block on failures
       img.src = url;
-    }))
-  );
+    });
+  });
 }
 
 interface Props {
@@ -56,6 +70,7 @@ export default function LoadingScreen({ onComplete }: Props) {
   // const [dots,  setDots]  = useState('');  // disabled — re-enable with dot animation below
   const [fading,   setFading]   = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [progress, setProgress] = useState(0);  // 0 to 1
 
   // Mobile detection
   useEffect(() => {
@@ -76,18 +91,22 @@ export default function LoadingScreen({ onComplete }: Props) {
   //   return () => clearInterval(id);
   // }, []);
 
-  // Timing: wait for min display time + fonts.ready + window load + image preload, then fade out
+  // Timing: wait for (all assets + min time) OR (max time), then fade out
   useEffect(() => {
     const minTimer   = new Promise<void>(resolve => setTimeout(resolve, MIN_DISPLAY_TIME));
+    const maxTimer   = new Promise<void>(resolve => setTimeout(resolve, MAX_DISPLAY_TIME));
     const fontsReady = document.fonts.ready.then(() => undefined);
     const windowLoad = new Promise<void>(resolve => {
       if (document.readyState === 'complete') resolve();
       else window.addEventListener('load', () => resolve(), { once: true });
     });
-    const imagesReady = preloadImages(allPreloadImages);
+    const imagesReady = preloadImagesWithProgress(allPreloadImages, setProgress);
 
     let cancelled = false;
-    Promise.all([minTimer, fontsReady, windowLoad, imagesReady]).then(() => {
+    Promise.race([
+      Promise.all([minTimer, fontsReady, windowLoad, imagesReady]),
+      maxTimer,
+    ]).then(() => {
       if (cancelled) return;
       setFading(true);
       setTimeout(() => { if (!cancelled) onComplete(); }, FADE_OUT_DURATION);
@@ -159,6 +178,24 @@ export default function LoadingScreen({ onComplete }: Props) {
         }}>
           Loading{dots}
         </div> */}
+
+        {/* Progress bar */}
+        <div style={{
+          marginTop: 12,
+          width: isMobile ? PROGRESS_BAR_WIDTH_MOBILE : PROGRESS_BAR_WIDTH,
+          height: PROGRESS_BAR_HEIGHT,
+          background: 'rgba(28, 28, 29, 0.1)',
+          borderRadius: PROGRESS_BAR_HEIGHT / 2,
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            width: `${Math.round(progress * 100)}%`,
+            height: '100%',
+            background: 'rgba(28, 28, 29, 0.35)',
+            borderRadius: PROGRESS_BAR_HEIGHT / 2,
+            transition: 'width 300ms ease-out',
+          }} />
+        </div>
 
       </div>
 

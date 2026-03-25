@@ -1,22 +1,22 @@
 {
   "computationalDesign": {
     "description": "Parametric Geometry · Algorithmic Workflows · Data Visualization · Tool Building · Urban Analytics · Scripting",
-    "image": "/images/categories/dark_background/ComputationalDesign_01.jpg"
+    "image": "/images/categories/dark_background/ComputationalDesign_01.webp"
   },
   "artifactsInterfaces": {
     "description": "Installations · Prototypes · Kinetic Systems · Data Experiences",
-    "image": "/images/categories/dark_background/ArtifactsAndInterfaces_01.jpg"
+    "image": "/images/categories/dark_background/ArtifactsAndInterfaces_01.webp"
   },
   "publicRealm": {
     "description": "Urban Design · Civic Infrastructure · Public Spaces · Landscape · Connectivity · Masterplanning",
-    "image": "/images/categories/dark_background/Public_Realm_01.jpg"
+    "image": "/images/categories/dark_background/Public_Realm_01.webp"
   },
   "architecture": {
     "description": "Buildings · Interiors · Renovation · Envelope Systems · Construction · Spatial Programming",
-    "image": "/images/categories/dark_background/Architecture_01.jpg"
+    "image": "/images/categories/dark_background/Architecture_01.webp"
   },
   "futures": {
     "description": "Vision · Strategic Planning · Competitions · Proposals · Speculative Narratives",
-    "image": "/images/categories/dark_background/Futures.jpg"
+    "image": "/images/categories/dark_background/Futures.webp"
   }
 }

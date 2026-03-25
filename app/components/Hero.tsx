@@ -50,12 +50,12 @@ const mobileBottomPadding = 70;        // px — bottom padding for "Approach & 
 // └─────────────────────────────────────────────────────────────────────────────┘
 
 const CATEGORY_IMAGES = [
-  '/images/categories/1_Public-Realm_01.png',
-  '/images/categories/2_Place_01.png',
-  '/images/categories/3_Interactivity_01.png',
-  '/images/categories/4_Data-Driven_01.png',
-  '/images/categories/5_Strategy_01.png',
-  '/images/categories/6_User-Oriented_01.png',
+  '/images/categories/1_Public-Realm_01.webp',
+  '/images/categories/2_Place_01.webp',
+  '/images/categories/3_Interactivity_01.webp',
+  '/images/categories/4_Data-Driven_01.webp',
+  '/images/categories/5_Strategy_01.webp',
+  '/images/categories/6_User-Oriented_01.webp',
 ];
 
 // Derived positions (compile-time constants)
