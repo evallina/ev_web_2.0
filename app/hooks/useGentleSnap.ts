@@ -8,11 +8,11 @@ const SNAP_STRENGTH = 0.30;        // 0-1: fraction of viewport height as snap z
 const HEADER_HEIGHT = 0;           // px — sticky header offset (0: sections designed with header overlay)
 const SNAP_ENABLED  = true;        // master toggle
 
-export function useGentleSnap(sectionIds: string[]) {
+export function useGentleSnap(sectionIds: string[], disabled?: boolean) {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!SNAP_ENABLED) return;
+    if (!SNAP_ENABLED || disabled) return;
 
     const cancelPendingSnap = () => {
       if (debounceTimer.current) {
@@ -66,5 +66,5 @@ export function useGentleSnap(sectionIds: string[]) {
       window.removeEventListener('touchstart', onTouchStart);
       cancelPendingSnap();
     };
-  }, [sectionIds]);
+  }, [sectionIds, disabled]);
 }

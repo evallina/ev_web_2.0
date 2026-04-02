@@ -23,7 +23,7 @@ export function useAutoScrollTour(config: AutoScrollConfig) {
   const cancelledRef = useRef(false);
   const tourActiveRef = useRef(false);
   const configRef = useRef(config);
-  configRef.current = config;
+  useEffect(() => { configRef.current = config; });
 
   const cancelTour = useCallback(() => {
     if (!tourActiveRef.current) return;

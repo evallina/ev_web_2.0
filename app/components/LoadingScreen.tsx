@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import projectsData from '@/src/data/projects.json';
 
 // ── Design variables ───────────────────────────────────────────────────────────
@@ -69,6 +69,9 @@ interface Props {
 }
 
 export default function LoadingScreen({ onComplete, customLabel, extraPreloadIds }: Props) {
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+
   // const [dots,  setDots]  = useState('');  // disabled — re-enable with dot animation below
   const [fading,   setFading]   = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -124,7 +127,7 @@ export default function LoadingScreen({ onComplete, customLabel, extraPreloadIds
     ]).then(() => {
       if (cancelled) return;
       setFading(true);
-      setTimeout(() => { if (!cancelled) onComplete(); }, FADE_OUT_DURATION);
+      setTimeout(() => { if (!cancelled) onCompleteRef.current(); }, FADE_OUT_DURATION);
     });
 
     return () => { cancelled = true; };

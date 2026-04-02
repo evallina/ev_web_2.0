@@ -87,8 +87,11 @@ export default function Home() {
     if (hero) window.scrollTo({ top: hero.offsetTop, behavior: "instant" });
   }, []);
 
+  // Auto-scroll state (declared early — needed by useGentleSnap below)
+  const [autoScrolling, setAutoScrolling] = useState(false);
+
   // Gentle JS-based snap — nudges toward nearest section after scroll settles
-  useGentleSnap(SNAP_SECTION_IDS);
+  useGentleSnap(SNAP_SECTION_IDS, autoScrolling);
   useParallax();
 
   // ── Refs ───────────────────────────────────────────────────────────────────
@@ -127,7 +130,6 @@ export default function Home() {
   const [showDebug,             setShowDebug]             = useState(false);
   const [debugFlash,            setDebugFlash]            = useState<string | null>(null);
   const [lastMatchedCount,      setLastMatchedCount]      = useState(0);
-  const [autoScrolling,         setAutoScrolling]         = useState(false);
 
   // ── Auto-scroll tour (for ?select= URL) ──────────────────────────────────
   const { startTour, skipToEnd, showSkipPill } = useAutoScrollTour({
