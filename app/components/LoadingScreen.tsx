@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import projectsData from '@/src/data/projects.json';
 
 // ── Design variables ───────────────────────────────────────────────────────────
-const MIN_DISPLAY_TIME          = 8500;   // ms — minimum display (design pause)
+const MIN_DISPLAY_TIME          = 3200;   // ms — minimum display (design pause)
 const MAX_DISPLAY_TIME          = 20000;  // ms — absolute max, fade out regardless
 const FADE_OUT_DURATION         = 800;    // ms — fade-out animation duration
 // const DOT_INTERVAL           = 400;    // ms — dot animation speed (disabled)
@@ -62,11 +62,13 @@ function preloadImagesWithProgress(
 }
 
 interface Props {
-  visible:    boolean;
-  onComplete: () => void;
+  visible:      boolean;
+  onComplete:   () => void;
+  customLabel?: string | null;
+  extraPreloadIds?: string[];  // additional project IDs to preload (e.g. from ?select=)
 }
 
-export default function LoadingScreen({ onComplete }: Props) {
+export default function LoadingScreen({ onComplete, customLabel, extraPreloadIds }: Props) {
   // const [dots,  setDots]  = useState('');  // disabled — re-enable with dot animation below
   const [fading,   setFading]   = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -93,6 +95,19 @@ export default function LoadingScreen({ onComplete }: Props) {
 
   // Timing: wait for (all assets + min time) OR (max time), then fade out
   useEffect(() => {
+    // Build extra images from custom select IDs
+    const extraImages: string[] = [];
+    if (extraPreloadIds && extraPreloadIds.length > 0) {
+      const allProjects = (projectsData.projects as (ProjectEntry & { id?: string })[]);
+      for (const id of extraPreloadIds) {
+        const proj = allProjects.find(p => p.id === id);
+        if (proj?.cards) {
+          for (const card of proj.cards) extraImages.push(card);
+        }
+      }
+    }
+    const imagesToLoad = [...allPreloadImages, ...extraImages];
+
     const minTimer   = new Promise<void>(resolve => setTimeout(resolve, MIN_DISPLAY_TIME));
     const maxTimer   = new Promise<void>(resolve => setTimeout(resolve, MAX_DISPLAY_TIME));
     const fontsReady = document.fonts.ready.then(() => undefined);
@@ -100,7 +115,7 @@ export default function LoadingScreen({ onComplete }: Props) {
       if (document.readyState === 'complete') resolve();
       else window.addEventListener('load', () => resolve(), { once: true });
     });
-    const imagesReady = preloadImagesWithProgress(allPreloadImages, setProgress);
+    const imagesReady = preloadImagesWithProgress(imagesToLoad, setProgress);
 
     let cancelled = false;
     Promise.race([
@@ -196,6 +211,23 @@ export default function LoadingScreen({ onComplete }: Props) {
             transition: 'width 300ms ease-out',
           }} />
         </div>
+
+        {/* Custom selection label (shown when ?select= URL param is present) */}
+        {customLabel && (
+          <div style={{
+            marginTop: 8,
+            fontFamily: 'var(--font-roboto, sans-serif)',
+            fontSize: '0.75rem',
+            color: '#1c1c1d',
+            opacity: 0.35,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            userSelect: 'none',
+            textAlign: 'center',
+          }}>
+            {customLabel}
+          </div>
+        )}
 
       </div>
 

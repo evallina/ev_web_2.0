@@ -17,6 +17,7 @@ import { CAT_KEYS } from "@/src/config/categories";
 import ContactBottom from "./components/ContactBottom";
 import LoadingScreen from "./components/LoadingScreen";
 import AlgorithmExplainer from "./components/AlgorithmExplainer";
+import { useAutoScrollTour } from "./hooks/useAutoScrollTour";
 import projectsData from "@/src/data/projects.json";
 
 // ── Gentle snap — sections the hook will nudge toward after scroll settles ────
@@ -93,6 +94,25 @@ export default function Home() {
   // ── Refs ───────────────────────────────────────────────────────────────────
   const currentSectionRef = useRef<string>('hero');
 
+  // ── Custom URL selection (?select=EV-03,EV-16&label=MIT+Application) ────
+  const [customSelectIds,     setCustomSelectIds]     = useState<string[] | null>(null);
+  const [customSelectLabel,   setCustomSelectLabel]   = useState<string | null>(null);
+  const [isCustomSelectActive, setIsCustomSelectActive] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const selectParam = params.get('select');
+    const labelParam = params.get('label');
+    if (selectParam) {
+      const ids = selectParam.split(',').map(id => id.trim()).filter(Boolean);
+      if (ids.length > 0) {
+        setCustomSelectIds(ids);
+        setCustomSelectLabel(labelParam || 'Your Selection');
+        setIsCustomSelectActive(true);
+      }
+    }
+  }, []);
+
   // ── State ──────────────────────────────────────────────────────────────────
   const [loading,       setLoading]       = useState(true);
   const [worksIsMobile, setWorksIsMobile] = useState(false);
@@ -107,6 +127,27 @@ export default function Home() {
   const [showDebug,             setShowDebug]             = useState(false);
   const [debugFlash,            setDebugFlash]            = useState<string | null>(null);
   const [lastMatchedCount,      setLastMatchedCount]      = useState(0);
+
+  // ── Auto-scroll tour (for ?select= URL) ──────────────────────────────────
+  const { startTour, skipToEnd, showSkipPill } = useAutoScrollTour({
+    enabled: isCustomSelectActive,
+    onReachCards: () => {
+      if (customSelectIds) {
+        setSelectedProjectIds(customSelectIds);
+        setSelectedProjectScores({});
+        setLastPresetName(customSelectLabel);
+      }
+    },
+    onComplete: () => {},
+    onCancelled: () => {},
+  });
+
+  const handleLoadingComplete = () => {
+    setLoading(false);
+    if (isCustomSelectActive) {
+      setTimeout(() => { startTour(); }, 500);
+    }
+  };
 
   // ── Effects ────────────────────────────────────────────────────────────────
 
@@ -357,9 +398,14 @@ export default function Home() {
         <rect width="100%" height="100%" filter="url(#page-noise)" />
       </svg>
 
-      {/* Loading screen — shown until fonts + images ready (min 1500ms) */}
+      {/* Loading screen — shown until fonts + images ready */}
       {loading && (
-        <LoadingScreen visible={loading} onComplete={() => setLoading(false)} />
+        <LoadingScreen
+          visible={loading}
+          onComplete={handleLoadingComplete}
+          customLabel={isCustomSelectActive ? (customSelectLabel || 'Curated Selection') : null}
+          extraPreloadIds={customSelectIds ?? undefined}
+        />
       )}
 
       <Header
@@ -427,7 +473,22 @@ export default function Home() {
           {/*Select a preset or tune the chart. Use the arrow below to see the projects.*/}
         </p>
         <div className="works-chart-wrapper relative z-10 flex-1 flex flex-col items-center justify-start w-full min-h-0" style={{ marginTop: worksIsMobile ? mobileTitleToChartGap : -24 }}>
-          <RadarChart onPlay={handleRadarPlay} onCategoryFilter={handleCategoryFilter} />
+          <RadarChart
+            onPlay={handleRadarPlay}
+            onCategoryFilter={handleCategoryFilter}
+            customPreset={isCustomSelectActive && customSelectIds ? {
+              name: customSelectLabel || 'Your Selection',
+              ids: customSelectIds,
+            } : null}
+            onCustomPresetClick={() => {
+              if (customSelectIds) {
+                setSelectedProjectIds(customSelectIds);
+                setSelectedProjectScores({});
+                setLastPresetName(customSelectLabel);
+                scrollToSection('project-cards');
+              }
+            }}
+          />
         </div>
       </section>
 
@@ -461,6 +522,36 @@ export default function Home() {
         }}>
           {debugFlash}
         </div>
+      )}
+
+      {/* Skip-to-selection pill during auto-scroll tour */}
+      {showSkipPill && (
+        <button
+          onClick={skipToEnd}
+          style={{
+            position: 'fixed',
+            bottom: 32,
+            right: worksIsMobile ? '50%' : 32,
+            transform: worksIsMobile ? 'translateX(50%)' : 'none',
+            zIndex: 200,
+            background: 'rgba(255, 255, 255, 0.95)',
+            color: '#1c1c1d',
+            border: '1px solid rgba(0, 0, 0, 0.1)',
+            borderRadius: 24,
+            padding: '8px 20px',
+            fontSize: 13,
+            fontFamily: 'var(--font-sans)',
+            letterSpacing: '0.05em',
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+            transition: 'opacity 200ms ease, transform 200ms ease',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = worksIsMobile ? 'translateX(50%) scale(1.05)' : 'scale(1.05)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = worksIsMobile ? 'translateX(50%)' : 'none'; }}
+        >
+          Skip to selection →
+        </button>
       )}
 
       <ContactBottom

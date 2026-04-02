@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import catDesc from '@/src/data/categoryDescriptions.json';
 import presetsData from '@/src/data/presets.json';
+import projectsData from '@/src/data/projects.json';
 import { CATEGORIES, CAT_KEYS } from '@/src/config/categories';
 import IconCardReel from './IconCardReel';
 
@@ -270,6 +271,9 @@ interface RadarChartProps {
   onCategoryFilter?:   (catKey: string) => void;
   /** Fired once when the initial (or reset) autoplay sequence finishes returning to defaults. */
   onAutoPlayComplete?: () => void;
+  /** Custom URL-based selection — shows a special preset button that computes average radar from selected project IDs */
+  customPreset?: { name: string; ids: string[] } | null;
+  onCustomPresetClick?: () => void;
 }
 
 // Popout anchor positioning:
@@ -279,7 +283,7 @@ interface RadarChartProps {
 // `bottom:` without needing window.innerHeight at render time.
 interface PopoutPos { left: number; top: number; bottom: number; above: boolean; }
 
-export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplete }: RadarChartProps) {
+export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplete, customPreset, onCustomPresetClick }: RadarChartProps) {
   const [values,        setValues]        = useState<number[]>([...DEFAULT_VALUES]);
   const [ghosts,        setGhosts]        = useState<number[][]>([]);
   const [arrowKeys,     setArrowKeys]     = useState<Record<string, number>>({});
@@ -308,6 +312,26 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
   const [connectorClip,     setConnectorClip]     = useState(100);
   const [connectorTransDur, setConnectorTransDur] = useState(0);
   const [connectorEasing,   setConnectorEasing]   = useState<'ease-in' | 'ease-out'>('ease-out');
+
+  // Compute averaged radar values for custom URL-based selection
+  const customRadarValues = useMemo(() => {
+    if (!customPreset) return null;
+    const projects = projectsData.projects as { id: string; categoryScores: Record<string, number> }[];
+    const selected = projects.filter(p => customPreset.ids.includes(p.id));
+    if (selected.length === 0) return null;
+    const avg: Record<string, number> = {};
+    CAT_KEYS.forEach(key => {
+      avg[key] = Math.round(
+        selected.reduce((sum, p) => sum + (p.categoryScores[key] || 0), 0) / selected.length,
+      );
+    });
+    return avg;
+  }, [customPreset]);
+
+  const customRadarArray = useMemo(
+    () => customRadarValues ? CAT_KEYS.map(k => customRadarValues[k] ?? 0) : null,
+    [customRadarValues],
+  );
 
   const svgRef             = useRef<SVGSVGElement>(null);
   const containerRef       = useRef<HTMLDivElement>(null);
@@ -1027,31 +1051,48 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
               );
             })}
 
-            {/* 5th slot: YOUR SELECTION — always in the layout (reserves space), fades in/out */}
-            <div style={{
-              display: 'flex', flexDirection: 'row', alignItems: 'center',
-              opacity:       showYourSelection ? 1 : 0,
-              pointerEvents: showYourSelection ? 'auto' : 'none',
-              transition:    `opacity ${mobilePresetTransition}ms ease`,
-            }}>
-              <button
-                className={`font-sans cursor-pointer ${presetTextSize}`}
-                style={{
-                  flex: 1, height: presetButtonHeightMobile,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: presetFillColorPressed, color: presetTextColorPressed,
-                  border: `${presetBorderWidth}px solid ${presetBorderColorActive}`,
-                  borderRadius: presetBorderRadius, padding: '0 10px',
-                  letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600,
-                }}
-              >Your Selection</button>
-              {/* Fixed-width slot matching active preset rows */}
-              <div style={{ width: mobileArrowSize + mobileArrowGap, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
-                <div style={{ position: 'relative', width: mobileArrowSize, height: mobileArrowSize }}>
-                  {arrowInner}
+            {/* 5th slot: YOUR SELECTION / CUSTOM PRESET — fades in/out */}
+            {(() => {
+              const showSlot = showYourSelection || !!customPreset;
+              const isCustomActive = customPreset && activePreset === customPreset.name;
+              const label = customPreset ? customPreset.name : 'Your Selection';
+              return (
+                <div style={{
+                  display: 'flex', flexDirection: 'row', alignItems: 'center',
+                  opacity:       showSlot ? 1 : 0,
+                  pointerEvents: showSlot ? 'auto' : 'none',
+                  transition:    `opacity ${mobilePresetTransition}ms ease`,
+                }}>
+                  <button
+                    className={`font-sans cursor-pointer ${presetTextSize}`}
+                    onClick={customPreset && customRadarArray ? () => {
+                      setHasPlayed(false);
+                      cancelAutoPlay();
+                      stopResetSpin();
+                      animateToPreset(customRadarArray, customPreset.name);
+                      onCustomPresetClick?.();
+                    } : undefined}
+                    style={{
+                      flex: 1, height: presetButtonHeightMobile,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: isCustomActive ? presetFillColorPressed : (customPreset ? 'transparent' : presetFillColorPressed),
+                      color: isCustomActive ? presetTextColorPressed : (customPreset ? presetTextColor : presetTextColorPressed),
+                      border: `${presetBorderWidth}px solid ${isCustomActive ? presetBorderColorActive : (customPreset ? 'rgba(255,255,255,0.35)' : presetBorderColorActive)}`,
+                      borderRadius: presetBorderRadius, padding: '0 10px',
+                      letterSpacing: '0.15em', textTransform: 'uppercase',
+                      fontWeight: isCustomActive ? 600 : (customPreset ? 400 : 600),
+                      transition: 'background 200ms, color 200ms, border-color 200ms',
+                    }}
+                  >{label}</button>
+                  {/* Fixed-width slot matching active preset rows */}
+                  <div style={{ width: mobileArrowSize + mobileArrowGap, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ position: 'relative', width: mobileArrowSize, height: mobileArrowSize }}>
+                      {arrowInner}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
 
           </div>
         </>
@@ -1103,32 +1144,47 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
                       }}
                     >{preset.name}</button>
 
-                    {/* YOUR SELECTION grows between Research (i=1) and Spatial Experiences */}
-                    {i === 1 && (
-                      <div style={{
-                        overflow: 'hidden', flexShrink: 0,
-                        width:      showYourSelection ? presetButtonWidth : 0,
-                        marginLeft: showYourSelection ? 0 : -presetButtonGap,
-                        opacity:    showYourSelection ? 1 : 0,
-                        transition: `width ${yourSelectionTransition}ms ease-out, margin-left ${yourSelectionTransition}ms ease-out, opacity ${yourSelectionTransition}ms ease-out`,
-                        display: 'flex', alignItems: 'center',
-                      }}>
-                        <button
-                          ref={yourSelectionBtnRef}
-                          className={`font-sans ${presetTextSize}`}
-                          style={{
-                            width: presetButtonWidth, height: presetButtonHeight,
-                            flexShrink: 0, whiteSpace: 'nowrap',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: presetFillColorPressed, color: presetTextColorPressed,
-                            border: `${presetBorderWidth}px solid ${presetBorderColorActive}`,
-                            borderRadius: presetBorderRadius, padding: '0 10px',
-                            letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600,
-                            cursor: 'default',
-                          }}
-                        >Your Selection</button>
-                      </div>
-                    )}
+                    {/* YOUR SELECTION / CUSTOM PRESET grows between Research (i=1) and Spatial Experiences */}
+                    {i === 1 && (() => {
+                      const showSlot = showYourSelection || !!customPreset;
+                      const isCustomActive = customPreset && activePreset === customPreset.name;
+                      const label = customPreset ? customPreset.name : 'Your Selection';
+                      return (
+                        <div style={{
+                          overflow: 'hidden', flexShrink: 0,
+                          width:      showSlot ? presetButtonWidth : 0,
+                          marginLeft: showSlot ? 0 : -presetButtonGap,
+                          opacity:    showSlot ? 1 : 0,
+                          transition: `width ${yourSelectionTransition}ms ease-out, margin-left ${yourSelectionTransition}ms ease-out, opacity ${yourSelectionTransition}ms ease-out`,
+                          display: 'flex', alignItems: 'center',
+                        }}>
+                          <button
+                            ref={yourSelectionBtnRef}
+                            className={`font-sans ${presetTextSize}`}
+                            onClick={customPreset && customRadarArray ? () => {
+                              setHasPlayed(false);
+                              cancelAutoPlay();
+                              stopResetSpin();
+                              animateToPreset(customRadarArray, customPreset.name);
+                              onCustomPresetClick?.();
+                            } : undefined}
+                            style={{
+                              width: presetButtonWidth, height: presetButtonHeight,
+                              flexShrink: 0, whiteSpace: 'nowrap',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              background: isCustomActive ? presetFillColorPressed : (customPreset ? 'transparent' : presetFillColorPressed),
+                              color: isCustomActive ? presetTextColorPressed : (customPreset ? presetTextColor : presetTextColorPressed),
+                              border: `${presetBorderWidth}px solid ${isCustomActive ? presetBorderColorActive : (customPreset ? 'rgba(255,255,255,0.35)' : presetBorderColorActive)}`,
+                              borderRadius: presetBorderRadius, padding: '0 10px',
+                              letterSpacing: '0.15em', textTransform: 'uppercase',
+                              fontWeight: isCustomActive ? 600 : (customPreset ? 400 : 600),
+                              cursor: customPreset ? 'pointer' : 'default',
+                              transition: 'background 200ms, color 200ms, border-color 200ms',
+                            }}
+                          >{label}</button>
+                        </div>
+                      );
+                    })()}
                   </React.Fragment>
                 );
               })}
