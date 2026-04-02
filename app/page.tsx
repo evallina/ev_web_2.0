@@ -127,10 +127,29 @@ export default function Home() {
   const [showDebug,             setShowDebug]             = useState(false);
   const [debugFlash,            setDebugFlash]            = useState<string | null>(null);
   const [lastMatchedCount,      setLastMatchedCount]      = useState(0);
+  const [autoScrolling,         setAutoScrolling]         = useState(false);
 
   // ── Auto-scroll tour (for ?select= URL) ──────────────────────────────────
   const { startTour, skipToEnd, showSkipPill } = useAutoScrollTour({
     enabled: isCustomSelectActive,
+    onReachWorks: () => {
+      if (customSelectIds) {
+        // Compute averaged radar values from the custom selection
+        const projects = projectsData.projects as { id: string; categoryScores: Record<string, number> }[];
+        const selected = projects.filter(p => customSelectIds.includes(p.id));
+        if (selected.length > 0) {
+          const avgRadar: Record<string, number> = {};
+          const keys = Object.keys(selected[0]?.categoryScores || {});
+          keys.forEach(key => {
+            avgRadar[key] = Math.round(
+              selected.reduce((sum, p) => sum + (p.categoryScores[key] || 0), 0) / selected.length,
+            );
+          });
+          setLastRadarValues(avgRadar);
+          setLastPresetName(customSelectLabel || 'Your Selection');
+        }
+      }
+    },
     onReachCards: () => {
       if (customSelectIds) {
         setSelectedProjectIds(customSelectIds);
@@ -138,14 +157,17 @@ export default function Home() {
         setLastPresetName(customSelectLabel);
       }
     },
-    onComplete: () => {},
-    onCancelled: () => {},
+    onComplete: () => { setAutoScrolling(false); },
+    onCancelled: () => { setAutoScrolling(false); },
   });
 
   const handleLoadingComplete = () => {
     setLoading(false);
     if (isCustomSelectActive) {
-      setTimeout(() => { startTour(); }, 500);
+      setTimeout(() => {
+        setAutoScrolling(true);
+        startTour();
+      }, 500);
     }
   };
 
@@ -431,6 +453,7 @@ export default function Home() {
           onNavigateUp={() => scrollToSectionBottom('trajectory')}
           onNavigateDown={() => scrollToSection('design-philosophy')}
           siteReady={!loading}
+          turboMode={isCustomSelectActive && autoScrolling}
         />
       </ErrorBoundary>
 
@@ -488,6 +511,7 @@ export default function Home() {
                 scrollToSection('project-cards');
               }
             }}
+            activePresetOverride={autoScrolling ? lastPresetName : null}
           />
         </div>
       </section>

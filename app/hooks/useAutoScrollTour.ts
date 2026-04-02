@@ -3,9 +3,9 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 // ── Configurable timing ────────────────────────────────────────────────
 const HERO_PAUSE         = 3000;   // ms — time on hero before scrolling starts
-const PHILOSOPHY_PAUSE   = 2000;   // ms — pause at philosophy section
-const WORKS_PAUSE        = 1500;   // ms — pause at works section
-const SCROLL_DURATION    = 1200;   // ms — time for each scroll animation
+const PHILOSOPHY_PAUSE   = 3000;   // ms — stay at philosophy for 3 seconds
+const WORKS_PAUSE        = 2000;   // ms — pause at works while animation plays
+const SCROLL_DURATION    = 1200;   // ms — smooth scroll travel time
 const CARDS_SETTLE       = 500;    // ms — settle time after reaching cards
 const SKIP_PILL_DELAY    = 1000;   // ms — delay before showing the skip pill
 
@@ -56,12 +56,7 @@ export function useAutoScrollTour(config: AutoScrollConfig) {
     };
     const check = () => !cancelledRef.current;
 
-    // Show skip pill after delay
-    setTimeout(() => {
-      if (!cancelledRef.current) setShowSkipPill(true);
-    }, SKIP_PILL_DELAY);
-
-    // 1. Pause at hero
+    // 1. Pause at hero (typewriter running in turbo mode)
     await wait(HERO_PAUSE);
     if (!check()) return;
 
@@ -74,11 +69,13 @@ export function useAutoScrollTour(config: AutoScrollConfig) {
     scrollTo('project-selection');
     await wait(SCROLL_DURATION);
     if (!check()) return;
+
+    // 4. Trigger custom preset at works
     configRef.current.onReachWorks?.();
     await wait(WORKS_PAUSE);
     if (!check()) return;
 
-    // 4. Scroll to cards
+    // 5. Trigger card selection + scroll to cards
     configRef.current.onReachCards?.();
     await wait(300); // let cards render
     scrollTo('project-cards');
@@ -96,6 +93,10 @@ export function useAutoScrollTour(config: AutoScrollConfig) {
     cancelledRef.current = false;
     tourActiveRef.current = true;
     setTouring(true);
+    // Show skip pill after delay
+    setTimeout(() => {
+      if (!cancelledRef.current) setShowSkipPill(true);
+    }, SKIP_PILL_DELAY);
     runTour();
   }, [runTour]);
 

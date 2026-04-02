@@ -80,6 +80,16 @@ body {
   animation: radar-btn-bounce 0.45s ease-in-out infinite;
 }
 
+@keyframes radar-btn-bounce-periodic {
+  0%, 10%, 100% { transform: translateY(0); }
+  3% { transform: translateY(7px); }
+  6% { transform: translateY(0); }
+}
+
+.radar-btn-bounce-periodic {
+  animation: radar-btn-bounce-periodic 3s ease-in-out infinite;
+}
+
 /* ── Image protection — blocks casual right-click save and drag ── */
 .img-protected {
   pointer-events: none;

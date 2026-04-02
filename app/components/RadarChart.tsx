@@ -274,6 +274,8 @@ interface RadarChartProps {
   /** Custom URL-based selection — shows a special preset button that computes average radar from selected project IDs */
   customPreset?: { name: string; ids: string[] } | null;
   onCustomPresetClick?: () => void;
+  /** When set, programmatically animate to this preset (used by auto-scroll tour) */
+  activePresetOverride?: string | null;
 }
 
 // Popout anchor positioning:
@@ -283,7 +285,7 @@ interface RadarChartProps {
 // `bottom:` without needing window.innerHeight at render time.
 interface PopoutPos { left: number; top: number; bottom: number; above: boolean; }
 
-export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplete, customPreset, onCustomPresetClick }: RadarChartProps) {
+export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplete, customPreset, onCustomPresetClick, activePresetOverride }: RadarChartProps) {
   const [values,        setValues]        = useState<number[]>([...DEFAULT_VALUES]);
   const [ghosts,        setGhosts]        = useState<number[][]>([]);
   const [arrowKeys,     setArrowKeys]     = useState<Record<string, number>>({});
@@ -332,6 +334,23 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
     () => customRadarValues ? CAT_KEYS.map(k => customRadarValues[k] ?? 0) : null,
     [customRadarValues],
   );
+
+  // Programmatic preset activation (from auto-scroll tour)
+  const prevOverrideRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (activePresetOverride && activePresetOverride !== prevOverrideRef.current) {
+      // Animate to the custom preset if the override matches
+      if (customPreset && activePresetOverride === customPreset.name && customRadarArray) {
+        animateToPresetRef.current(customRadarArray, customPreset.name);
+      } else {
+        // Check built-in presets
+        const found = PRESETS.find(p => p.name === activePresetOverride);
+        if (found) animateToPresetRef.current(found.values, found.name);
+      }
+    }
+    prevOverrideRef.current = activePresetOverride ?? null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePresetOverride, customPreset, customRadarArray]);
 
   const svgRef             = useRef<SVGSVGElement>(null);
   const containerRef       = useRef<HTMLDivElement>(null);
@@ -501,11 +520,17 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
     if (isMobile) return; // no bounce animation in mobile (arrow is inline, not standalone)
     const div = bounceDivRef.current;
     if (!div) return;
-    // Bounce the whole wrapper div (arc SVG + circle) so the arc follows the circle
-    div.style.animation = (hasPlayed || !hoveredDownArrow)
-      ? 'none'
-      : 'radar-btn-bounce 0.45s ease-in-out infinite';
-  }, [hasPlayed, hoveredDownArrow, isMobile]);
+    // Periodic bounce when custom preset is selected (subtle "tap me" hint)
+    const isCustomSelected = customPreset && activePreset === customPreset.name;
+    if (isCustomSelected && !hasPlayed) {
+      div.style.animation = 'radar-btn-bounce-periodic 3s ease-in-out infinite';
+    } else {
+      // Default bounce: fast on hover before play, none otherwise
+      div.style.animation = (hasPlayed || !hoveredDownArrow)
+        ? 'none'
+        : 'radar-btn-bounce 0.45s ease-in-out infinite';
+    }
+  }, [hasPlayed, hoveredDownArrow, isMobile, customPreset, activePreset]);
 
   // Switch to mobile layout below mobilePresetsBreakpoint
   useEffect(() => {

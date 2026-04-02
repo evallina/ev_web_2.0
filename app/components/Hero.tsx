@@ -157,10 +157,11 @@ interface Props {
   onNavigateUp:   () => void;
   onNavigateDown: () => void;
   siteReady?:     boolean;
+  turboMode?:     boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady = false }: Props) {
+export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady = false, turboMode = false }: Props) {
   const [showUnderlines, setShowUnderlines] = useState([false, false, false, false]);
   const [heroIsVertical, setHeroIsVertical] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -177,10 +178,11 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const speedMultiplier = turboMode ? 3 : 1;
   const { displayed: heroText, done: heroDone } = useHeroTypewriter(
     [heroSeg1, heroSeg2, heroSeg3],
-    [heroPauseAfterSeg1, heroPauseAfterSeg2],
-    heroTypingSpeed,
+    [heroPauseAfterSeg1 / speedMultiplier, heroPauseAfterSeg2 / speedMultiplier],
+    heroTypingSpeed / speedMultiplier,
     heroErasingSpeed,
     resetKey,
     siteReady,
