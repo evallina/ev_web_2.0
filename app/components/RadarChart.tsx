@@ -387,6 +387,13 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
 
   // Schedules the full preset sequence. Cancels any running sequence first.
   // Called automatically on first scroll-into-view, and manually by the reset button.
+  // When a customPreset is provided, it's appended as the final step so the tour
+  // ends on the custom selection instead of Overview.
+  const customPresetRef = useRef(customPreset);
+  const customRadarArrayRef = useRef(customRadarArray);
+  useEffect(() => { customPresetRef.current = customPreset; }, [customPreset]);
+  useEffect(() => { customRadarArrayRef.current = customRadarArray; }, [customRadarArray]);
+
   const runAutoPlaySequence = useCallback(() => {
     cancelAutoPlay();
     const STEP = PRESET_ANIM_DURATION + autoPlayPauseDuration;
@@ -394,12 +401,27 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
       const id = setTimeout(fn, delay);
       autoTimersRef.current.push(id);
     };
+
+    // Build sequence: standard presets, then optionally the custom preset
+    const sequence = [...AUTOPLAY_SEQUENCE];
+
     AUTOPLAY_SEQUENCE.forEach((preset, i) => {
       schedule(500 + STEP * i, () => animateToPresetRef.current(preset.values, preset.name));
     });
+
+    let completionDelay = 500 + STEP * (sequence.length - 1) + PRESET_ANIM_DURATION;
+
+    // Append custom preset as final step if available
+    if (customPresetRef.current && customRadarArrayRef.current) {
+      completionDelay += autoPlayPauseDuration;
+      const customArr = customRadarArrayRef.current;
+      const customName = customPresetRef.current.name;
+      schedule(completionDelay, () => animateToPresetRef.current(customArr, customName));
+      completionDelay += PRESET_ANIM_DURATION;
+    }
+
     // Signal the reel after the last morph completes + a brief pause (200ms).
-    const completionDelay = 500 + STEP * (AUTOPLAY_SEQUENCE.length - 1) + PRESET_ANIM_DURATION + 200;
-    schedule(completionDelay, () => {
+    schedule(completionDelay + 200, () => {
       setChartIntroComplete(true);
       onAutoPlayComplete?.();
     });
