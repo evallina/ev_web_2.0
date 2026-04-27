@@ -542,7 +542,7 @@ export default function Home() {
             onPlay={handleRadarPlay}
             onCategoryFilter={handleCategoryFilter}
             customPreset={isCustomSelectActive && customSelectIds ? {
-              name: customSelectLabel || 'Your Selection',
+              name: labelSelectionParked ? 'Custom Selection' : (customSelectLabel || 'Your Selection'),
               ids: customSelectIds,
             } : null}
             onCustomPresetClick={() => {
