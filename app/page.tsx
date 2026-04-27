@@ -109,7 +109,9 @@ export default function Home() {
     const selectParam = params.get('select');
     const labelParam = params.get('label');
     const directScroll = params.has('directScroll');
+
     if (selectParam) {
+      // Full custom selection mode (with optional label)
       const ids = selectParam.split(',').map(id => id.trim()).filter(Boolean);
       if (ids.length > 0) {
         setCustomSelectIds(ids);
@@ -117,6 +119,10 @@ export default function Home() {
         setIsCustomSelectActive(true);
         setDirectScrollMode(directScroll);
       }
+    } else if (labelParam) {
+      // Label-only mode: normal site, just the header label
+      setCustomSelectLabel(labelParam);
+      // isCustomSelectActive stays false — no tour, no custom preset, no card selection
     }
   }, []);
 
@@ -479,7 +485,7 @@ export default function Home() {
         grainOpacity={grainOpacity}
         onNavigate={navigateTo}
         onResetHero={resetHero}
-        customLabel={isCustomSelectActive ? customSelectLabel : null}
+        customLabel={customSelectLabel}
       />
 
       <ContactTop
