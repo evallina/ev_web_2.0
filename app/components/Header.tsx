@@ -9,7 +9,7 @@ const menuSquareSize         = 30;                 // px   — width & height of
 const menuCloseSize          = 18;                 // px   — span length of each X line in the close icon
 const headerNameSize         = '1.0rem';           // size — font-size for "ENOL VALLINA"
 const headerNameFont         = 'var(--font-sans)'; // font — font family for "ENOL VALLINA"
-const headerNameBold         = true;               // bool — true = bold, false = normal weight
+// const headerNameBold      = true;  // bool — bold weight is now hardcoded inside the rendered <span> to allow a thinner label suffix
 
 // ── Mobile full-screen menu ──────────────────────────────────────────────────
 const mobileBreakpoint  = 750;                     // px   — below this width, full-screen menu is used
@@ -45,9 +45,10 @@ interface Props {
   grainOpacity: number;
   onNavigate:   (id: string) => void;
   onResetHero:  () => void;
+  customLabel?: string | null;
 }
 
-export default function Header({ menuOpen, setMenuOpen, scrolled, grainOpacity, onNavigate, onResetHero }: Props) {
+export default function Header({ menuOpen, setMenuOpen, scrolled, grainOpacity, onNavigate, onResetHero, customLabel }: Props) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -78,11 +79,13 @@ export default function Header({ menuOpen, setMenuOpen, scrolled, grainOpacity, 
             color: 'white',
             fontSize:      headerNameSize,
             fontFamily:    headerNameFont,
-            fontWeight:    headerNameBold ? 'bold' : 'normal',
             letterSpacing: '0.05em',
           }}
         >
-          ENOL VALLINA
+          <span style={{ fontWeight: 700 }}>ENOL VALLINA</span>
+          {customLabel && (
+            <span style={{ fontWeight: 400, opacity: 0.6 }}> | {customLabel.toUpperCase()}</span>
+          )}
         </button>
 
         {/* Nav items — desktop only (slide in from right with stagger) */}

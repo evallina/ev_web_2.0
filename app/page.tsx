@@ -97,21 +97,25 @@ export default function Home() {
   // ── Refs ───────────────────────────────────────────────────────────────────
   const currentSectionRef = useRef<string>('hero');
 
-  // ── Custom URL selection (?select=EV-03,EV-16&label=MIT+Application) ────
-  const [customSelectIds,     setCustomSelectIds]     = useState<string[] | null>(null);
-  const [customSelectLabel,   setCustomSelectLabel]   = useState<string | null>(null);
+  // ── Custom URL selection (?select=EV-03,EV-16&label=MIT+Application&directScroll) ────
+  const [customSelectIds,      setCustomSelectIds]      = useState<string[] | null>(null);
+  const [customSelectLabel,    setCustomSelectLabel]    = useState<string | null>(null);
   const [isCustomSelectActive, setIsCustomSelectActive] = useState(false);
+  const [directScrollMode,     setDirectScrollMode]     = useState(false);
+  const [labelSelectionParked, setLabelSelectionParked] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const selectParam = params.get('select');
     const labelParam = params.get('label');
+    const directScroll = params.has('directScroll');
     if (selectParam) {
       const ids = selectParam.split(',').map(id => id.trim()).filter(Boolean);
       if (ids.length > 0) {
         setCustomSelectIds(ids);
         setCustomSelectLabel(labelParam || 'Your Selection');
         setIsCustomSelectActive(true);
+        setDirectScrollMode(directScroll);
       }
     }
   }, []);
@@ -166,10 +170,38 @@ export default function Home() {
   const handleLoadingComplete = () => {
     setLoading(false);
     if (isCustomSelectActive) {
-      setTimeout(() => {
-        setAutoScrolling(true);
-        startTour();
-      }, 500);
+      if (directScrollMode) {
+        // Direct scroll mode: land on hero, wait 1s, then smooth scroll to cards
+        setTimeout(() => {
+          if (customSelectIds) {
+            setSelectedProjectIds(customSelectIds);
+            setSelectedProjectScores({});
+            setLastPresetName(customSelectLabel);
+
+            // Compute averaged radar values for the custom preset display
+            const projects = projectsData.projects as { id: string; categoryScores: Record<string, number> }[];
+            const selected = projects.filter(p => customSelectIds.includes(p.id));
+            if (selected.length > 0) {
+              const avgRadar: Record<string, number> = {};
+              const keys = Object.keys(selected[0]?.categoryScores || {});
+              keys.forEach(key => {
+                avgRadar[key] = Math.round(
+                  selected.reduce((sum, p) => sum + (p.categoryScores[key] || 0), 0) / selected.length,
+                );
+              });
+              setLastRadarValues(avgRadar);
+            }
+          }
+          const cards = document.getElementById('project-cards');
+          if (cards) window.scrollTo({ top: cards.offsetTop, behavior: 'smooth' });
+        }, 1000);
+      } else {
+        // Normal tour mode
+        setTimeout(() => {
+          setAutoScrolling(true);
+          startTour();
+        }, 500);
+      }
     }
   };
 
@@ -383,6 +415,8 @@ export default function Home() {
     setLastPresetName(null);
     setLastDebugMeta(result.debugMeta);
     setLastMatchedCount(result._scoredRows.filter(r => r.finalScore >= 20).length);
+    // Park label selection if user filtered by category in label mode
+    if (isCustomSelectActive) setLabelSelectionParked(true);
     scrollToSection('project-cards');
   };
 
@@ -404,6 +438,11 @@ export default function Home() {
     setLastPresetName(presetName);
     setLastDebugMeta(result.debugMeta);
     setLastMatchedCount(result._scoredRows.filter(r => r.finalScore >= 20).length);
+    // In label mode: park if a different preset was played; un-park if the custom preset was played
+    if (isCustomSelectActive) {
+      if (presetName !== customSelectLabel) setLabelSelectionParked(true);
+      else setLabelSelectionParked(false);
+    }
     scrollToSection('project-cards');
   };
 
@@ -439,6 +478,7 @@ export default function Home() {
         grainOpacity={grainOpacity}
         onNavigate={navigateTo}
         onResetHero={resetHero}
+        customLabel={isCustomSelectActive ? customSelectLabel : null}
       />
 
       <ContactTop
@@ -510,6 +550,7 @@ export default function Home() {
                 setSelectedProjectIds(customSelectIds);
                 setSelectedProjectScores({});
                 setLastPresetName(customSelectLabel);
+                setLabelSelectionParked(false);
                 scrollToSection('project-cards');
               }
             }}
@@ -577,6 +618,59 @@ export default function Home() {
           onMouseLeave={e => { e.currentTarget.style.transform = worksIsMobile ? 'translateX(50%)' : 'none'; }}
         >
           Skip to selection →
+        </button>
+      )}
+
+      {/* Return-to-label pill — appears when user has parked the custom selection */}
+      {isCustomSelectActive && labelSelectionParked && !autoScrolling && (
+        <button
+          onClick={() => {
+            if (customSelectIds) {
+              setSelectedProjectIds(customSelectIds);
+              setSelectedProjectScores({});
+              setLastPresetName(customSelectLabel);
+              setLabelSelectionParked(false);
+
+              // Compute averaged radar for the custom preset
+              const projects = projectsData.projects as { id: string; categoryScores: Record<string, number> }[];
+              const selected = projects.filter(p => customSelectIds.includes(p.id));
+              if (selected.length > 0) {
+                const avgRadar: Record<string, number> = {};
+                const keys = Object.keys(selected[0]?.categoryScores || {});
+                keys.forEach(key => {
+                  avgRadar[key] = Math.round(
+                    selected.reduce((sum, p) => sum + (p.categoryScores[key] || 0), 0) / selected.length,
+                  );
+                });
+                setLastRadarValues(avgRadar);
+              }
+
+              scrollToSection('project-cards');
+            }
+          }}
+          style={{
+            position: 'fixed',
+            bottom: 32,
+            right: worksIsMobile ? '50%' : 32,
+            transform: worksIsMobile ? 'translateX(50%)' : 'none',
+            zIndex: 200,
+            background: 'rgba(255, 255, 255, 0.95)',
+            color: '#1c1c1d',
+            border: '1px solid rgba(0, 0, 0, 0.1)',
+            borderRadius: 24,
+            padding: '8px 20px',
+            fontSize: 13,
+            fontFamily: 'var(--font-sans)',
+            letterSpacing: '0.05em',
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+            transition: 'opacity 200ms ease, transform 200ms ease',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = worksIsMobile ? 'translateX(50%) scale(1.05)' : 'scale(1.05)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = worksIsMobile ? 'translateX(50%)' : 'none'; }}
+        >
+          {customSelectLabel} Selection →
         </button>
       )}
 
