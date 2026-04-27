@@ -276,6 +276,8 @@ interface RadarChartProps {
   onCustomPresetClick?: () => void;
   /** When set, programmatically animate to this preset (used by auto-scroll tour) */
   activePresetOverride?: string | null;
+  /** Fired when the user manipulates the chart (+/- adjust) or clicks a non-custom preset — used by label-mode parking */
+  onChartInteraction?: () => void;
 }
 
 // Popout anchor positioning:
@@ -285,7 +287,7 @@ interface RadarChartProps {
 // `bottom:` without needing window.innerHeight at render time.
 interface PopoutPos { left: number; top: number; bottom: number; above: boolean; }
 
-export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplete, customPreset, onCustomPresetClick, activePresetOverride }: RadarChartProps) {
+export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplete, customPreset, onCustomPresetClick, activePresetOverride, onChartInteraction }: RadarChartProps) {
   const [values,        setValues]        = useState<number[]>([...DEFAULT_VALUES]);
   const [ghosts,        setGhosts]        = useState<number[][]>([]);
   const [arrowKeys,     setArrowKeys]     = useState<Record<string, number>>({});
@@ -461,6 +463,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
     setIsAnimating(false);
     setActivePreset(null);
     setShowYourSelection(true);   // show "YOUR SELECTION" slot in mobile
+    onChartInteraction?.();
 
     setValues(prev => {
       const next = [...prev];
@@ -1065,7 +1068,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
                 <div key={preset.name} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <button
                     ref={el => { presetButtonRefs.current[i] = el; }}
-                    onClick={() => { setHasPlayed(false); setShowYourSelection(false); cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); }}
+                    onClick={() => { setHasPlayed(false); setShowYourSelection(false); cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); onChartInteraction?.(); }}
                     onMouseEnter={() => setHoveredPreset(preset.name)}
                     onMouseLeave={() => setHoveredPreset(null)}
                     className={`font-sans cursor-pointer ${presetTextSize}`}
@@ -1175,7 +1178,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
                   <React.Fragment key={preset.name}>
                     <button
                       ref={el => { presetButtonRefs.current[i] = el; }}
-                      onClick={() => { setHasPlayed(false); setShowYourSelection(false); cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); }}
+                      onClick={() => { setHasPlayed(false); setShowYourSelection(false); cancelAutoPlay(); stopResetSpin(); animateToPreset(preset.values, preset.name); onChartInteraction?.(); }}
                       onMouseEnter={() => setHoveredPreset(preset.name)}
                       onMouseLeave={() => setHoveredPreset(null)}
                       className={`font-sans cursor-pointer ${presetTextSize}`}

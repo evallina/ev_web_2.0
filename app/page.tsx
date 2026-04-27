@@ -438,10 +438,11 @@ export default function Home() {
     setLastPresetName(presetName);
     setLastDebugMeta(result.debugMeta);
     setLastMatchedCount(result._scoredRows.filter(r => r.finalScore >= 20).length);
-    // In label mode: park if a different preset was played; un-park if the custom preset was played
+    // In label mode: park if a different preset was played; un-park if the custom preset was played.
+    // The chart's activePreset can be either the original label or the parked alias "Custom Selection".
     if (isCustomSelectActive) {
-      if (presetName !== customSelectLabel) setLabelSelectionParked(true);
-      else setLabelSelectionParked(false);
+      const matchesCustom = presetName === customSelectLabel || presetName === 'Custom Selection';
+      setLabelSelectionParked(!matchesCustom);
     }
     scrollToSection('project-cards');
   };
@@ -555,6 +556,9 @@ export default function Home() {
               }
             }}
             activePresetOverride={autoScrolling ? lastPresetName : null}
+            onChartInteraction={() => {
+              if (isCustomSelectActive && !autoScrolling) setLabelSelectionParked(true);
+            }}
           />
         </div>
       </section>
