@@ -6,37 +6,35 @@ import { useEffect, useRef, useState } from 'react';
 // CONFIGURABLE VARIABLES
 // ════════════════════════════════════════════════════════════════════════════
 
+// ── Typography (adjust these to tune title sizes) ──────────────────────
+const TITLE_FONT_SIZE = 'clamp(1.8rem, 2.8vw, 2.8rem)';  // all cards same size — was clamp(1.4rem, 2.2vw, 2.2rem)
+// ↑ Adjust this to change all card title sizes. Format: clamp(min, preferred, max)
+
 // ── Grid ──
-const GRID_GAP          = 6;          // px — gutter between cards
+const GRID_GAP          = 12;          // px — gutter between cards (1.5× original 6)
 const GRID_ASPECT_RATIO = '16 / 9';   // desktop grid aspect ratio
-const GRID_MAX_HEIGHT   = '85vh';     // prevent oversized cards on tall screens
-const GRID_MIN_HEIGHT   = 440;        // px — keep cards from collapsing on short screens
+const GRID_MAX_HEIGHT   = '80vh';     // leaves room for the nav links + gaps so the whole section fits one viewport
 const MOBILE_BREAKPOINT = 750;        // px — switch to stacked single-column layout
 
-// ── Overlay ──
-const OVERLAY_DEFAULT = 'rgba(0, 0, 0, 0.55)';  // darkens image (default/hover)
-const OVERLAY_ACTIVE  = 'rgba(0, 0, 0, 0.25)';  // lightens image (active)
+// ── Overlay (darkens image) ──
+const OVERLAY_DEFAULT = 'rgba(0, 0, 0, 0.55)';
+const OVERLAY_ACTIVE  = 'rgba(0, 0, 0, 0.70)';  // darker when active
 
-// ── Hover zoom ──
+// ── Image effects ──
 const HOVER_SCALE     = 1.05;
+const ACTIVE_BLUR     = 6;          // px — image blur when active
 const ZOOM_TRANSITION = '600ms ease';
+const FADE_DURATION   = '400ms';    // overlay / phrase / button / filter fades
 
 // ── Button ──
-const BUTTON_SIZE         = 40;   // px — square button
-const BUTTON_EDGE_PADDING = 16;   // px — from right and bottom card edges
-const BUTTON_RADIUS       = 6;    // px
+const BUTTON_SIZE = 50;   // px — square button (1.5× the original 40)
 
-// ── Fade transitions (overlay / phrase / button) ──
-const FADE_DURATION = '400ms';
-
-// ── Card ──
-const CARD_RADIUS       = 4;    // px — subtle rounding
-const TEXT_EDGE_PADDING = 28;   // px — left/right inset of the title + phrase block
-const TEXT_BLOCK_GAP    = 10;   // px — gap between title and phrase
-
-// ── Section ──
-const SECTION_PADDING_VERTICAL = 40;        // px — top & bottom section padding
-const SOLID_DARK               = '#1c1c1d'; // fallback background (no image)
+// ── Layout ──
+const CARD_CONTENT_PADDING   = 30;        // px — padding from card edge for text AND button
+const SECTION_PADDING_TOP    = 70;        // px — clears the ~48px sticky header with ~18px breathing room
+const SECTION_PADDING_BOTTOM = 50;        // px — small gap below the WORK SELECTION link
+const GRID_NAV_GAP           = 15;        // px — vertical space between the grid and the top/bottom nav links
+const SOLID_DARK             = '#1c1c1d'; // fallback background (no image)
 
 // ════════════════════════════════════════════════════════════════════════════
 // CARD DATA
@@ -52,10 +50,9 @@ interface DoorwayCard {
   url?:          string;
   presetName?:   string;
   gridArea:      string;
-  imagePath:     string;                 // '' → solid dark background
-  imagePosition: { x: string; y: string }; // object-position — adjustable per card
+  imagePath:     string;                    // '' → solid dark background
+  imagePosition: { x: string; y: string };  // object-position — adjustable per card
   buttonEnabled: boolean;
-  large?:        boolean;                // larger title (hero card)
 }
 
 const CARDS: DoorwayCard[] = [
@@ -64,12 +61,11 @@ const CARDS: DoorwayCard[] = [
     title:         'Project Minerva',
     phrase:        'My most recent work, an online platform I built to empower the creative process.',
     type:          'link',
-    url:           'https://minerva.enolvallina.com', // placeholder — user will confirm
+    url:           'https://minerva-lime.vercel.app/',
     gridArea:      'minerva',
     imagePath:     '/images/cardboard/minerva.webp',
     imagePosition: { x: '50%', y: '50%' },
     buttonEnabled: true,
-    large:         true,
   },
   {
     id:            'systems',
@@ -127,7 +123,7 @@ const mobileAspect = (id: string) => (id === 'minerva' ? '16 / 9' : '16 / 10');
 
 function ChevronDownIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+    <svg width="27" height="27" viewBox="0 0 24 24" fill="none"
       stroke="#1c1c1d" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polyline points="6 9 12 15 18 9" />
     </svg>
@@ -136,12 +132,33 @@ function ChevronDownIcon() {
 
 function ExternalLinkIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
       stroke="#1c1c1d" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
     </svg>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// NAV LINK — matches the site's section nav style (DesignPhilosophy "Works ▼")
+// ════════════════════════════════════════════════════════════════════════════
+
+function NavLink({ direction, label, onClick }: { direction: 'up' | 'down'; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="font-sans text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 cursor-pointer"
+      style={{ background: 'none', border: 'none', padding: 0, color: '#1c1c1d', opacity: 0.85, transition: 'opacity 200ms ease' }}
+      onMouseEnter={e => { e.currentTarget.style.opacity = '0.6'; }}
+      onMouseLeave={e => { e.currentTarget.style.opacity = '0.85'; }}
+    >
+      {direction === 'up'   && <span style={{ lineHeight: 1 }}>▲</span>}
+      <span>{label}</span>
+      {direction === 'down' && <span style={{ lineHeight: 1 }}>▼</span>}
+    </button>
   );
 }
 
@@ -152,9 +169,13 @@ function ExternalLinkIcon() {
 interface DoorwaysProps {
   /** Triggers a preset selection + scroll to the project cards (handled by parent). */
   onPresetSelect: (presetName: string) => void;
+  /** Scroll up to the design-philosophy section. */
+  onScrollUp:     () => void;
+  /** Scroll down to the project-selection (Work Selection) section. */
+  onScrollDown:   () => void;
 }
 
-export default function Doorways({ onPresetSelect }: DoorwaysProps) {
+export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: DoorwaysProps) {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [hoveredId,    setHoveredId]    = useState<string | null>(null);
   const [isMobile,     setIsMobile]     = useState(false);
@@ -200,15 +221,15 @@ export default function Doorways({ onPresetSelect }: DoorwaysProps) {
 
   // ── Render one card (shared between grid & stacked layouts) ──
   const renderCard = (card: DoorwayCard) => {
-    const isActive  = activeCardId === card.id;
-    const isHovered = hoveredId === card.id;
-    const zoomed    = isActive || (canHover && isHovered);
+    const isActive   = activeCardId === card.id;
+    const isHovered  = hoveredId === card.id;
+    const zoomed     = isActive || (canHover && isHovered);
     const showButton = card.buttonEnabled && (card.type === 'preset' || !!card.url);
 
     const cardStyle: React.CSSProperties = {
       position:     'relative',
       overflow:     'hidden',
-      borderRadius: CARD_RADIUS,
+      borderRadius: 0,            // straight corners
       cursor:       'pointer',
       background:   SOLID_DARK,
       ...(isMobile
@@ -218,12 +239,12 @@ export default function Doorways({ onPresetSelect }: DoorwaysProps) {
 
     const buttonStyle: React.CSSProperties = {
       position:       'absolute',
-      right:          BUTTON_EDGE_PADDING,
-      bottom:         BUTTON_EDGE_PADDING,
+      right:          CARD_CONTENT_PADDING,
+      bottom:         CARD_CONTENT_PADDING,
       width:          BUTTON_SIZE,
       height:         BUTTON_SIZE,
       background:     'rgba(255, 255, 255, 0.95)',
-      borderRadius:   BUTTON_RADIUS,
+      borderRadius:   0,          // square corners
       border:         'none',
       padding:        0,
       display:        'flex',
@@ -262,9 +283,9 @@ export default function Doorways({ onPresetSelect }: DoorwaysProps) {
               height:         '100%',
               objectFit:      'cover',
               objectPosition: `${card.imagePosition.x} ${card.imagePosition.y}`,
-              filter:         'grayscale(100%)',
+              filter:         isActive ? `grayscale(100%) blur(${ACTIVE_BLUR}px)` : 'grayscale(100%)',
               transform:      `scale(${zoomed ? HOVER_SCALE : 1})`,
-              transition:     `transform ${ZOOM_TRANSITION}`,
+              transition:     `transform ${ZOOM_TRANSITION}, filter ${FADE_DURATION} ease`,
               userSelect:     'none',
               WebkitUserDrag: 'none',
               pointerEvents:  'none',
@@ -283,27 +304,27 @@ export default function Doorways({ onPresetSelect }: DoorwaysProps) {
           }}
         />
 
-        {/* Title + phrase — vertically centered; title never moves (phrase space reserved) */}
+        {/* Title + phrase — anchored top-left, left-justified; title never moves */}
         <div
           style={{
-            position:      'absolute',
-            top:           '50%',
-            transform:     'translateY(-50%)',
-            left:          TEXT_EDGE_PADDING,
-            right:         TEXT_EDGE_PADDING,
-            display:       'flex',
-            flexDirection: 'column',
-            gap:           TEXT_BLOCK_GAP,
-            pointerEvents: 'none',
+            position:       'absolute',
+            inset:          0,
+            padding:        CARD_CONTENT_PADDING,
+            display:        'flex',
+            flexDirection:  'column',
+            justifyContent: 'flex-start',
+            alignItems:     'flex-start',
+            pointerEvents:  'none',
           }}
         >
           <h3
             style={{
               margin:     0,
-              fontFamily: 'var(--font-playfair)', // serif — @theme inline doesn't emit --font-serif to :root, so use the inherited next/font var
+              textAlign:  'left',
+              fontFamily: 'var(--font-playfair)', // project serif (see Doorways font note)
               fontWeight: 700,
               color:      '#ffffff',
-              fontSize:   card.large ? 'clamp(1.8rem, 3vw, 3rem)' : 'clamp(1.4rem, 2.2vw, 2.2rem)',
+              fontSize:   TITLE_FONT_SIZE, // consistent across all cards — see TITLE_FONT_SIZE at top
               lineHeight: 1.1,
               textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
             }}
@@ -313,12 +334,14 @@ export default function Doorways({ onPresetSelect }: DoorwaysProps) {
           <p
             style={{
               margin:     0,
-              maxWidth:   '80%',
-              fontFamily: 'var(--font-roboto)', // sans — see note on h3 above
-              fontSize:   'clamp(0.75rem, 1.1vw, 0.95rem)',
+              marginTop:  8,
+              textAlign:  'left',
+              maxWidth:   '85%',
+              fontFamily: 'var(--font-roboto)', // project sans
+              fontSize:   'clamp(0.75rem, 1vw, 0.9rem)',
               lineHeight: 1.45,
-              color:      card.id === 'writing' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.85)',
-              opacity:    isActive ? 1 : 0,
+              color:      'rgba(255, 255, 255, 0.85)',
+              opacity:    isActive ? (card.id === 'writing' ? 0.6 : 1) : 0,
               transition: `opacity ${FADE_DURATION} ease`,
             }}
           >
@@ -326,7 +349,7 @@ export default function Doorways({ onPresetSelect }: DoorwaysProps) {
           </p>
         </div>
 
-        {/* Button — preset (chevron) or link (external) */}
+        {/* Button — bottom-left; preset (chevron) or link (external) */}
         {showButton && (
           card.type === 'preset' ? (
             <button
@@ -358,7 +381,7 @@ export default function Doorways({ onPresetSelect }: DoorwaysProps) {
     );
   };
 
-  // ── Layout container ──
+  // ── Grid / stack container ──
   const gridStyle: React.CSSProperties = isMobile
     ? {
         width:         '100%',
@@ -375,7 +398,6 @@ export default function Doorways({ onPresetSelect }: DoorwaysProps) {
         gap:                 GRID_GAP,
         aspectRatio:         GRID_ASPECT_RATIO,
         maxHeight:           GRID_MAX_HEIGHT,
-        minHeight:           GRID_MIN_HEIGHT,
       };
 
   const orderedCards = isMobile
@@ -386,22 +408,30 @@ export default function Doorways({ onPresetSelect }: DoorwaysProps) {
     <section
       id="doorways"
       style={{
-        position:       'relative',
         background:     '#ffffff',
         minHeight:      '100vh',
+        boxSizing:      'border-box',
         display:        'flex',
         flexDirection:  'column',
         alignItems:     'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
+        gap:            GRID_NAV_GAP,
         paddingLeft:    'var(--page-margin)',
         paddingRight:   'var(--page-margin)',
-        paddingTop:     SECTION_PADDING_VERTICAL,
-        paddingBottom:  SECTION_PADDING_VERTICAL,
+        paddingTop:     SECTION_PADDING_TOP,
+        paddingBottom:  SECTION_PADDING_BOTTOM,
       }}
     >
+      {/* PHILOSOPHY ▲ — scroll up */}
+      <NavLink direction="up" label="Philosophy" onClick={onScrollUp} />
+
+      {/* Bento grid */}
       <div ref={gridRef} style={gridStyle}>
         {orderedCards.map(renderCard)}
       </div>
+
+      {/* WORK SELECTION ▼ — scroll down */}
+      <NavLink direction="down" label="Work Selection" onClick={onScrollDown} />
     </section>
   );
 }

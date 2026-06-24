@@ -516,6 +516,8 @@ export default function Home() {
             .find(p => p.name === presetName);
           if (preset) handleRadarPlay(preset.values, presetName);
         }}
+        onScrollUp={() => scrollToSection('design-philosophy')}
+        onScrollDown={() => scrollToSection('project-selection')}
       />
 
       {/* ── Section 5: Project Selection (Works) ── */}
