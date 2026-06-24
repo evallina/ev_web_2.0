@@ -13,7 +13,7 @@ const TITLE_FONT_SIZE = 'clamp(1.8rem, 2.8vw, 2.8rem)';  // all cards same size 
 // ── Grid ──
 const GRID_GAP          = 12;          // px — gutter between cards (1.5× original 6)
 const GRID_ASPECT_RATIO = '16 / 9';   // desktop grid aspect ratio
-const GRID_MAX_HEIGHT   = '80vh';     // leaves room for the nav links + gaps so the whole section fits one viewport
+const GRID_MAX_HEIGHT   = '77vh';     // leaves room for the nav links + gaps so the whole section fits one viewport
 const MOBILE_BREAKPOINT = 750;        // px — switch to stacked single-column layout
 
 // ── Overlay (darkens image) ──
@@ -192,7 +192,11 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
 
   // ── Hover-capable pointer detection (no zoom-on-hover for touch) ──
   useEffect(() => {
-    setCanHover(window.matchMedia('(hover: hover)').matches);
+    const mq = window.matchMedia('(hover: hover)');
+    const update = () => setCanHover(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
   }, []);
 
   // ── Click outside the grid → deactivate ──
@@ -272,6 +276,7 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
       >
         {/* Image layer (omitted → solid dark shows through) */}
         {card.imagePath && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={card.imagePath}
             alt=""

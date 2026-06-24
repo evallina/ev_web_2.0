@@ -112,6 +112,7 @@ export default function Home() {
     const labelParam = params.get('label');
     const directScroll = params.has('directScroll');
 
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time client-only read of URL params on mount; window.location is unavailable during SSR */
     if (selectParam) {
       // Full custom selection mode (with optional label)
       const ids = selectParam.split(',').map(id => id.trim()).filter(Boolean);
@@ -126,6 +127,7 @@ export default function Home() {
       setCustomSelectLabel(labelParam);
       // isCustomSelectActive stays false — no tour, no custom preset, no card selection
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   // ── State ──────────────────────────────────────────────────────────────────
