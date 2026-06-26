@@ -75,7 +75,7 @@ const CARDS: DoorwayCard[] = [
     presetName:    'Systems Thinking',
     gridArea:      'systems',
     imagePath:     '/images/cardboard/systems.webp',
-    imagePosition: { x: '50%', y: '50%' },
+    imagePosition: { x: '50%', y: '45%' },
     buttonEnabled: true,
   },
   {
@@ -86,7 +86,7 @@ const CARDS: DoorwayCard[] = [
     presetName:    'Spatial Experiences',
     gridArea:      'spatial',
     imagePath:     '/images/cardboard/spatial.webp',
-    imagePosition: { x: '50%', y: '50%' },
+    imagePosition: { x: '30%', y: '50%' },
     buttonEnabled: true,
   },
   {
@@ -97,7 +97,7 @@ const CARDS: DoorwayCard[] = [
     presetName:    'Research',
     gridArea:      'research',
     imagePath:     '/images/cardboard/research.webp',
-    imagePosition: { x: '50%', y: '50%' },
+    imagePosition: { x: '50%', y: '00%' },
     buttonEnabled: true,
   },
   {
