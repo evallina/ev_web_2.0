@@ -11,7 +11,6 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import DesignPhilosophy from "./components/DesignPhilosophy";
 import RadarChart from "./components/RadarChart";
 import ProjectCards from "./components/ProjectCards";
-import Doorways from "./components/Doorways";
 import { selectProjects } from "@/src/lib/selectProjects";
 import type { DebugMeta } from "@/src/types";
 import { CAT_KEYS } from "@/src/config/categories";
@@ -20,7 +19,6 @@ import LoadingScreen from "./components/LoadingScreen";
 import AlgorithmExplainer from "./components/AlgorithmExplainer";
 import { useAutoScrollTour } from "./hooks/useAutoScrollTour";
 import projectsData from "@/src/data/projects.json";
-import presetsData from "@/src/data/presets.json";
 
 // ── Gentle snap — sections the hook will nudge toward after scroll settles ────
 const SNAP_SECTION_IDS = ['hero', 'design-philosophy', 'doorways', 'project-selection', 'project-cards', 'contact-bottom'];
@@ -107,25 +105,30 @@ export default function Home() {
   const [labelSelectionParked, setLabelSelectionParked] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const selectParam = params.get('select');
-    const labelParam = params.get('label');
-    const directScroll = params.has('directScroll');
+    // Read URL params once on mount (window.location is client-only, so this can't run during SSR).
+    // Grouped in a function — same handler pattern as the resize/scroll effects below.
+    const applyUrlSelection = () => {
+      const params = new URLSearchParams(window.location.search);
+      const selectParam = params.get('select');
+      const labelParam = params.get('label');
+      const directScroll = params.has('directScroll');
 
-    if (selectParam) {
-      // Full custom selection mode (with optional label)
-      const ids = selectParam.split(',').map(id => id.trim()).filter(Boolean);
-      if (ids.length > 0) {
-        setCustomSelectIds(ids);
-        setCustomSelectLabel(labelParam || 'Your Selection');
-        setIsCustomSelectActive(true);
-        setDirectScrollMode(directScroll);
+      if (selectParam) {
+        // Full custom selection mode (with optional label)
+        const ids = selectParam.split(',').map(id => id.trim()).filter(Boolean);
+        if (ids.length > 0) {
+          setCustomSelectIds(ids);
+          setCustomSelectLabel(labelParam || 'Your Selection');
+          setIsCustomSelectActive(true);
+          setDirectScrollMode(directScroll);
+        }
+      } else if (labelParam) {
+        // Label-only mode: normal site, just the header label
+        setCustomSelectLabel(labelParam);
+        // isCustomSelectActive stays false — no tour, no custom preset, no card selection
       }
-    } else if (labelParam) {
-      // Label-only mode: normal site, just the header label
-      setCustomSelectLabel(labelParam);
-      // isCustomSelectActive stays false — no tour, no custom preset, no card selection
-    }
+    };
+    applyUrlSelection();
   }, []);
 
   // ── State ──────────────────────────────────────────────────────────────────
@@ -508,17 +511,7 @@ export default function Home() {
         />
       </ErrorBoundary>
 
-      <DesignPhilosophy onScrollDown={() => scrollToSection('doorways')} siteReady={!loading} />
-
-      <Doorways
-        onPresetSelect={(presetName) => {
-          const preset = (presetsData as Array<{ name: string; values: Record<string, number> }>)
-            .find(p => p.name === presetName);
-          if (preset) handleRadarPlay(preset.values, presetName);
-        }}
-        onScrollUp={() => scrollToSection('design-philosophy')}
-        onScrollDown={() => scrollToSection('project-selection')}
-      />
+      <DesignPhilosophy onScrollDown={() => scrollToSection('project-selection')} siteReady={!loading} />
 
       {/* ── Section 5: Project Selection (Works) ── */}
       <section id="project-selection" className="relative min-h-screen flex flex-col items-center" style={{ paddingLeft: 'var(--page-margin)', paddingRight: 'var(--page-margin)', paddingTop: worksIsMobile ? mobileSectionPaddingTop : 80, paddingBottom: worksIsMobile ? mobileSectionPaddingBottom : darkShapeBottomPanelHeight }}>
