@@ -1,0 +1,55 @@
+{
+  "_comment": "Doorways bento cards. Edit title/description freely. type: 'link' opens url in a new tab; type: 'preset' loads presetName from presets.json and scrolls to the project cards. Empty imagePath → solid dark card. Empty url on a link → non-clickable (e.g. 'coming soon').",
+  "cards": [
+    {
+      "id": "minerva",
+      "title": "Project Minerva",
+      "description": "My most recent work, an online platform I built to empower the creative process.",
+      "type": "link",
+      "url": "https://minerva-lime.vercel.app/",
+      "gridArea": "minerva",
+      "imagePath": "/images/cardboard/minerva.webp",
+      "imagePosition": { "x": "50%", "y": "50%" }
+    },
+    {
+      "id": "systems",
+      "title": "Systems Thinking",
+      "description": "Projects designed as systems, expanding from territorial analysis to urban fabric interventions.",
+      "type": "preset",
+      "presetName": "Systems Thinking",
+      "gridArea": "systems",
+      "imagePath": "/images/cardboard/systems.webp",
+      "imagePosition": { "x": "50%", "y": "45%" }
+    },
+    {
+      "id": "spatial",
+      "title": "Spatial Experiences",
+      "description": "A collection of architecture projects you move through, where space is shaped into experience.",
+      "type": "preset",
+      "presetName": "Spatial Experiences",
+      "gridArea": "spatial",
+      "imagePath": "/images/cardboard/spatial.webp",
+      "imagePosition": { "x": "30%", "y": "50%" }
+    },
+    {
+      "id": "research",
+      "title": "Research",
+      "description": "An ensemble of studies questioning how we perceive and experience the city, and therefore how we analyze it.",
+      "type": "preset",
+      "presetName": "Research",
+      "gridArea": "research",
+      "imagePath": "/images/cardboard/research.webp",
+      "imagePosition": { "x": "50%", "y": "0%" }
+    },
+    {
+      "id": "writing",
+      "title": "Writing",
+      "description": "Notes on design, cities, and technology. Coming soon.",
+      "type": "link",
+      "url": "",
+      "gridArea": "writing",
+      "imagePath": "",
+      "imagePosition": { "x": "50%", "y": "50%" }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import doorwaysData from '@/src/data/doorways.json';
 
 // ════════════════════════════════════════════════════════════════════════════
 // CONFIGURABLE VARIABLES
@@ -11,33 +12,31 @@ const TITLE_FONT_SIZE = 'clamp(1.8rem, 2.8vw, 2.8rem)';  // all cards same size 
 // ↑ Adjust this to change all card title sizes. Format: clamp(min, preferred, max)
 
 // ── Grid ──
-const GRID_GAP          = 12;          // px — gutter between cards (1.5× original 6)
+const GRID_GAP          = 12;         // px — gutter between cards
 const GRID_ASPECT_RATIO = '16 / 9';   // desktop grid aspect ratio
 const GRID_MAX_HEIGHT   = '77vh';     // leaves room for the nav links + gaps so the whole section fits one viewport
 const MOBILE_BREAKPOINT = 750;        // px — switch to stacked single-column layout
 
 // ── Overlay (darkens image) ──
 const OVERLAY_DEFAULT = 'rgba(0, 0, 0, 0.55)';
-const OVERLAY_ACTIVE  = 'rgba(0, 0, 0, 0.70)';  // darker when active
+const OVERLAY_REVEAL  = 'rgba(0, 0, 0, 0.70)';  // darker on hover reveal
 
-// ── Image effects ──
-const HOVER_SCALE     = 1.05;
-const ACTIVE_BLUR     = 6;          // px — image blur when active
+// ── Image / reveal effects ──
+const HOVER_SCALE     = 1.05;       // image zoom on hover reveal
+const REVEAL_BLUR     = 6;          // px — image blur on hover reveal
 const ZOOM_TRANSITION = '600ms ease';
-const FADE_DURATION   = '400ms';    // overlay / phrase / button / filter fades
-
-// ── Button ──
-const BUTTON_SIZE = 50;   // px — square button (1.5× the original 40)
+const FADE_DURATION   = '400ms';    // overlay / filter fades
+const TYPE_SPEED      = 10;         // ms per character for the description typewriter
 
 // ── Layout ──
-const CARD_CONTENT_PADDING   = 30;        // px — padding from card edge for text AND button
-const SECTION_PADDING_TOP    = 70;        // px — clears the ~48px sticky header with ~18px breathing room
-const SECTION_PADDING_BOTTOM = 50;        // px — small gap below the WORK SELECTION link
+const CARD_CONTENT_PADDING   = 30;        // px — padding from card edge for title + description
+const SECTION_PADDING_TOP    = 70;        // px — clears the ~48px sticky header with breathing room
+const SECTION_PADDING_BOTTOM = 50;        // px — gap below the WORK SELECTION link
 const GRID_NAV_GAP           = 15;        // px — vertical space between the grid and the top/bottom nav links
 const SOLID_DARK             = '#1c1c1d'; // fallback background (no image)
 
 // ════════════════════════════════════════════════════════════════════════════
-// CARD DATA
+// CARD DATA — content lives in src/data/doorways.json (titles + descriptions)
 // ════════════════════════════════════════════════════════════════════════════
 
 type CardType = 'link' | 'preset';
@@ -45,101 +44,20 @@ type CardType = 'link' | 'preset';
 interface DoorwayCard {
   id:            string;
   title:         string;
-  phrase:        string;
+  description:   string;
   type:          CardType;
   url?:          string;
   presetName?:   string;
   gridArea:      string;
   imagePath:     string;                    // '' → solid dark background
   imagePosition: { x: string; y: string };  // object-position — adjustable per card
-  buttonEnabled: boolean;
 }
 
-const CARDS: DoorwayCard[] = [
-  {
-    id:            'minerva',
-    title:         'Project Minerva',
-    phrase:        'My most recent work, an online platform I built to empower the creative process.',
-    type:          'link',
-    url:           'https://minerva-lime.vercel.app/',
-    gridArea:      'minerva',
-    imagePath:     '/images/cardboard/minerva.webp',
-    imagePosition: { x: '50%', y: '50%' },
-    buttonEnabled: true,
-  },
-  {
-    id:            'systems',
-    title:         'Systems Thinking',
-    phrase:        'Projects designed as systems, expanding from territorial analysis to urban fabric interventions.',
-    type:          'preset',
-    presetName:    'Systems Thinking',
-    gridArea:      'systems',
-    imagePath:     '/images/cardboard/systems.webp',
-    imagePosition: { x: '50%', y: '45%' },
-    buttonEnabled: true,
-  },
-  {
-    id:            'spatial',
-    title:         'Spatial Experiences',
-    phrase:        'A collection of architecture projects you move through, where space is shaped into experience.',
-    type:          'preset',
-    presetName:    'Spatial Experiences',
-    gridArea:      'spatial',
-    imagePath:     '/images/cardboard/spatial.webp',
-    imagePosition: { x: '30%', y: '50%' },
-    buttonEnabled: true,
-  },
-  {
-    id:            'research',
-    title:         'Research',
-    phrase:        'An ensemble of studies questioning how we perceive and experience the city, and therefore how we analyze it.',
-    type:          'preset',
-    presetName:    'Research',
-    gridArea:      'research',
-    imagePath:     '/images/cardboard/research.webp',
-    imagePosition: { x: '50%', y: '00%' },
-    buttonEnabled: true,
-  },
-  {
-    id:            'writing',
-    title:         'Writing',
-    phrase:        'Notes on design, cities, and technology. Coming soon.',
-    type:          'link',
-    url:           '', // no URL yet
-    gridArea:      'writing',
-    imagePath:     '', // solid dark background (no image yet)
-    imagePosition: { x: '50%', y: '50%' },
-    buttonEnabled: false, // ← flip to true when Substack is ready
-  },
-];
+const CARDS = (doorwaysData.cards as DoorwayCard[]);
 
 // Stacked-layout order (top → bottom) and per-card mobile aspect ratios
 const MOBILE_ORDER = ['minerva', 'systems', 'spatial', 'research', 'writing'];
 const mobileAspect = (id: string) => (id === 'minerva' ? '16 / 9' : '16 / 10');
-
-// ════════════════════════════════════════════════════════════════════════════
-// ICONS (inline SVG, dark stroke on the white button)
-// ════════════════════════════════════════════════════════════════════════════
-
-function ChevronDownIcon() {
-  return (
-    <svg width="27" height="27" viewBox="0 0 24 24" fill="none"
-      stroke="#1c1c1d" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
-
-function ExternalLinkIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke="#1c1c1d" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-      <polyline points="15 3 21 3 21 9" />
-      <line x1="10" y1="14" x2="21" y2="3" />
-    </svg>
-  );
-}
 
 // ════════════════════════════════════════════════════════════════════════════
 // NAV LINK — matches the site's section nav style (DesignPhilosophy "Works ▼")
@@ -176,11 +94,10 @@ interface DoorwaysProps {
 }
 
 export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: DoorwaysProps) {
-  const [activeCardId, setActiveCardId] = useState<string | null>(null);
-  const [hoveredId,    setHoveredId]    = useState<string | null>(null);
-  const [isMobile,     setIsMobile]     = useState(false);
-  const [canHover,     setCanHover]     = useState(false);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [isMobile,  setIsMobile]  = useState(false);
+  const [canHover,  setCanHover]  = useState(false);
+  const [typed,     setTyped]     = useState('');
 
   // ── Responsive breakpoint ──
   useEffect(() => {
@@ -190,7 +107,7 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // ── Hover-capable pointer detection (no zoom-on-hover for touch) ──
+  // ── Hover-capable pointer detection (reveal is hover-only; touch clicks straight through) ──
   useEffect(() => {
     const mq = window.matchMedia('(hover: hover)');
     const update = () => setCanHover(mq.matches);
@@ -199,81 +116,52 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // ── Click outside the grid → deactivate ──
+  // ── Typewriter — types out the hovered card's description one char at a time ──
+  const targetText = canHover && hoveredId
+    ? (CARDS.find(c => c.id === hoveredId)?.description ?? '')
+    : '';
   useEffect(() => {
-    if (activeCardId === null) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      const grid = gridRef.current;
-      if (grid && !grid.contains(e.target as Node)) {
-        setActiveCardId(null);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [activeCardId]);
+    if (typed === targetText) return; // fully typed (or nothing to type) → idle
+    const t = setTimeout(() => {
+      setTyped(prev => {
+        const base = targetText.startsWith(prev) ? prev : ''; // restart if the target changed
+        return targetText.slice(0, base.length + 1);
+      });
+    }, TYPE_SPEED);
+    return () => clearTimeout(t);
+  }, [typed, targetText]);
 
-  // ── A card body click toggles active (deactivates if already active) ──
-  const handleCardClick = (card: DoorwayCard) => {
-    setActiveCardId(prev => (prev === card.id ? null : card.id));
-  };
-
-  // ── Preset button click → fire callback (parent scrolls to cards) ──
-  const handlePresetButton = (e: React.MouseEvent, card: DoorwayCard) => {
-    e.stopPropagation(); // don't toggle the card off
-    if (card.presetName) onPresetSelect(card.presetName);
+  // ── Direct navigation on click ──
+  const handleActivate = (card: DoorwayCard) => {
+    if (card.type === 'preset' && card.presetName) {
+      onPresetSelect(card.presetName); // parent applies the preset + scrolls to the project cards
+    } else if (card.type === 'link' && card.url) {
+      window.open(card.url, '_blank', 'noopener,noreferrer');
+    }
+    // link with no url (e.g. Writing "coming soon") → non-clickable, no-op
   };
 
   // ── Render one card (shared between grid & stacked layouts) ──
   const renderCard = (card: DoorwayCard) => {
-    const isActive   = activeCardId === card.id;
-    const isHovered  = hoveredId === card.id;
-    const zoomed     = isActive || (canHover && isHovered);
-    const showButton = card.buttonEnabled && (card.type === 'preset' || !!card.url);
+    const isRevealed = canHover && hoveredId === card.id;
+    const clickable  = card.type === 'preset' || (card.type === 'link' && !!card.url);
 
     const cardStyle: React.CSSProperties = {
-      position:     'relative',
-      overflow:     'hidden',
-      borderRadius: 0,            // straight corners
-      cursor:       'pointer',
-      background:   SOLID_DARK,
+      position:       'relative',
+      display:        'block',
+      overflow:       'hidden',
+      borderRadius:   0,
+      cursor:         clickable ? 'pointer' : 'default',
+      background:     SOLID_DARK,
+      textDecoration: 'none',
+      color:          'inherit',
       ...(isMobile
         ? { width: '100%', aspectRatio: mobileAspect(card.id) }
         : { gridArea: card.gridArea, minHeight: 0 }),
     };
 
-    const buttonStyle: React.CSSProperties = {
-      position:       'absolute',
-      right:          CARD_CONTENT_PADDING,
-      bottom:         CARD_CONTENT_PADDING,
-      width:          BUTTON_SIZE,
-      height:         BUTTON_SIZE,
-      background:     'rgba(255, 255, 255, 0.95)',
-      borderRadius:   0,          // square corners
-      border:         'none',
-      padding:        0,
-      display:        'flex',
-      alignItems:     'center',
-      justifyContent: 'center',
-      cursor:         'pointer',
-      opacity:        isActive ? 1 : 0,
-      pointerEvents:  isActive ? 'auto' : 'none',
-      transition:     `opacity ${FADE_DURATION} ease, transform 150ms ease`,
-      boxShadow:      '0 2px 8px rgba(0, 0, 0, 0.25)',
-      textDecoration: 'none',
-    };
-
-    const onBtnEnter = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.transform = 'scale(1.1)'; };
-    const onBtnLeave = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.transform = 'none'; };
-
-    return (
-      <div
-        key={card.id}
-        style={cardStyle}
-        onClick={() => handleCardClick(card)}
-        onMouseEnter={() => setHoveredId(card.id)}
-        onMouseLeave={() => setHoveredId(null)}
-        aria-label={card.title}
-      >
+    const inner = (
+      <>
         {/* Image layer (omitted → solid dark shows through) */}
         {card.imagePath && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -288,8 +176,8 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
               height:         '100%',
               objectFit:      'cover',
               objectPosition: `${card.imagePosition.x} ${card.imagePosition.y}`,
-              filter:         isActive ? `grayscale(100%) blur(${ACTIVE_BLUR}px)` : 'grayscale(100%)',
-              transform:      `scale(${zoomed ? HOVER_SCALE : 1})`,
+              filter:         isRevealed ? `grayscale(100%) blur(${REVEAL_BLUR}px)` : 'grayscale(100%)',
+              transform:      `scale(${isRevealed ? HOVER_SCALE : 1})`,
               transition:     `transform ${ZOOM_TRANSITION}, filter ${FADE_DURATION} ease`,
               userSelect:     'none',
               WebkitUserDrag: 'none',
@@ -303,13 +191,13 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
           style={{
             position:      'absolute',
             inset:         0,
-            background:    isActive ? OVERLAY_ACTIVE : OVERLAY_DEFAULT,
+            background:    isRevealed ? OVERLAY_REVEAL : OVERLAY_DEFAULT,
             transition:    `background ${FADE_DURATION} ease`,
             pointerEvents: 'none',
           }}
         />
 
-        {/* Title + phrase — anchored top-left, left-justified; title never moves */}
+        {/* Title (always visible) + typed description (on hover reveal) — anchored top-left */}
         <div
           style={{
             position:       'absolute',
@@ -326,10 +214,10 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
             style={{
               margin:     0,
               textAlign:  'left',
-              fontFamily: 'var(--font-playfair)', // project serif (see Doorways font note)
+              fontFamily: 'var(--font-playfair)', // project serif
               fontWeight: 700,
               color:      '#ffffff',
-              fontSize:   TITLE_FONT_SIZE, // consistent across all cards — see TITLE_FONT_SIZE at top
+              fontSize:   TITLE_FONT_SIZE,
               lineHeight: 1.1,
               textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
             }}
@@ -339,49 +227,63 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
           <p
             style={{
               margin:     0,
-              marginTop:  8,
+              marginTop:  10,
               textAlign:  'left',
               maxWidth:   '85%',
+              minHeight:  '1.45em',
               fontFamily: 'var(--font-roboto)', // project sans
               fontSize:   'clamp(0.75rem, 1vw, 0.9rem)',
               lineHeight: 1.45,
-              color:      'rgba(255, 255, 255, 0.85)',
-              opacity:    isActive ? (card.id === 'writing' ? 0.6 : 1) : 0,
-              transition: `opacity ${FADE_DURATION} ease`,
+              color:      'rgba(255, 255, 255, 0.9)',
             }}
           >
-            {card.phrase}
+            {isRevealed ? typed : ''}
+            {isRevealed && (
+              <span
+                aria-hidden="true"
+                style={{
+                  display:       'inline-block',
+                  width:         2,
+                  height:        '1em',
+                  marginLeft:    2,
+                  background:    '#ffffff',
+                  verticalAlign: 'text-bottom',
+                  animation:     'philosophy-cursor-blink 800ms step-end infinite',
+                }}
+              />
+            )}
           </p>
         </div>
+      </>
+    );
 
-        {/* Button — bottom-left; preset (chevron) or link (external) */}
-        {showButton && (
-          card.type === 'preset' ? (
-            <button
-              type="button"
-              style={buttonStyle}
-              onClick={(e) => handlePresetButton(e, card)}
-              onMouseEnter={onBtnEnter}
-              onMouseLeave={onBtnLeave}
-              aria-label={`Show ${card.title} projects`}
-            >
-              <ChevronDownIcon />
-            </button>
-          ) : (
-            <a
-              href={card.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={buttonStyle}
-              onClick={(e) => e.stopPropagation()}
-              onMouseEnter={onBtnEnter}
-              onMouseLeave={onBtnLeave}
-              aria-label={`Open ${card.title}`}
-            >
-              <ExternalLinkIcon />
-            </a>
-          )
-        )}
+    const sharedProps = {
+      style:        cardStyle,
+      onMouseEnter: () => { setHoveredId(card.id); setTyped(''); },
+      onMouseLeave: () => { setHoveredId(null); },
+      'aria-label': card.title,
+    };
+
+    // Link cards → real <a> (new tab, middle-click, etc.). Preset / no-url → div.
+    if (card.type === 'link' && card.url) {
+      return (
+        <a key={card.id} href={card.url} target="_blank" rel="noopener noreferrer" {...sharedProps}>
+          {inner}
+        </a>
+      );
+    }
+    return (
+      <div
+        key={card.id}
+        {...sharedProps}
+        onClick={clickable ? () => handleActivate(card) : undefined}
+        role={clickable ? 'button' : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        onKeyDown={clickable ? (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleActivate(card); }
+        } : undefined}
+      >
+        {inner}
       </div>
     );
   };
@@ -431,7 +333,7 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
       <NavLink direction="up" label="Philosophy" onClick={onScrollUp} />
 
       {/* Bento grid */}
-      <div ref={gridRef} style={gridStyle}>
+      <div style={gridStyle}>
         {orderedCards.map(renderCard)}
       </div>
 
