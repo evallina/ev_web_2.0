@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import MorphingImages from './MorphingImages';
+import WorkTypeHalo from './WorkTypeHalo';
+
+// Intro graphic toggle — 'halo' = WorkTypeGraphic canvas (current design);
+// 'reel' = the previous MorphingImages reel (files kept for easy revert).
+const INTRO_GRAPHIC: 'halo' | 'reel' = 'halo';
 
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │  DESIGN VARIABLES — edit these to tune the hero section                    │
@@ -308,17 +313,26 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
 
           {/* Image — no offset on mobile; heroImageNarrowOffsetY would shift outside the flex layout */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <MorphingImages
-              images={CATEGORY_IMAGES}
-              morphTransitionDuration={morphTransitionDuration}
-              morphPauseDuration={morphPauseDuration}
-              morphIntensity={morphIntensity}
-              siteReady={siteReady}
-              style={{
-                width:  `min(75vw, ${mobileImageMaxSize})`,
-                height: `min(75vw, ${mobileImageMaxSize})`,
-              }}
-            />
+            {INTRO_GRAPHIC === 'halo' ? (
+              <WorkTypeHalo
+                style={{
+                  width:  `min(75vw, ${mobileImageMaxSize})`,
+                  height: `min(75vw, ${mobileImageMaxSize})`,
+                }}
+              />
+            ) : (
+              <MorphingImages
+                images={CATEGORY_IMAGES}
+                morphTransitionDuration={morphTransitionDuration}
+                morphPauseDuration={morphPauseDuration}
+                morphIntensity={morphIntensity}
+                siteReady={siteReady}
+                style={{
+                  width:  `min(75vw, ${mobileImageMaxSize})`,
+                  height: `min(75vw, ${mobileImageMaxSize})`,
+                }}
+              />
+            )}
           </div>
 
           {/* Equal spacer — fills other half of remaining vertical space */}
@@ -362,18 +376,28 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
                 ? `translate(${heroImageNarrowOffsetX}, ${heroImageNarrowOffsetY})`
                 : `translate(${heroImageWideOffsetX},   ${heroImageWideOffsetY})`,
             }}>
-              <MorphingImages
-                images={CATEGORY_IMAGES}
-                morphTransitionDuration={morphTransitionDuration}
-                morphPauseDuration={morphPauseDuration}
-                morphIntensity={morphIntensity}
-                siteReady={siteReady}
-                style={{
-                  width:     heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
-                  height:    heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
-                  maxHeight: heroIsVertical ? 'none' : '65vh',
-                }}
-              />
+              {INTRO_GRAPHIC === 'halo' ? (
+                <WorkTypeHalo
+                  style={{
+                    width:     heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
+                    height:    heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
+                    maxHeight: heroIsVertical ? 'none' : '65vh',
+                  }}
+                />
+              ) : (
+                <MorphingImages
+                  images={CATEGORY_IMAGES}
+                  morphTransitionDuration={morphTransitionDuration}
+                  morphPauseDuration={morphPauseDuration}
+                  morphIntensity={morphIntensity}
+                  siteReady={siteReady}
+                  style={{
+                    width:     heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
+                    height:    heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
+                    maxHeight: heroIsVertical ? 'none' : '65vh',
+                  }}
+                />
+              )}
             </div>
           </div>
 
