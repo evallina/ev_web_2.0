@@ -62,6 +62,23 @@ class WorkTypeGraphic {
     this.off = document.createElement('canvas');
     this.off.width = this.off.height = 640;
 
+    // Does this 2D context actually honour ctx.filter blur? Blink (Chrome/Android): yes;
+    // WebKit (Safari desktop + iOS, and iOS Chrome): no. Detected by blurring a test rect
+    // and checking whether it bled. When unsupported we blur the canvas element via CSS.
+    this.useCtxFilter = (() => {
+      try {
+        const tc = document.createElement('canvas'); tc.width = tc.height = 20;
+        const tx = tc.getContext('2d');
+        tx.filter = 'blur(4px)';
+        tx.fillStyle = '#fff';
+        tx.fillRect(9, 9, 2, 2);        // tiny opaque dot
+        tx.filter = 'none';
+        // if the blur was honoured the dot spreads out → centre alpha drops far below 255
+        return tx.getImageData(10, 10, 1, 1).data[3] < 200;
+      } catch { return false; }
+    })();
+    this._cssBlur = -1; // cached CSS-blur px (WebKit path) to avoid redundant style writes
+
     // static film-grain tile
     const nz = document.createElement('canvas');
     nz.width = nz.height = 256;
@@ -269,18 +286,34 @@ class WorkTypeGraphic {
     const coreBlur = Math.max(0, o.blur * bscale * (1 - Math.min(0.5, this.flash * 0.35)));
     const haloBlur = o.blur * bscale * 2.6;
 
-    // halo pass (wide soft glow)
-    ctx.save();
-    ctx.filter = 'blur(' + haloBlur.toFixed(1) + 'px)';
-    ctx.globalAlpha = Math.min(1, 0.5 * o.glow * alphaMul);
-    ctx.drawImage(this.off, x, y, Dw, Dh);
-    ctx.restore();
-    // core pass (sharper body)
-    ctx.save();
-    ctx.filter = 'blur(' + coreBlur.toFixed(1) + 'px)';
-    ctx.globalAlpha = Math.min(1, 0.92 * o.glow * alphaMul);
-    ctx.drawImage(this.off, x, y, Dw, Dh);
-    ctx.restore();
+    if (this.useCtxFilter) {
+      // Blink: blur inside the canvas — halo pass (wide soft glow) + core pass (sharper body)
+      if (this._cssBlur !== 0) { cv.style.filter = ''; this._cssBlur = 0; }
+      ctx.save();
+      ctx.filter = 'blur(' + haloBlur.toFixed(1) + 'px)';
+      ctx.globalAlpha = Math.min(1, 0.5 * o.glow * alphaMul);
+      ctx.drawImage(this.off, x, y, Dw, Dh);
+      ctx.restore();
+      ctx.save();
+      ctx.filter = 'blur(' + coreBlur.toFixed(1) + 'px)';
+      ctx.globalAlpha = Math.min(1, 0.92 * o.glow * alphaMul);
+      ctx.drawImage(this.off, x, y, Dw, Dh);
+      ctx.restore();
+    } else {
+      // WebKit/Safari: ctx.filter is ignored — draw the shape sharp, then blur the whole
+      // canvas element via CSS (which WebKit does support). Single-radius, but the halo +
+      // core opacities still build the glow.
+      ctx.globalAlpha = Math.min(1, 0.5 * o.glow * alphaMul);
+      ctx.drawImage(this.off, x, y, Dw, Dh);
+      ctx.globalAlpha = Math.min(1, 0.92 * o.glow * alphaMul);
+      ctx.drawImage(this.off, x, y, Dw, Dh);
+      ctx.globalAlpha = 1;
+      const cssBlur = (o.blur * bscale * 1.1) / dpr; // ≈ match the in-canvas core blur, in CSS px
+      if (Math.abs(cssBlur - this._cssBlur) > 0.25) {
+        cv.style.filter = 'blur(' + cssBlur.toFixed(1) + 'px)';
+        this._cssBlur = cssBlur;
+      }
+    }
 
     // film grain — carved out of the glow so it works on transparent backgrounds
     if (o.grain > 0.01) {
