@@ -12,8 +12,8 @@ class WorkTypeGraphic {
   static defaults = {
     form: 'ring',          // 'ring' | 'blob' | 'hybrid'
     roundness: 0.85,       // 0 = sharp polygon corners, 1 = fully rounded
-    aspect: 1.7,           // width:height stretch (1 = square)
-    scale: 0.58,           // shape diameter relative to min(container w,h)
+    aspect: 1.35,          // width:height stretch (1 = square)
+    scale: 0.67,           // shape diameter relative to min(container w,h)
     amplitude: 0.7,        // how far vertices travel (0–1)
     ringWidth: 49,         // base ring thickness (offscreen-canvas px)
     widthVariation: 1,     // per-vertex thickness variation (0–1)
@@ -22,8 +22,10 @@ class WorkTypeGraphic {
     clickStrength: 130,    // click reaction
     blur: 14,              // core blur
     glow: 1.45,            // brightness multiplier
-    grain: 0.45,           // film-grain intensity (0–1)
+    grain: 0.6,            // film-grain intensity (0–1)
     color: '#FFFFFF',
+    offsetX: 0,            // x position of the graphic, fraction of half-canvas (−1 left … 1 right)
+    offsetY: 0,            // y position of the graphic, fraction of half-canvas (−1 up … 1 down)
     background: 'transparent' // 'transparent' | any CSS color
   };
 
@@ -53,6 +55,8 @@ class WorkTypeGraphic {
     this.flash = 0;
     this.inside = false;
     this.dispR = 100;
+    this.dispCx = null;   // shape centre on the display canvas (CSS px) — set each frame
+    this.dispCy = null;
     this.pattern = null;
 
     this.off = document.createElement('canvas');
@@ -72,7 +76,7 @@ class WorkTypeGraphic {
 
     this._onMove = (e) => this.onMove(e);
     this._onLeave = () => { this.inside = false; };
-    this._onDown = () => this.poke(this.opts.clickStrength);
+    this._onDown = (e) => this.pokeAt(e, this.opts.clickStrength);
     cv.addEventListener('pointermove', this._onMove);
     cv.addEventListener('pointerleave', this._onLeave);
     cv.addEventListener('pointerdown', this._onDown);
@@ -100,8 +104,8 @@ class WorkTypeGraphic {
 
   onMove(e) {
     const rect = this.cv.getBoundingClientRect();
-    const dx = e.clientX - (rect.left + rect.width / 2);
-    const dy = e.clientY - (rect.top + rect.height / 2);
+    const dx = e.clientX - (rect.left + (this.dispCx ?? rect.width / 2));
+    const dy = e.clientY - (rect.top + (this.dispCy ?? rect.height / 2));
     const d = Math.sqrt(dx * dx + dy * dy);
     if (d < this.dispR * 1.15) {
       if (!this.inside) {
@@ -119,6 +123,36 @@ class WorkTypeGraphic {
       v.wpv += (Math.random() - 0.5) * s * 3;
     }
     this.flash = Math.min(1.6, this.flash + s / 90);
+  }
+
+  // Directed poke — pushes the vertex nearest the pointer OUTWARD (neighbours less),
+  // mimicking the radar chart's poke-out. Used on click/press.
+  pokeAt(e, s) {
+    const rect = this.cv.getBoundingClientRect();
+    const ang = Math.atan2(e.clientY - (rect.top + (this.dispCy ?? rect.height / 2)), e.clientX - (rect.left + (this.dispCx ?? rect.width / 2)));
+    let nearest = 0, best = Infinity;
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI * 2) / 5;
+      let da = Math.abs(ang - a) % (Math.PI * 2);
+      if (da > Math.PI) da = Math.PI * 2 - da;
+      if (da < best) { best = da; nearest = i; }
+    }
+    for (let i = 0; i < 5; i++) {
+      let ring = Math.abs(i - nearest);
+      ring = Math.min(ring, 5 - ring);
+      const falloff = ring === 0 ? 1 : ring === 1 ? 0.3 : 0.08;
+      this.verts[i].pv += s * 2.2 * falloff;                     // outward radius kick
+      this.verts[i].wpv += (Math.random() - 0.5) * s * falloff;  // subtle width jitter
+    }
+    this.flash = Math.min(1.6, this.flash + s / 90);
+  }
+
+  // Live-update options (used by the debug panel).
+  setOptions(patch) {
+    Object.assign(this.opts, patch);
+    if (patch.background !== undefined && patch.background !== 'transparent') {
+      this.container.style.background = patch.background;
+    }
   }
 
   newDur(speed) {
@@ -225,7 +259,11 @@ class WorkTypeGraphic {
     const D = m * o.scale * (S / (2 * R));
     const Dw = D * ax, Dh = D * ay;
     this.dispR = (m * o.scale * Math.max(ax, ay)) / 2 / dpr;
-    const x = (W - Dw) / 2, y = (H - Dh) / 2;
+    const offX = (o.offsetX || 0) * (W / 2);
+    const offY = (o.offsetY || 0) * (H / 2);
+    const x = (W - Dw) / 2 + offX, y = (H - Dh) / 2 + offY;
+    this.dispCx = (W / 2 + offX) / dpr;   // keep hover/click detection aligned to the offset shape
+    this.dispCy = (H / 2 + offY) / dpr;
     const bscale = D / S;
     const alphaMul = Math.min(1.6, this.pulse.val * (1 + this.flash * 0.55));
     const coreBlur = Math.max(0, o.blur * bscale * (1 - Math.min(0.5, this.flash * 0.35)));

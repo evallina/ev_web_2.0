@@ -8,6 +8,15 @@ import WorkTypeHalo from './WorkTypeHalo';
 // 'reel' = the previous MorphingImages reel (files kept for easy revert).
 const INTRO_GRAPHIC: 'halo' | 'reel' = 'halo';
 
+// ── Halo frame (INTRO_GRAPHIC === 'halo') — full-bleed background layer ──
+// Insets from the hero edges; 0 = flush to the screen edge (full bleed). The
+// left inset tucks the graphic under the intro text.
+const haloInsetTop         = 0;      // full bleed top
+const haloInsetRight       = 0;      // full bleed right
+const haloInsetBottom      = 0;      // full bleed bottom
+const haloInsetLeftDesktop = '20%';  // desktop: left edge sits under the text
+const haloInsetLeftMobile  = 0;      // mobile: full width
+
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │  DESIGN VARIABLES — edit these to tune the hero section                    │
 // ├─────────────────────────────────────────────────────────────────────────────┤
@@ -163,10 +172,11 @@ interface Props {
   onNavigateDown: () => void;
   siteReady?:     boolean;
   turboMode?:     boolean;
+  showDebug?:     boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady = false, turboMode = false }: Props) {
+export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady = false, turboMode = false, showDebug = false }: Props) {
   const [showUnderlines, setShowUnderlines] = useState([false, false, false, false]);
   const [heroIsVertical, setHeroIsVertical] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -286,11 +296,21 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
   );
 
   return (
-    <section id="hero" className="h-screen flex flex-col">
+    <section id="hero" className="h-screen flex flex-col relative">
+      {/* Full-bleed halo background layer (halo mode only) */}
+      {INTRO_GRAPHIC === 'halo' && (
+        <div style={{ position: 'absolute', top: haloInsetTop, right: haloInsetRight, bottom: haloInsetBottom, left: isMobile ? haloInsetLeftMobile : haloInsetLeftDesktop, zIndex: 0 }}>
+          <WorkTypeHalo showDebug={showDebug} />
+        </div>
+      )}
+
+      {/* Content — above the halo; click-through in halo mode so the canvas gets hover/click (nav buttons re-enable). */}
+      <div className="flex-1 flex flex-col" style={{ position: 'relative', zIndex: 1, pointerEvents: INTRO_GRAPHIC === 'halo' ? 'none' : 'auto' }}>
       {/* Top nav hint — scroll up to Trajectory */}
       <div className="flex justify-center pt-16" style={{ marginBottom: isMobile ? mobileTopGap : 0 }}>
         <button
           onClick={onNavigateUp}
+          style={{ pointerEvents: 'auto' }}
           className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer"
         >
           <span>▲</span>
@@ -311,16 +331,9 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
           {/* Equal spacer — fills half the remaining vertical space, min mobileTextImageGap */}
           <div style={{ flex: 1, minHeight: mobileTextImageGap }} />
 
-          {/* Image — no offset on mobile; heroImageNarrowOffsetY would shift outside the flex layout */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {INTRO_GRAPHIC === 'halo' ? (
-              <WorkTypeHalo
-                style={{
-                  width:  `min(75vw, ${mobileImageMaxSize})`,
-                  height: `min(75vw, ${mobileImageMaxSize})`,
-                }}
-              />
-            ) : (
+          {/* Image — reel only (halo is the background layer) */}
+          {INTRO_GRAPHIC === 'reel' && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <MorphingImages
                 images={CATEGORY_IMAGES}
                 morphTransitionDuration={morphTransitionDuration}
@@ -332,8 +345,8 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
                   height: `min(75vw, ${mobileImageMaxSize})`,
                 }}
               />
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Equal spacer — fills other half of remaining vertical space */}
           <div style={{ flex: 1, minHeight: 0 }} />
@@ -342,6 +355,7 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
           <div className="flex justify-center" style={{ paddingBottom: mobileBottomPadding }}>
             <button
               onClick={onNavigateDown}
+              style={{ pointerEvents: 'auto' }}
               className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer"
             >
               <span>Approach & Work</span>
@@ -366,25 +380,17 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
               {textH1s}
             </div>
 
-            {/* Image column */}
-            <div style={{
-              width:          heroIsVertical ? '100%' : '50%',
-              display:        'flex',
-              alignItems:     'center',
-              justifyContent: 'center',
-              transform:      heroIsVertical
-                ? `translate(${heroImageNarrowOffsetX}, ${heroImageNarrowOffsetY})`
-                : `translate(${heroImageWideOffsetX},   ${heroImageWideOffsetY})`,
-            }}>
-              {INTRO_GRAPHIC === 'halo' ? (
-                <WorkTypeHalo
-                  style={{
-                    width:     heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
-                    height:    heroIsVertical ? `min(75vw, ${heroImageMaxVertical})` : morphImageSize,
-                    maxHeight: heroIsVertical ? 'none' : '65vh',
-                  }}
-                />
-              ) : (
+            {/* Image column (reel only — halo is the background layer) */}
+            {INTRO_GRAPHIC === 'reel' && (
+              <div style={{
+                width:          heroIsVertical ? '100%' : '50%',
+                display:        'flex',
+                alignItems:     'center',
+                justifyContent: 'center',
+                transform:      heroIsVertical
+                  ? `translate(${heroImageNarrowOffsetX}, ${heroImageNarrowOffsetY})`
+                  : `translate(${heroImageWideOffsetX},   ${heroImageWideOffsetY})`,
+              }}>
                 <MorphingImages
                   images={CATEGORY_IMAGES}
                   morphTransitionDuration={morphTransitionDuration}
@@ -397,14 +403,15 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
                     maxHeight: heroIsVertical ? 'none' : '65vh',
                   }}
                 />
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Bottom nav hint */}
           <div className="flex justify-center pb-8">
             <button
               onClick={onNavigateDown}
+              style={{ pointerEvents: 'auto' }}
               className="font-sans text-white/35 text-xs uppercase tracking-[0.2em] flex flex-col items-center gap-1 hover:text-white/65 transition-colors cursor-pointer"
             >
               <span>Approach & Work</span>
@@ -413,6 +420,7 @@ export default function Hero({ resetKey, onNavigateUp, onNavigateDown, siteReady
           </div>
         </>
       )}
+      </div>
     </section>
   );
 }

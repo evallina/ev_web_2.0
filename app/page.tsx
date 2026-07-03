@@ -510,6 +510,7 @@ export default function Home() {
           onNavigateDown={() => scrollToSection('design-philosophy')}
           siteReady={!loading}
           turboMode={isCustomSelectActive && autoScrolling}
+          showDebug={showDebug}
         />
       </ErrorBoundary>
 
