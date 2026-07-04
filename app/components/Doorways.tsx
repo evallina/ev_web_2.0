@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import doorwaysData from '@/src/data/doorways.json';
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -94,10 +94,12 @@ interface DoorwaysProps {
 }
 
 export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: DoorwaysProps) {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [isMobile,  setIsMobile]  = useState(false);
-  const [canHover,  setCanHover]  = useState(false);
-  const [typed,     setTyped]     = useState('');
+  const [hoveredId,      setHoveredId]      = useState<string | null>(null);
+  const [isMobile,       setIsMobile]       = useState(false);
+  const [canHover,       setCanHover]       = useState(false);
+  const [typed,          setTyped]          = useState('');
+  const [scrollActiveId, setScrollActiveId] = useState<string | null>(null); // mobile: card centred in view
+  const scrollActiveRef  = useRef<string | null>(null);
 
   // ── Responsive breakpoint ──
   useEffect(() => {
@@ -116,10 +118,34 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // ── Typewriter — types out the hovered card's description one char at a time ──
-  const targetText = canHover && hoveredId
-    ? (CARDS.find(c => c.id === hoveredId)?.description ?? '')
-    : '';
+  // ── Mobile (no hover): reveal the card nearest the viewport centre as you scroll ──
+  useEffect(() => {
+    if (canHover) return;
+    const pick = () => {
+      const vh = window.innerHeight;
+      let best: string | null = null, bestDist = Infinity;
+      document.querySelectorAll<HTMLElement>('[data-doorway-id]').forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.bottom <= 0 || r.top >= vh) return;
+        const dist = Math.abs(r.top + r.height / 2 - vh / 2);
+        if (dist < bestDist) { bestDist = dist; best = el.dataset.doorwayId ?? null; }
+      });
+      if (best !== scrollActiveRef.current) {
+        scrollActiveRef.current = best;
+        setScrollActiveId(best);
+        setTyped('');
+      }
+    };
+    pick();
+    window.addEventListener('scroll', pick, { passive: true });
+    window.addEventListener('resize', pick, { passive: true });
+    return () => { window.removeEventListener('scroll', pick); window.removeEventListener('resize', pick); };
+  }, [canHover]);
+
+  // ── Typewriter — types out the active card's description one char at a time ──
+  // Active card = hovered (desktop) or scroll-centred (mobile/touch).
+  const activeId = canHover ? hoveredId : scrollActiveId;
+  const targetText = activeId ? (CARDS.find(c => c.id === activeId)?.description ?? '') : '';
   useEffect(() => {
     if (typed === targetText) return; // fully typed (or nothing to type) → idle
     const t = setTimeout(() => {
@@ -143,7 +169,7 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
 
   // ── Render one card (shared between grid & stacked layouts) ──
   const renderCard = (card: DoorwayCard) => {
-    const isRevealed = canHover && hoveredId === card.id;
+    const isRevealed = activeId === card.id;
     const clickable  = card.type === 'preset' || (card.type === 'link' && !!card.url);
 
     const cardStyle: React.CSSProperties = {
@@ -258,10 +284,11 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
     );
 
     const sharedProps = {
-      style:        cardStyle,
-      onMouseEnter: () => { setHoveredId(card.id); setTyped(''); },
-      onMouseLeave: () => { setHoveredId(null); },
-      'aria-label': card.title,
+      style:             cardStyle,
+      onMouseEnter:      () => { setHoveredId(card.id); setTyped(''); },
+      onMouseLeave:      () => { setHoveredId(null); },
+      'aria-label':      card.title,
+      'data-doorway-id': card.id,
     };
 
     // Link cards → real <a> (new tab, middle-click, etc.). Preset / no-url → div.
