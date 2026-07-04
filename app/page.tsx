@@ -583,6 +583,7 @@ export default function Home() {
             onChartInteraction={() => {
               if (isCustomSelectActive && !autoScrolling) setLabelSelectionParked(true);
             }}
+            showDebug={showDebug}
           />
         </div>
       </section>

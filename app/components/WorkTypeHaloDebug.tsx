@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { HaloOffsets } from './WorkTypeHalo';
 
 // Floating, draggable debug panel for tuning the WorkTypeGraphic halo.
@@ -72,7 +72,18 @@ interface Props {
 
 export default function WorkTypeHaloDebug({ engineRef, visible, offsets, onOffsetChange, isMobile }: Props) {
   const [params, setParams] = useState<Record<string, number | string>>(DEFAULTS);
-  const [pos,    setPos]    = useState({ x: 20, y: 90 });
+  const [pos,    setPos]    = useState({ x: 40, y: 140 }); // over the intro text
+  const [inView, setInView] = useState(false);
+
+  // Only show while the intro (hero) section is on screen.
+  useEffect(() => {
+    const el = document.getElementById('hero');
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const show = visible && inView;
 
   const update = (key: string, value: number | string) => {
     setParams(p => ({ ...p, [key]: value }));
@@ -99,7 +110,7 @@ export default function WorkTypeHaloDebug({ engineRef, visible, offsets, onOffse
         overflowY: 'auto', zIndex: 60, background: 'rgba(0,0,0,0.92)',
         backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 12, color: 'white',
-        opacity: visible ? 1 : 0, pointerEvents: visible ? 'auto' : 'none',
+        opacity: show ? 1 : 0, pointerEvents: show ? 'auto' : 'none',
         transition: 'opacity 200ms ease',
       }}
     >

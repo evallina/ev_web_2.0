@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import catDesc from '@/src/data/categoryDescriptions.json';
 import presetsData from '@/src/data/presets.json';
+import RadarGraphic from './RadarGraphic';
 import projectsData from '@/src/data/projects.json';
 import { CATEGORIES, CAT_KEYS } from '@/src/config/categories';
 import IconCardReel from './IconCardReel';
@@ -278,6 +279,8 @@ interface RadarChartProps {
   activePresetOverride?: string | null;
   /** Fired when the user manipulates the chart (+/- adjust) or clicks a non-custom preset — used by label-mode parking */
   onChartInteraction?: () => void;
+  /** Debug mode — shows the radar-shape tuning panel. */
+  showDebug?: boolean;
 }
 
 // Popout anchor positioning:
@@ -287,8 +290,9 @@ interface RadarChartProps {
 // `bottom:` without needing window.innerHeight at render time.
 interface PopoutPos { left: number; top: number; bottom: number; above: boolean; }
 
-export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplete, customPreset, onCustomPresetClick, activePresetOverride, onChartInteraction }: RadarChartProps) {
+export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplete, customPreset, onCustomPresetClick, activePresetOverride, onChartInteraction, showDebug = false }: RadarChartProps) {
   const [values,        setValues]        = useState<number[]>([...DEFAULT_VALUES]);
+  const [graphicForm,   setGraphicForm]   = useState<string>('ring'); // radar shape look: 'original' | 'ring' | 'blob' | 'hybrid'
   const [ghosts,        setGhosts]        = useState<number[][]>([]);
   const [arrowKeys,     setArrowKeys]     = useState<Record<string, number>>({});
   const [textKeys,      setTextKeys]      = useState<Record<number, number>>({});
@@ -781,7 +785,8 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
   return (
     <div ref={containerRef} className="flex flex-col items-center w-full" style={isMobile ? {} : { flex: 1, minHeight: 0 }}>
 
-      {/* ── Radar SVG ─────────────────────────────────────────────────────── */}
+      {/* ── Radar SVG + canvas shape overlay ──────────────────────────────── */}
+      <div style={{ position: 'relative', width: '100%', marginBottom: -svgBottomClip }}>
       <svg
         ref={svgRef}
         viewBox="0 0 800 760"
@@ -789,7 +794,7 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
           width:        '100%',
           maxHeight:    isMobile ? mobileChartMaxHeight : '60vh',
           fontFamily:   'var(--font-roboto, Roboto, sans-serif)',
-          marginBottom: -svgBottomClip,
+          display:      'block',
         }}
         aria-label="Radar chart — select project types"
       >
@@ -806,8 +811,8 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
           );
         })}
 
-        {/* Ghost polygons */}
-        {ghosts.map((gVals, gi) => {
+        {/* Ghost polygons (original look only — the canvas draws them otherwise) */}
+        {graphicForm === 'original' && ghosts.map((gVals, gi) => {
           const oi = gi + 5 - ghosts.length;
           return (
             <path
@@ -821,15 +826,17 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
           );
         })}
 
-        {/* Active polygon — CSS d-transition only when not under JS animation */}
-        <path
-          d={activePath}
-          fill="white"
-          fillOpacity={activeFillOpacity}
-          stroke="white"
-          strokeWidth={activeStrokeWidth}
-          style={{ transition: isAnimating ? 'none' : 'd 300ms ease-in-out' }}
-        />
+        {/* Active polygon (original look only) — canvas draws the ring/blob otherwise */}
+        {graphicForm === 'original' && (
+          <path
+            d={activePath}
+            fill="white"
+            fillOpacity={activeFillOpacity}
+            stroke="white"
+            strokeWidth={activeStrokeWidth}
+            style={{ transition: isAnimating ? 'none' : 'd 300ms ease-in-out' }}
+          />
+        )}
 
         {/* Category labels + arrow controls */}
         {CATEGORIES.map((cat, i) => {
@@ -1023,6 +1030,15 @@ export default function RadarChart({ onPlay, onCategoryFilter, onAutoPlayComplet
         })}
 
       </svg>
+
+        <RadarGraphic
+          values={values}
+          ghosts={ghosts}
+          form={graphicForm}
+          onFormChange={setGraphicForm}
+          showDebug={showDebug}
+        />
+      </div>
 
       {isMobile ? (
         // ── MOBILE: natural document flow ────────────────────────────────────
