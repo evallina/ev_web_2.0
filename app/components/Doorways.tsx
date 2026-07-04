@@ -143,8 +143,10 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
 
   // ── Render one card (shared between grid & stacked layouts) ──
   const renderCard = (card: DoorwayCard) => {
-    const isRevealed = canHover && hoveredId === card.id;
-    const clickable  = card.type === 'preset' || (card.type === 'link' && !!card.url);
+    const hoverReveal  = canHover && hoveredId === card.id; // desktop: hover reveal + typewriter
+    const staticReveal = isMobile;                          // mobile: description always shown (no hover on touch)
+    const dim          = hoverReveal || staticReveal;       // darkened overlay + blurred image so the text reads
+    const clickable    = card.type === 'preset' || (card.type === 'link' && !!card.url);
 
     const cardStyle: React.CSSProperties = {
       position:       'relative',
@@ -176,8 +178,8 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
               height:         '100%',
               objectFit:      'cover',
               objectPosition: `${card.imagePosition.x} ${card.imagePosition.y}`,
-              filter:         isRevealed ? `grayscale(100%) blur(${REVEAL_BLUR}px)` : 'grayscale(100%)',
-              transform:      `scale(${isRevealed ? HOVER_SCALE : 1})`,
+              filter:         dim ? `grayscale(100%) blur(${REVEAL_BLUR}px)` : 'grayscale(100%)',
+              transform:      `scale(${hoverReveal ? HOVER_SCALE : 1})`,
               transition:     `transform ${ZOOM_TRANSITION}, filter ${FADE_DURATION} ease`,
               userSelect:     'none',
               WebkitUserDrag: 'none',
@@ -191,7 +193,7 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
           style={{
             position:      'absolute',
             inset:         0,
-            background:    isRevealed ? OVERLAY_REVEAL : OVERLAY_DEFAULT,
+            background:    dim ? OVERLAY_REVEAL : OVERLAY_DEFAULT,
             transition:    `background ${FADE_DURATION} ease`,
             pointerEvents: 'none',
           }}
@@ -200,8 +202,9 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
         {/* Title (always visible) + typed description (on hover reveal) — anchored top-left */}
         <div
           style={{
-            position:       'absolute',
-            inset:          0,
+            // Desktop: overlay the text absolutely on the fixed-aspect card.
+            // Mobile: in-flow so the card grows to fit the always-visible description (no clipping).
+            ...(isMobile ? { position: 'relative', width: '100%' } : { position: 'absolute', inset: 0 }),
             padding:        CARD_CONTENT_PADDING,
             display:        'flex',
             flexDirection:  'column',
@@ -237,8 +240,8 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
               color:      'rgba(255, 255, 255, 0.9)',
             }}
           >
-            {isRevealed ? typed : ''}
-            {isRevealed && (
+            {staticReveal ? card.description : (hoverReveal ? typed : '')}
+            {hoverReveal && !staticReveal && (
               <span
                 aria-hidden="true"
                 style={{
