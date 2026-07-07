@@ -6,7 +6,7 @@
       "title": "Project Minerva",
       "description": "My most recent work, an online platform I built to empower the creative process.",
       "type": "link",
-      "url": "https://minerva-lime.vercel.app/",
+      "url": "https://minerva-lime.vercel.app/about",
       "gridArea": "minerva",
       "imagePath": "/images/cardboard/minerva.webp",
       "imagePosition": { "x": "50%", "y": "50%" }
