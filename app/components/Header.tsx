@@ -23,7 +23,7 @@ const NAV_ITEMS = [
   { label: 'HOME',       id: 'hero' },
   { label: 'TRAJECTORY', id: 'trajectory' },
   { label: 'PHILOSOPHY', id: 'design-philosophy' },
-  { label: 'WORKS',      id: 'project-selection' },
+  { label: 'WORKS',      id: 'doorways' },
   { label: 'CONTACT',    id: 'contact-bottom' },
 ] as const;
 
@@ -34,7 +34,7 @@ const MOBILE_NAV_ITEMS: ({ label: string; id: string } | null)[] = [
   { label: 'HOME',       id: 'hero' },
   null,
   { label: 'PHILOSOPHY', id: 'design-philosophy' },
-  { label: 'WORKS',      id: 'project-selection' },
+  { label: 'WORKS',      id: 'doorways' },
   { label: 'CONTACT',    id: 'contact-bottom' },
 ];
 

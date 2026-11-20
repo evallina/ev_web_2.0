@@ -2,14 +2,43 @@
   "_comment": "Doorways bento cards. Edit title/description freely. type: 'link' opens url in a new tab; type: 'preset' loads presetName from presets.json and scrolls to the project cards. Empty imagePath → solid dark card. Empty url on a link → non-clickable (e.g. 'coming soon').",
   "cards": [
     {
+      "id": "palpable",
+      "title": "Palpable Studio",
+      "description": "I have founded a design company that focuses on designing digital products and physical experiences that amplify human agency.",
+      "type": "link",
+      "url": "https://palpablestudio.co",
+      "gridArea": "palpable",
+      "imagePath": "/images/cardboard/ps_01_dark_animated.gif",
+      "imagePosition": {
+        "x": "50%",
+        "y": "50%"
+      }
+    },
+    {
       "id": "minerva",
       "title": "Project Minerva",
-      "description": "My most recent work, an online platform I built to empower the creative process.",
+      "description": "An online platform I'm building to empower the creative process.",
       "type": "link",
       "url": "https://minerva-lime.vercel.app",
       "gridArea": "minerva",
-      "imagePath": "/images/cardboard/minerva.webp",
-      "imagePosition": { "x": "50%", "y": "50%" }
+      "imagePath": "/images/cardboard/Project_Minerva_landing.png",
+      "imagePosition": {
+        "x": "50%",
+        "y": "50%"
+      }
+    },
+    {
+      "id": "plutus",
+      "title": "Plutus App",
+      "description": "A minimal iOS currency converter, designed and shipped end to end.",
+      "type": "link",
+      "url": "https://palpablestudio.co/plutus",
+      "gridArea": "plutus",
+      "imagePath": "/images/cardboard/plutus_01.png",
+      "imagePosition": {
+        "x": "50%",
+        "y": "50%"
+      }
     },
     {
       "id": "systems",
@@ -19,7 +48,10 @@
       "presetName": "Systems Thinking",
       "gridArea": "systems",
       "imagePath": "/images/cardboard/systems.webp",
-      "imagePosition": { "x": "50%", "y": "45%" }
+      "imagePosition": {
+        "x": "50%",
+        "y": "45%"
+      }
     },
     {
       "id": "spatial",
@@ -29,7 +61,10 @@
       "presetName": "Spatial Experiences",
       "gridArea": "spatial",
       "imagePath": "/images/cardboard/spatial.webp",
-      "imagePosition": { "x": "30%", "y": "50%" }
+      "imagePosition": {
+        "x": "30%",
+        "y": "50%"
+      }
     },
     {
       "id": "research",
@@ -39,7 +74,10 @@
       "presetName": "Research",
       "gridArea": "research",
       "imagePath": "/images/cardboard/research.webp",
-      "imagePosition": { "x": "50%", "y": "0%" }
+      "imagePosition": {
+        "x": "50%",
+        "y": "0%"
+      }
     },
     {
       "id": "writing",
@@ -49,7 +87,10 @@
       "url": "",
       "gridArea": "writing",
       "imagePath": "",
-      "imagePosition": { "x": "50%", "y": "50%" }
+      "imagePosition": {
+        "x": "50%",
+        "y": "50%"
+      }
     }
   ]
 }

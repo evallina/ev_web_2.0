@@ -14,7 +14,7 @@ const TITLE_FONT_SIZE = 'clamp(1.8rem, 2.8vw, 2.8rem)';  // all cards same size 
 // ── Grid ──
 const GRID_GAP          = 12;         // px — gutter between cards
 const GRID_ASPECT_RATIO = '16 / 9';   // desktop grid aspect ratio
-const GRID_MAX_HEIGHT   = '77vh';     // leaves room for the nav links + gaps so the whole section fits one viewport
+const GRID_MAX_HEIGHT   = '70vh';     // leaves room for the nav links + 'Works' title + gaps so the whole section fits one viewport
 const MOBILE_BREAKPOINT = 750;        // px — switch to stacked single-column layout
 
 // ── Overlay (darkens image) ──
@@ -31,8 +31,9 @@ const TYPE_SPEED      = 10;         // ms per character for the description type
 // ── Layout ──
 const CARD_CONTENT_PADDING   = 30;        // px — padding from card edge for title + description
 const SECTION_PADDING_TOP    = 70;        // px — clears the ~48px sticky header with breathing room
-const SECTION_PADDING_BOTTOM = 50;        // px — gap below the WORK SELECTION link
+const SECTION_PADDING_BOTTOM = 50;        // px — gap below the SELECTION link
 const GRID_NAV_GAP           = 15;        // px — vertical space between the grid and the top/bottom nav links
+const TITLE_TO_GRID_GAP      = 40;        // px — vertical space between the 'Works' title and the grid
 const SOLID_DARK             = '#1c1c1d'; // fallback background (no image)
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -56,8 +57,8 @@ interface DoorwayCard {
 const CARDS = (doorwaysData.cards as DoorwayCard[]);
 
 // Stacked-layout order (top → bottom) and per-card mobile aspect ratios
-const MOBILE_ORDER = ['minerva', 'systems', 'spatial', 'research', 'writing'];
-const mobileAspect = (id: string) => (id === 'minerva' ? '16 / 9' : '16 / 10');
+const MOBILE_ORDER = ['palpable', 'minerva', 'plutus', 'systems', 'spatial', 'research', 'writing'];
+const mobileAspect = (id: string) => (id === 'palpable' ? '16 / 9' : '16 / 10');
 
 // ════════════════════════════════════════════════════════════════════════════
 // NAV LINK — matches the site's section nav style (DesignPhilosophy "Works ▼")
@@ -89,7 +90,7 @@ interface DoorwaysProps {
   onPresetSelect: (presetName: string) => void;
   /** Scroll up to the design-philosophy section. */
   onScrollUp:     () => void;
-  /** Scroll down to the project-selection (Work Selection) section. */
+  /** Scroll down to the project-selection (Selection) section. */
   onScrollDown:   () => void;
 }
 
@@ -302,9 +303,12 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
     : {
         width:               '100%',
         display:             'grid',
-        gridTemplateColumns: '17fr 50fr 33fr',
-        gridTemplateRows:    '37fr 30fr 33fr',
-        gridTemplateAreas:   `"minerva minerva research" "minerva minerva spatial" "writing systems spatial"`,
+        // Former Minerva block (cols 1–2, rows 1–2) split into: palpable (left half, full height),
+        // minerva (right half, top) and plutus (right half, bottom). Extra tracks keep the halves equal
+        // while preserving the outer card proportions (writing 17 / systems 50 / research 37 / spatial 63).
+        gridTemplateColumns: '17fr 16.5fr 33.5fr 33fr',
+        gridTemplateRows:    '33.5fr 3.5fr 30fr 33fr',
+        gridTemplateAreas:   `"palpable palpable minerva research" "palpable palpable plutus research" "palpable palpable plutus spatial" "writing systems systems spatial"`,
         gap:                 GRID_GAP,
         aspectRatio:         GRID_ASPECT_RATIO,
         maxHeight:           GRID_MAX_HEIGHT,
@@ -324,7 +328,7 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
         display:        'flex',
         flexDirection:  'column',
         alignItems:     'center',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',   // title sits right under the Philosophy link; Selection link pinned to the bottom
         gap:            GRID_NAV_GAP,
         paddingLeft:    'var(--page-margin)',
         paddingRight:   'var(--page-margin)',
@@ -335,13 +339,18 @@ export default function Doorways({ onPresetSelect, onScrollUp, onScrollDown }: D
       {/* PHILOSOPHY ▲ — scroll up */}
       <NavLink direction="up" label="Philosophy" onClick={onScrollUp} />
 
-      {/* Bento grid */}
-      <div style={gridStyle}>
-        {orderedCards.map(renderCard)}
+      {/* Title + bento grid */}
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: TITLE_TO_GRID_GAP }}>
+        <h2 className="font-serif font-bold text-4xl text-center" style={{ margin: 0, color: '#1c1c1d' }}>Works</h2>
+        <div style={gridStyle}>
+          {orderedCards.map(renderCard)}
+        </div>
       </div>
 
-      {/* WORK SELECTION ▼ — scroll down */}
-      <NavLink direction="down" label="Work Selection" onClick={onScrollDown} />
+      {/* SELECTION ▼ — scroll down */}
+      <div style={{ marginTop: 'auto' }}>
+        <NavLink direction="down" label="Selection" onClick={onScrollDown} />
+      </div>
     </section>
   );
 }

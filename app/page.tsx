@@ -45,7 +45,7 @@ const darkShapeBottomPanelHeight  = 60;    // px — height of the bottom white 
 const WORKS_MOBILE_BP            = 750;  // px
 const mobileSectionPaddingTop    = 60;   // px — top white strip height and section top padding on mobile
 const mobileSectionPaddingBottom = 120;  // px — bottom white panel height + buffer (must be > darkShapeBottomPanelHeight)
-const mobileTitleToChartGap      = 0;    // px — gap between "Work Selection" title and chart on mobile
+const mobileTitleToChartGap      = 0;    // px — gap between "Selection" title and chart on mobile
 const mobileBottomCornerWidth    = '12%'; // width of each bottom white corner panel on mobile (0% = no corners, full-width dark shape bottom)
 const mobileBottomPanelHeight    = 100;    // px — height of the bottom white corner panels on mobile (independent of section bottom padding)
 
@@ -558,7 +558,7 @@ export default function Home() {
         </div>
         {/* Content */}
         <div className="h-3" />
-        <h2 className="relative z-10 font-serif font-bold text-white text-4xl text-center mb-3">Work Selection</h2>
+        <h2 className="relative z-10 font-serif font-bold text-white text-4xl text-center mb-3">Selection</h2>
         <p className="relative z-10 font-sans text-white/40 text-sm leading-relaxed text-center mx-auto" style={{ maxWidth: "65%" }}>
           {/*Select a preset or tune the chart. Use the arrow below to see the projects.*/}
         </p>
